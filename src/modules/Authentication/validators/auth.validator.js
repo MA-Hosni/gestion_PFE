@@ -13,7 +13,7 @@ const degreeToTypes = {
 
 
 export const baseUserSchema = Joi.object({
-  full_name: Joi.string().min(2).max(60).required().messages({
+  fullName: Joi.string().min(2).max(60).required().messages({
     'string.min': 'Full name must be at least 2 characters long',
     'string.max': 'Full name cannot exceed 60 characters',
     'any.required': 'Full name is required'
@@ -22,7 +22,7 @@ export const baseUserSchema = Joi.object({
     'string.email': 'Please provide a valid email address',
     'any.required': 'Email is required'
   }),
-  phone_number: Joi.string().pattern(phoneNumberPattern).required().messages({
+  phoneNumber: Joi.string().pattern(phoneNumberPattern).required().messages({
     'string.pattern.base': 'Phone number must be a valid Tunisian number (8 digits or formatted)',
     'any.required': 'Phone number is required'
   }),
@@ -31,27 +31,28 @@ export const baseUserSchema = Joi.object({
     'string.pattern.base': 'Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character',
     'any.required': 'Password is required'
   }),
-  role: Joi.string().valid("Student", "Enc_Company", "Enc_University").required().messages({
-    'any.only': 'Role must be one of: Student, Enc_Company, Enc_University',
+  role: Joi.string().valid("Student", "CompSupervisor", "UniSupervisor").required().messages({
+    'any.only': 'Role must be one of: Student, CompSupervisor, UniSupervisor',
     'any.required': 'Role is required'
   })
 });
 
 export const studentSignupSchema = baseUserSchema.keys({
-  cin: Joi.string().required().messages({
+  cin: Joi.string().pattern(/^\d{8}$/).required().messages({
+    'string.pattern.base': 'CIN must be exactly 8 digits',
     'any.required': 'ID card number is required'
   }),
-  student_id_card_img: Joi.string().required().messages({
+  studentIdCardIMG: Joi.string().required().messages({
     'any.required': 'student university card image is required'
   }),
   degree: Joi.string().valid("Bachelor", "Master", "Engineer").required().messages({
     'any.only': 'Degree must be one of: Bachelor, Master, Engineer',
     'any.required': 'Degree is required'
   }),
-  degree_type: Joi.string().required().messages({
+  degreeType: Joi.string().required().messages({
     'any.required': 'Degree type is required'
   }),
-  company_name: Joi.string().required().messages({
+  companyName: Joi.string().required().messages({
     'any.required': 'Company of internship is required'
   })
 }).custom((value, helpers) => {
@@ -86,29 +87,28 @@ export const studentSignupSchema = baseUserSchema.keys({
 });
 
 export const companySupervisorSignupSchema = baseUserSchema.keys({
-  company_name: Joi.string().required().messages({
+  companyName: Joi.string().required().messages({
     'any.required': 'Company name is required'
   }),
-  badge_img: Joi.string().required().messages({
+  badgeIMG: Joi.string().required().messages({
     'any.required': 'Working badge image is required'
   })
 }).custom((value, helpers) => {
-  if (value.role && value.role !== "Enc_Company") {
-    return helpers.error('any.invalid', { message: 'Role must be Enc_Company for company supervisor signup' });
+  if (value.role && value.role !== "CompSupervisor") {
+    return helpers.error('any.invalid', { message: 'Role must be CompSupervisor for company supervisor signup' });
   }
-  return { ...value, role: "Enc_Company" };
+  return { ...value, role: "CompSupervisor" };
 });
 
 export const universitySupervisorSignupSchema = baseUserSchema.keys({
-  admin: Joi.boolean().optional().default(false),
-  badge_img: Joi.string().required().messages({
+  badgeIMG: Joi.string().required().messages({
     'any.required': 'University badge image is required'
   })
 }).custom((value, helpers) => {
-  if (value.role && value.role !== "Enc_University") {
-    return helpers.error('any.invalid', { message: 'Role must be Enc_University for university supervisor signup' });
+  if (value.role && value.role !== "UniSupervisor") {
+    return helpers.error('any.invalid', { message: 'Role must be UniSupervisor for university supervisor signup' });
   }
-  return { ...value, role: "Enc_University" };
+  return { ...value, role: "UniSupervisor" };
 });
 
 export const loginSchema = Joi.object({

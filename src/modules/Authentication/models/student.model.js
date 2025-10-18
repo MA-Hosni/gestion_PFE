@@ -3,43 +3,35 @@ import mongoose from "mongoose";
 const { Schema, model } = mongoose;
 
 const DegreeEnum = ["Bachelor", "Master", "Engineer"];
+const DegreeTypes = {
+  Engineer: ["INLOG", "INREV"],
+  Master: ["Pro_IM", "Pro_DCA", "Pro_PAR", "R_DISR", "R_TMAC"],
+  Bachelor: ["AV", "CMM", "IMM", "BD", "MIME", "Coco_JV", "Coco_3D"]
+};
 
 const studentSchema = new Schema({
   cin: { type: String, unique: true, required: true },
-  student_id_card_img: { type: String, required: true },
-  company_name: { type: String, required: true },
+  studentIdCardIMG: { type: String, required: true },
+  companyName: { type: String, required: true },
   degree: { type: String, enum: DegreeEnum, required: true },
-  degree_type: { 
+  degreeType: { 
     type: String, 
     required: true,
     validate: {
       validator: function(value) {
-        if (this.degree === "Engineer") {
-          return ["INLOG", "INREV"].includes(value);
-        } else if (this.degree === "Master") {
-          return ["Pro IM", "Pro DCA", "Pro PAR", "R DISR", "R TMAC"].includes(value);
-        } else if (this.degree === "Bachelor") {
-          return ["AV", "CMM", "IMM", "BD", "MIME", "Coco-JV", "Coco-3D"].includes(value);
-        }
-        return false; // Invalid degree
+        const validTypes = DegreeTypes[this.degree];
+        return validTypes && validTypes.includes(value);
       },
-      message: function(props) {
-        if (props.path === "degree_type") {
-          if (this.degree === "Engineer") {
-            return "degree_type must be either 'INLOG' or 'INREV'";
-          } else if (this.degree === "Master") {
-            return "degree_type must be one of: 'Pro IM', 'Pro DCA', 'Pro PAR', 'R DISR', 'R TMAC'";
-          } else if (this.degree === "Bachelor") {
-            return "degree_type must be one of: 'AV', 'CMM', 'IMM', 'BD', 'MIME', 'Coco-JV', 'Coco-3D'";
-          }
-        }
-        return "Invalid degree_type for the specified degree";
-      }
+      message: "Invalid degree type for the specified degree"
     }
   },
-  user: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  userId: { type: Schema.Types.ObjectId, ref: "User", required: true, unique: true },
+  compSupervisorId: { type: Schema.Types.ObjectId, ref: "CompSupervisor", required: true },
+  uniSupervisorId: { type: Schema.Types.ObjectId, ref: "UniSupervisor", required: true },
   project: { type: Schema.Types.ObjectId, ref: "Project" },
   meetings: [{ type: Schema.Types.ObjectId, ref: "Meeting" }]
 }, { timestamps: true });
+
+studentSchema.index({ userId: 1 });
 
 export default model("Student", studentSchema);
