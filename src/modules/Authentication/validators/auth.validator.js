@@ -1,15 +1,15 @@
 import Joi from "joi";
 
-const phoneNumberPattern = new RegExp("^(\+216|00216|216)?[0-9]{8}$|^(\+216|00216|216)?\s?[0-9]{2}\s?[0-9]{3}\s?[0-9]{3}$/");
+const phoneNumberPattern = new RegExp("^(\\+216|216)?[0-9]{8}$|^(\\+216|00216|216)?\\s?[0-9]{2}\\s?[0-9]{3}\\s?[0-9]{3}$");
 const passwordPattern = new RegExp(
   "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[\\W_]).{8,}$"
 );
 
-const degreeToTypes = {
-  Engineer: ["INLOG", "INREV"],
-  Master: ["Pro IM", "Pro DCA", "Pro PAR", "R DISR", "R TMAC"],
-  Bachelor: ["AV", "CMM", "IMM", "BD", "MIME", "Coco-JV", "Coco-3D"]
-};
+// const degreeToTypes = {
+//   Engineer: ["INLOG", "INREV"],
+//   Master: ["Pro IM", "Pro DCA", "Pro PAR", "R DISR", "R TMAC"],
+//   Bachelor: ["AV", "CMM", "IMM", "BD", "MIME", "Coco-JV", "Coco-3D"]
+// };
 
 
 export const baseUserSchema = Joi.object({
@@ -49,40 +49,37 @@ export const studentSignupSchema = baseUserSchema.keys({
     'any.only': 'Degree must be one of: Bachelor, Master, Engineer',
     'any.required': 'Degree is required'
   }),
-  degreeType: Joi.string().required().messages({
-    'any.required': 'Degree type is required'
+  // degreeType: Joi.string().required().messages({
+  //   'any.required': 'Degree type is required'
+  // }),
+  degreeType: Joi.when('degree', {
+    is: 'Engineer',
+    then: Joi.string().valid("INLOG", "INREV").required().messages({
+      'any.only': 'Degree type must be either "INLOG" or "INREV" for Engineer degree',
+      'any.required': 'Degree type is required for Engineer degree'
+    }),
+    otherwise: Joi.when('degree', {
+      is: 'Master',
+      then: Joi.string().valid("Pro IM", "Pro DCA", "Pro PAR", "R DISR", "R TMAC").required().messages({
+        'any.only': 'Degree type must be one of: "Pro IM", "Pro DCA", "Pro PAR", "R DISR", "R TMAC" for Master degree',
+        'any.required': 'Degree type is required for Master degree'
+      }),
+      otherwise: Joi.when('degree', {
+        is: 'Bachelor',
+        then: Joi.string().valid("AV", "CMM", "IMM", "BD", "MIME", "Coco-JV", "Coco-3D").required().messages({
+          'any.only': 'Degree type must be one of: "AV", "CMM", "IMM", "BD", "MIME", "Coco-JV", "Coco-3D" for Bachelor degree',
+          'any.required': 'Degree type is required for Bachelor degree'
+        })
+      })
+    })
   }),
   companyName: Joi.string().required().messages({
     'any.required': 'Company of internship is required'
   })
 }).custom((value, helpers) => {
   if (value.role && value.role !== "Student") {
-    return helpers.error('any.invalid', { message: 'Role must be Student for student signup' });
+    return helpers.error('any.custom', { message: 'Role must be Student for student signup' });
   }
-
-  if (value.degree === "Engineer") {
-    const validEngineerTypes = ["INLOG", "INREV"];
-    if (!validEngineerTypes.includes(value.degree_type)) {
-      return helpers.error('any.invalid', { 
-        message: 'degree_type must be either \'INLOG\' or \'INREV\'' 
-      });
-    }
-  } else if (value.degree === "Master") {
-    const validMasterTypes = ["Pro IM", "Pro DCA", "Pro PAR", "R DISR", "R TMAC"];
-    if (!validMasterTypes.includes(value.degree_type)) {
-      return helpers.error('any.invalid', { 
-        message: 'degree_type must be one of: \'Pro IM\', \'Pro DCA\', \'Pro PAR\', \'R DISR\', \'R TMAC\'' 
-      });
-    }
-  } else if (value.degree === "Bachelor") {
-    const validBachelorTypes = ["AV", "CMM", "IMM", "BD", "MIME", "Coco-JV", "Coco-3D"];
-    if (!validBachelorTypes.includes(value.degree_type)) {
-      return helpers.error('any.invalid', { 
-        message: 'degree_type must be one of: \'AV\', \'CMM\', \'IMM\', \'BD\', \'MIME\', \'Coco-JV\', \'Coco-3D\'' 
-      });
-    }
-  }
-
   return { ...value, role: "Student" };
 });
 

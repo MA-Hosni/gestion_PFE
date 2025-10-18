@@ -15,9 +15,9 @@ const signupLimiter = rateLimit({
 });
 
 router.post("/signup/student", signupLimiter, validate(studentSignupSchema), authController.signupStudent);
-router.post("/signup/supervisor-company", signupLimiter, validate(companySupervisorSignupSchema), authController.signupCompany);
-router.post("/signup/supervisor-university", signupLimiter, validate(universitySupervisorSignupSchema), authController.signupUniversity);
-// router.post("/login", validate(loginSchema), authController.login);
-// router.post("/logout", authController.logout);
+router.post("/signup/supervisor-company", signupLimiter, validate(companySupervisorSignupSchema), authController.signupCompanySupervisor);
+router.post("/signup/supervisor-university", signupLimiter, validate(universitySupervisorSignupSchema), authController.signupUniversitySupervisor);
+router.post("/login", validate(loginSchema), authController.login);
+router.post("/logout", authController.logout);
 
 export default router;

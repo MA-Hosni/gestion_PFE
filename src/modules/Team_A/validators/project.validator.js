@@ -1,5 +1,7 @@
 import Joi from "joi";
 
+const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+
 export const projectSchema = Joi.object({
   title: Joi.string().min(3).max(100).required().messages({
     'string.min': 'Title must be at least 3 characters long',
