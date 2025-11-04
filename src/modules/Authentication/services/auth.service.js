@@ -1,0 +1,620 @@
+import mongoose from "mongoose";
+import User from "../models/user.models.js";
+import Student from "../models/student.model.js";
+import CompSupervisor from "../models/compSupervisor.model.js";
+import UniSupervisor from "../models/uniSupervisor.model.js";
+import { hashPassword, comparePassword } from "../utils/hash.js";
+import { signAccessToken, signRefreshToken, signSignupToken, verifySignupToken } from "../utils/jwt.js";
+import { generateVerificationToken } from "../utils/generateToken.js";
+import { sendVerificationEmail, sendPasswordResetEmail } from "../../../shared/services/email.service.js";
+
+
+export const registerStudent = async (userData) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  try {
+    const { fullName, email, phoneNumber, password, cin, studentIdCardIMG, companyName, degree, degreeType, uniSupervisorId, compSupervisorId } = userData;
+
+    const existingUser = await User.findOne({
+      $or: [{ email }, { phoneNumber }]
+    });
+
+    if (existingUser) {
+      const error = new Error("User already exists with this email or phone number");
+      error.status = 409;
+      throw error;
+    }
+
+    const existingStudent = await Student.findOne({ cin });
+    if (existingStudent) {
+      const error = new Error("Student with this CIN already exists");
+      error.status = 409;
+      throw error;
+    }
+
+    const existingUniSupervisor = await User.findById(uniSupervisorId);
+
+    if (!existingUniSupervisor) {
+      const error = new Error("University supervisor does not exist");
+      error.status = 404;
+      throw error;
+    }
+
+    if (existingUniSupervisor.role !== "UniSupervisor") {
+      const error = new Error("Invalid university supervisor");
+      error.status = 400;
+      throw error;
+    }
+
+    if (!existingUniSupervisor.isVerified) {
+      const error = new Error("University supervisor must be verified");
+      error.status = 400;
+      throw error;
+    }
+
+    const existingCompSupervisorUser = await User.findById(compSupervisorId);
+
+    if (!existingCompSupervisorUser) {
+      const error = new Error("Company supervisor does not exist");
+      error.status = 404;
+      throw error;
+    }
+
+    if (existingCompSupervisorUser.role !== "CompSupervisor") {
+      const error = new Error("Invalid company supervisor");
+      error.status = 400;
+      throw error;
+    }
+
+    if (!existingCompSupervisorUser.isVerified) {
+      const error = new Error("Company supervisor must be verified");
+      error.status = 400;
+      throw error;
+    }
+
+    const existingCompSupervisor = await CompSupervisor.findOne({ userId: compSupervisorId });
+
+    if (!existingCompSupervisor) {
+      const error = new Error("Company supervisor profile not found");
+      error.status = 404;
+      throw error;
+    }
+
+    const normalize = (s) => String(s || '').trim().toLowerCase();
+    if (normalize(existingCompSupervisor.companyName) !== normalize(companyName)) {
+      const error = new Error("Company supervisor and student must belong to the same company");
+      error.status = 400;
+      throw error;
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const verificationToken = generateVerificationToken();
+
+    const newUser = new User({
+      fullName,
+      email,
+      phoneNumber,
+      password: hashedPassword,
+      role: "Student",
+      verificationToken,
+      isVerified: false
+    });
+
+    const savedUser = await newUser.save({ session });
+
+    const newStudent = new Student({
+      cin,
+      studentIdCardIMG,
+      companyName,
+      degree,
+      degreeType,
+      userId: savedUser._id,
+      uniSupervisorId,
+      compSupervisorId
+    });
+
+    await newStudent.save({ session });
+
+    await UniSupervisor.findOneAndUpdate(
+      { userId: uniSupervisorId },
+      { $push: { studentsId: newStudent._id } },
+      { session, new: true }
+    );
+
+    await CompSupervisor.findOneAndUpdate(
+      { userId: compSupervisorId },
+      { $push: { studentsId: newStudent._id } },
+      { session, new: true }
+    );
+
+    await session.commitTransaction();
+    session.endSession();
+
+    // Send verification email (non-blocking)
+    try {
+      await sendVerificationEmail({
+        to: savedUser.email,
+        userName: savedUser.fullName,
+        verificationToken: savedUser.verificationToken
+      });
+      console.log(`✅ Verification email sent to ${savedUser.email}`);
+    } catch (emailError) {
+      console.error(`⚠️ Failed to send verification email to ${savedUser.email}:`, emailError.message);
+      // Don't throw error - registration was successful, email is secondary
+    }
+
+    const signupToken = signSignupToken({
+      userId: savedUser._id,
+      email: savedUser.email,
+      role: savedUser.role
+    });
+
+    return {
+      success: true,
+      message: "Student registered successfully. Please check your email to verify your account.",
+      data: {
+        userId: savedUser._id,
+        email: savedUser.email,
+        role: savedUser.role,
+        signupToken,
+        // verificationToken
+      }
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
+export const registerCompanySupervisor = async (userData) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { fullName, email, phoneNumber, password, companyName, badgeIMG } = userData;
+
+    const existingUser = await User.findOne({
+      $or: [{ email }, { phoneNumber }]
+    });
+
+    if (existingUser) {
+      const error = new Error("User already exists with this email or phone number");
+      error.status = 409;
+      throw error;
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const verificationToken = generateVerificationToken();
+
+    const newUser = new User({
+      fullName,
+      phoneNumber,
+      email,
+      password: hashedPassword,
+      role: "CompSupervisor",
+      verificationToken,
+      isVerified: false
+    });
+
+    const savedUser = await newUser.save({ session });
+
+    const newCompSupervisor = new CompSupervisor({
+      companyName,
+      badgeIMG,
+      userId: savedUser._id
+    });
+
+    await newCompSupervisor.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    // Send verification email (non-blocking)
+    try {
+      await sendVerificationEmail({
+        to: savedUser.email,
+        userName: savedUser.fullName,
+        verificationToken: savedUser.verificationToken
+      });
+      console.log(`✅ Verification email sent to ${savedUser.email}`);
+    } catch (emailError) {
+      console.error(`⚠️ Failed to send verification email to ${savedUser.email}:`, emailError.message);
+      // Don't throw error - registration was successful, email is secondary
+    }
+
+    const signupToken = signSignupToken({
+      userId: savedUser._id,
+      email: savedUser.email,
+      role: savedUser.role
+    });
+
+    return {
+      success: true,
+      message: "Company supervisor registered successfully. Please check your email to verify your account.",
+      data: {
+        userId: savedUser._id,
+        email: savedUser.email,
+        role: savedUser.role,
+        signupToken,
+        // verificationToken
+      }
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
+export const registerUniversitySupervisor = async (userData) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { fullName, email, phoneNumber, password, badgeIMG } = userData;
+
+    const existingUser = await User.findOne({
+      $or: [{ email }, { phoneNumber }]
+    });
+
+    if (existingUser) {
+      const error = new Error("User already exists with this email or phone number");
+      error.status = 409;
+      throw error;
+    }
+
+    const hashedPassword = await hashPassword(password);
+
+    const verificationToken = generateVerificationToken();
+
+    const newUser = new User({
+      fullName,
+      email,
+      phoneNumber,
+      password: hashedPassword,
+      role: "UniSupervisor",
+      verificationToken,
+      isVerified: false
+    });
+
+    const savedUser = await newUser.save({ session });
+
+    const newUniSupervisor = new UniSupervisor({
+      badgeIMG,
+      userId: savedUser._id
+    });
+
+    await newUniSupervisor.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
+
+    // Send verification email (non-blocking)
+    try {
+      await sendVerificationEmail({
+        to: savedUser.email,
+        userName: savedUser.fullName,
+        verificationToken: savedUser.verificationToken
+      });
+      console.log(`✅ Verification email sent to ${savedUser.email}`);
+    } catch (emailError) {
+      console.error(`⚠️ Failed to send verification email to ${savedUser.email}:`, emailError.message);
+      // Don't throw error - registration was successful, email is secondary
+    }
+
+    const signupToken = signSignupToken({
+      userId: savedUser._id,
+      email: savedUser.email,
+      role: savedUser.role
+    });
+
+    return {
+      success: true,
+      message: "University supervisor registered successfully. Please check your email to verify your account.",
+      data: {
+        userId: savedUser._id,
+        email: savedUser.email,
+        role: savedUser.role,
+        signupToken,
+        // verificationToken
+      }
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    session.endSession();
+    throw error;
+  }
+};
+
+export const verifyEmail = async (token) => {
+  const user = await User.findOne({ verificationToken: token });
+
+  if (!user) {
+    const error = new Error("Invalid verification token");
+    error.status = 400;
+    throw error;
+  }
+
+  user.isVerified = true;
+  user.verificationToken = null;
+  await user.save();
+
+  return {
+    success: true,
+    message: "Email verified successfully! Welcome aboard!"
+  };
+};
+  
+export const login = async (loginData) => {
+  const { email, password } = loginData;
+
+  const user = await User.findOne({ email, isActive: true }).select('+password');
+  
+  if (!user) {
+    const error = new Error("Invalid email or password");
+    error.status = 401;
+    throw error;
+  }
+
+  if (!user.isVerified) {
+    try {
+      await resendVerificationEmail(user.email);
+      console.log(`✅ Verification email auto-resent to ${user.email} during login attempt`);
+    } catch (emailError) {
+      console.error(`⚠️ Failed to resend verification email to ${user.email}:`, emailError.message);
+    }
+    
+    const error = new Error("Please verify your email before logging in. A new verification email has been sent to your inbox.");
+    error.status = 403;
+    throw error;
+  }
+
+  const isPasswordValid = await comparePassword(password, user.password);
+  
+  if (!isPasswordValid) {
+    const error = new Error("Invalid email or password");
+    error.status = 401;
+    throw error;
+  }
+
+  const accessToken = signAccessToken({
+    userId: user._id,
+    email: user.email,
+    role: user.role
+  });
+
+  const refreshToken = signRefreshToken({
+    userId: user._id,
+    email: user.email,
+    role: user.role
+  });
+
+  let userProfile = null;
+  switch (user.role) {
+    case "Student":
+      userProfile = await Student.findOne({ userId: user._id });
+      break;
+    case "CompSupervisor":
+      userProfile = await CompSupervisor.findOne({ userId: user._id });
+      break;
+    case "UniSupervisor":
+      userProfile = await UniSupervisor.findOne({ userId: user._id });
+      break;
+  }
+
+  return {
+    success: true,
+    message: "Login successful",
+    data: {
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        phoneNumber: user.phoneNumber,
+        role: user.role,
+        isVerified: user.isVerified,
+        profile: userProfile
+      },
+      accessToken,
+      refreshToken
+    }
+  };
+};
+
+export const resendVerificationEmail = async (email) => {
+  const user = await User.findOne({ email });
+  
+  if (!user) {
+    const error = new Error("User not found with this email");
+    error.status = 404;
+    throw error;
+  }
+
+  if (user.isVerified) {
+    const error = new Error("Email is already verified");
+    error.status = 400;
+    throw error;
+  }
+
+  // Generate new verification token if not exists
+  if (!user.verificationToken) {
+    user.verificationToken = generateVerificationToken();
+    await user.save();
+  }
+
+  // Send verification email
+  try {
+    await sendVerificationEmail({
+      to: user.email,
+      userName: user.fullName,
+      verificationToken: user.verificationToken
+    });
+    
+    console.log(`✅ Verification email resent to ${user.email}`);
+    
+    return {
+      success: true,
+      message: "Verification email sent successfully. Please check your inbox."
+    };
+  } catch (emailError) {
+    console.error(`❌ Failed to resend verification email to ${user.email}:`, emailError.message);
+    const error = new Error("Failed to send verification email. Please try again later.");
+    error.status = 500;
+    throw error;
+  }
+};
+
+export const logout = async (userId) => {
+  // In a production environment, you would typically:
+  // 1. Add the token to a blacklist
+  // 2. Store blacklisted tokens in Redis
+  // 3. Check blacklist during token verification
+  
+  // For now, we'll just return success
+  // The client should remove tokens from storage
+
+  return {
+    success: true,
+    message: `${userId} Logged out successfully`
+  };
+};
+
+export const completeSignup = async (signupToken) => {
+  const payload = verifySignupToken(signupToken);
+  
+  const user = await User.findById(payload.userId);
+  
+  if (!user) {
+    const error = new Error("User not found");
+    error.status = 404;
+    throw error;
+  }
+
+  if (!user.isVerified) {
+    const error = new Error("Please verify your email first");
+    error.status = 400;
+    throw error;
+  }
+
+  return {
+    success: true,
+    message: "Signup completed successfully",
+    data: {
+      userId: user._id,
+      email: user.email,
+      role: user.role
+    }
+  };
+};
+
+export const refreshAccessToken = async (refreshToken) => {
+  try {
+    // Import jwt here to avoid circular dependency
+    const jwt = await import("jsonwebtoken");
+    const { JWT_SECRET } = await import("../../../shared/config/index.js");
+    
+    // Verify refresh token
+    const payload = jwt.verify(refreshToken, JWT_SECRET);
+    
+    const user = await User.findById(payload.userId);
+    
+    if (!user || !user.isActive) {
+      const error = new Error("User not found or inactive");
+      error.status = 401;
+      throw error;
+    }
+
+    // Generate new access token
+    const newAccessToken = signAccessToken({
+      userId: user._id,
+      email: user.email,
+      role: user.role
+    });
+
+    return {
+      success: true,
+      message: "Token refreshed successfully",
+      data: {
+        accessToken: newAccessToken
+      }
+    };
+  } catch {
+    const err = new Error("Invalid refresh token");
+    err.status = 401;
+    throw err;
+  }
+};
+
+export const requestPasswordReset = async (email) => {
+  // Always respond with a generic message to avoid email enumeration
+  const genericResponse = {
+    success: true,
+    message: "If the email exists, a password reset link has been sent"
+  };
+
+  const user = await User.findOne({ email, isActive: true });
+
+  if (!user) {
+    // Don't reveal if email exists or not for security
+    return genericResponse;
+  }
+  
+  // Generate password reset token
+  const resetToken = generateVerificationToken();
+  
+  // Store reset token and expiration (30 minutes)
+  user.passwordResetToken = resetToken;
+  user.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000);
+  await user.save();
+
+  // Send password reset email (non-blocking for user experience)
+  try {
+    await sendPasswordResetEmail({
+      to: user.email,
+      userName: user.fullName,
+      resetToken: resetToken
+    });
+
+    console.log(`✅ Password reset email sent to ${user.email}`);
+    
+  } catch (emailError) {
+    // Do not reveal email send failures to avoid user enumeration or leakage
+    console.error(`⚠️ Failed to send password reset email to ${user.email}:`, emailError.message);
+  }
+
+  // In development, optionally include token in response for local testing
+  return process.env.NODE_ENV === 'development'
+    ? { ...genericResponse, resetToken: resetToken }
+    : genericResponse;
+};
+
+export const resetPassword = async (resetToken, newPassword) => {
+  const user = await User.findOne({
+    passwordResetToken: resetToken,
+    passwordResetExpires: { $gt: new Date() },
+    isActive: true
+  }).select('+password');
+
+  if (!user) {
+    const error = new Error("Invalid or expired password reset token");
+    error.status = 400;
+    throw error;
+  }
+
+  // Hash the new password
+  const hashedPassword = await hashPassword(newPassword);
+
+  // Update user password and clear reset token (single-use)
+  user.password = hashedPassword;
+  user.passwordResetToken = null;
+  user.passwordResetExpires = null;
+  await user.save();
+
+  return {
+    success: true,
+    message: "Password reset successfully"
+  };
+};
