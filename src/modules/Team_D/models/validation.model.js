@@ -3,31 +3,31 @@ import mongoose from 'mongoose';
 const { Schema, model } = mongoose;
 
 const ValidationSchema = new Schema({
-    task_id: { 
+    taskId: { 
         type: Schema.Types.ObjectId, 
         ref: 'Task', 
         required: true 
     },
 
-    status: { 
+    status: {
         type: String, 
         enum: ['valid', 'invalid'], 
         required: true 
     },
 
-    validator_id: { 
+    validatorId: { 
         type: Schema.Types.ObjectId, 
         ref: 'Student', 
         required: true 
     },
 
-    meeting_type: { 
+    meetingType: { 
         type: String, 
         enum: ['reunion', 'hors_reunion'], 
         required: true 
     },
 
-    meeting_reference: { 
+    meetingReference: { 
         type: Schema.Types.ObjectId, 
         ref: 'Meeting',
         default: null 
@@ -39,7 +39,7 @@ const ValidationSchema = new Schema({
 }, { timestamps: true });
 
 ValidationSchema.index(
-    { validator_id: 1, deletedAt: 1 },
+    { validatorId: 1, deletedAt: 1 },
     {
         partialFilterExpression: { deletedAt: { $eq: null } },
         background: true
