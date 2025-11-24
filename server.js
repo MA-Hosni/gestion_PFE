@@ -5,6 +5,7 @@ import errorMiddleware from './src/shared/middlewares/error.middleware.js';
 import { PORT } from './src/shared/config/index.js';
 import { connectDB } from './src/shared/db/db_config.js';
 import authRouter from './src/modules/Authentication/index.js';
+import teamARouter from './src/modules/Team_A/index.js';
 // import teamARouter from './src/modules/Team_A/index.js';
 // import teamBRouter from './src/modules/Team_B/index.js';
 // import teamCRouter from './src/modules/Team_C/index.js';
