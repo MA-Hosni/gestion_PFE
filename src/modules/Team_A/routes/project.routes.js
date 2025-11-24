@@ -9,9 +9,9 @@ const router = express.Router();
 
 router.post("/", authenticateToken, authorizeStudent, validate(ProjectSchema), projectController.createProject);
 router.get("/", authenticateToken, authorizeStudent, projectController.getProject);
-router.get("/projects", authenticateToken, authorizeSupervisor, projectController.getProjects);
+// router.get("/projects", authenticateToken, authorizeSupervisor, projectController.getProjects);
 // router.put("/", authenticateToken, authorizeStudent, validate(ProjectSchema), projectController.updateProject);
-router.put("/delete-project", authenticateToken, authorizeStudent, projectController.deleteProject);
+// router.put("/delete-project", authenticateToken, authorizeStudent, projectController.deleteProject);
 
 router.get("/students/without-project", authenticateToken, authorizeStudent, projectController.getStudentsWithoutProject);
 router.put("/students/add-contributors", authenticateToken, authorizeStudent, projectController.addContributors);
