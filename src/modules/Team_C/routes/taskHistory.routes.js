@@ -1,10 +1,11 @@
 const express = require("express")
 const router = express.Router()
-const { authMiddleware, roleMiddleware } = require("../../Authentication/middlewares/auth")
+import { authenticateToken } from "../../Authentication/middlewares/auth.middleware.js"
+import{authorizeStudent , authorizeSupervisor} from "../../Team_A/middlewares/auth.middleware.js"
 const taskHistoryController = require("../controllers/taskHistory.controller")
 
-router.post("/", authMiddleware, roleMiddleware(["Student"]), taskHistoryController.createHistory)
-router.get("/:task_id", authMiddleware, roleMiddleware(["Student", "Enc_University", "Enc_Pro"]), taskHistoryController.getHistoryByTask)
-router.delete("/:id", authMiddleware, roleMiddleware(["Enc_University", "Enc_Pro"]), taskHistoryController.deleteHistory)
+router.post("/", authenticateToken, authorizeStudent, taskHistoryController.createHistory)
+router.get("/:task_id", authenticateToken, authorizeStudent , authorizeSupervisor, taskHistoryController.getHistoryByTask)
+router.delete("/:id", authenticateToken, authorizeSupervisor, taskHistoryController.deleteHistory)
 
 module.exports = router
