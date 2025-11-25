@@ -4,7 +4,7 @@ import sprintRoutes from "./routes/sprint.routes.js";
 
 const router = express.Router();
 
-router.use("/projects", projectRoutes);
-router.use("/sprints", sprintRoutes);
+router.use("/project", projectRoutes);
+router.use("/project/sprints", sprintRoutes);
 
 export default router;

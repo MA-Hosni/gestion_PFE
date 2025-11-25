@@ -241,6 +241,81 @@ export const getProject = async (projectId) => {
   };
 };
 
+export const updateProject = async (projectId, updateData) => {
+  const { title, description, startDate, endDate } = updateData;
+  
+  const project = await Project.findOne({ _id: projectId, deletedAt: null });
+  if (!project) {
+    const error = new Error("Project not found");
+    error.status = 404;
+    throw error;
+  }
+
+  // Date validation logic
+  const newStart = startDate ? new Date(startDate) : project.startDate;
+  const newEnd = endDate ? new Date(endDate) : project.endDate;
+
+  if (newEnd <= newStart) {
+    const error = new Error("End date must be after start date");
+    error.status = 400;
+    throw error;
+  }
+
+  if (title) project.title = title;
+  if (description !== undefined) project.description = description;
+  if (startDate) project.startDate = startDate;
+  if (endDate) project.endDate = endDate;
+
+  await project.save();
+
+  return {
+    success: true,
+    message: "Project updated successfully",
+    data: project
+  };
+};
+
+export const deleteProject = async (projectId) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const project = await Project.findOne({ _id: projectId, deletedAt: null }).session(session);
+    
+    if (!project) {
+      const error = new Error("Project not found");
+      error.status = 404;
+      throw error;
+    }
+
+    // Soft delete project
+    project.deletedAt = new Date();
+    await project.save({ session });
+
+    // Remove project reference from all contributors
+    // We map over contributors and remove the project ID from each student
+    // But we keep the contributors list in the project intact
+    if (project.contributors && project.contributors.length > 0) {
+      await Student.updateMany(
+        { _id: { $in: project.contributors } },
+        { $unset: { project: 1 } }
+      ).session(session);
+    }
+
+    await session.commitTransaction();
+    
+    return {
+      success: true,
+      message: "Project deleted successfully"
+    };
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
+
 export const getStudentsWithoutProject = async () => {
   try {
     // Get all student IDs that are assigned to projects (in one optimized query)
