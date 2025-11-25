@@ -15,13 +15,37 @@ router.post("/",authenticateToken,authorizeStudent,validate(createUserStorySchem
  * Get all User Stories for student's project
  * GET /
  */
+router.get("/",authenticateToken,authorizeStudent,userStoryController.getUserStories);
+
+/**
+ * Get all User Stories for student's project
+ * GET /
+ */
+router.get("/",authenticateToken,authorizeStudent,userStoryController.getUserStories);
+
+
+
+
+/**
+ * Get all User Stories for of sprint 
+ * GET /
+ */
 // router.get("/",authenticateToken,authorizeStudent,userStoryController.getUserStories);
+
+/**
+ * Get all User Stori by id 
+ * GET /
+ */
+// router.get("/",authenticateToken,authorizeStudent,userStoryController.getUserStories);
+
+
 
 // /**
 //  * Update User Story
 //  * PUT /:id
 //  */
 // router.put("/:id",authenticateToken,authorizeStudent,validate(UserStorySchema),userStoryController.updateUserStory);
+
 
 // /**
 //  * Delete User Story

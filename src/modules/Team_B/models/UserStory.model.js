@@ -41,7 +41,4 @@ UserStorySchema.index(
     }
 );
 
-
-const UserStory = mongoose.models.UserStory || mongoose.model('UserStory', UserStorySchema);
-
-export default UserStory;
+export default model('UserStory', UserStorySchema);

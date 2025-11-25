@@ -1,6 +1,8 @@
 import mongoose from "mongoose";
 import UserStory from "../models/UserStory.model.js";
-import Sprint from "../../Team_A/models/Sprint.model.js";
+import Sprint from "../../Team_A/models/sprint.model.js";
+import Project from "../../Team_A/models/project.model.js";
+
 import Student from "../../Authentication/models/student.model.js";
 
 // 📌 CREATE USER STORY
@@ -99,6 +101,8 @@ import Student from "../../Authentication/models/student.model.js";
 //   }
 // };
 
+
+// 
 export const createUserStory = async (data , studentId) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -204,30 +208,91 @@ export const createUserStory = async (data , studentId) => {
     session.endSession();
   }
 };
+// Create User Story Correcte : 
 
 
+// // 📌 GET USER STORY (with Sprint + Tasks populated)
+// export const getUserStory = async (projectId) => {
+//   const userStory = await UserStory.findOne({
+//     _id: userStoryId,
+//     deletedAt: null
+//   })
+//     .populate("sprintId", "title startDate endDate")
+//     .populate("tasks", "title status assignedTo");
 
-// 📌 GET USER STORY (with Sprint + Tasks populated)
-export const getUserStory = async (userStoryId) => {
-  const userStory = await UserStory.findOne({
-    _id: userStoryId,
-    deletedAt: null
-  })
-    .populate("sprintId", "title startDate endDate")
-    .populate("tasks", "title status assignedTo");
+//   if (!userStory) {
+//     const error = new Error("User story not found");
+//     error.status = 404;
+//     throw error;
+//   }
 
-  if (!userStory) {
-    const error = new Error("User story not found");
-    error.status = 404;
-    throw error;
+//   return {
+//     success: true,
+//     data: userStory
+//   };
+// };
+
+
+export const getUserStories = async (projectId) => {
+  try {
+
+    if (!projectId) {
+          return res.status(StatusCodes.NOT_FOUND).json({
+            success: false,
+            message: "No project assigned to your account"
+          });
+        }
+        
+    // 1️⃣ Vérifier que le projet existe
+    const project = await Project.findOne({ _id: projectId, deletedAt: null }).populate({
+      path: 'sprints',
+      match: { deletedAt: null }, // ignorer les sprints supprimés
+      select: '_id title orderIndex'
+    });
+
+    if (!project) {
+      return {
+        success: false,
+        message: "Project not found",
+        data: []
+      };
+    }
+
+    // 2️⃣ Récupérer tous les sprints du projet
+    const sprintIds = project.sprints.map(s => s._id);
+
+    if (sprintIds.length === 0) {
+      return {
+        success: true,
+        message: "No sprints found for this project",
+        data: []
+      };
+    }
+
+    // 3️⃣ Récupérer toutes les UserStories liées à ces sprints
+    const userStories = await UserStory.find({
+      sprintId: { $in: sprintIds },
+      deletedAt: null
+    })
+    .populate({
+      path: 'sprintId',
+      select: 'title'
+    })
+    .sort({ startDate: 1 }); // optionnel : trier par date de début
+
+    return {
+      success: true,
+      message: "User stories retrieved successfully",
+      data: userStories
+    };
+  } catch (error) {
+    return {
+      success: false,
+      message: error.message,
+      data: []
+    };
   }
-
-  return {
-    success: true,
-    data: userStory
-  };
 };
-
 
 
 // 📌 UPDATE USER STORY

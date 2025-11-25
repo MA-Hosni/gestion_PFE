@@ -20,17 +20,11 @@ export const createUserStory = async (req, res, next) => {
   }
 };
 
+
 // Get all User Stories for the student's project
 export const getUserStories = async (req, res, next) => {
   try {
     const projectId = req.student.project;
-
-    if (!projectId) {
-      return res.status(StatusCodes.NOT_FOUND).json({
-        success: false,
-        message: "No project assigned to your account"
-      });
-    }
 
     const result = await userStoryService.getUserStories(projectId);
 
