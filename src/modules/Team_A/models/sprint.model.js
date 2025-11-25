@@ -22,4 +22,5 @@ SprintSchema.index({
     background: true
   });
 
-export default model('Sprint', SprintSchema);
+const Sprint = mongoose.models.Sprint || mongoose.model('Sprint', SprintSchema);
+export default Sprint;
