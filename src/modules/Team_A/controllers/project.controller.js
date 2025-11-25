@@ -41,6 +41,45 @@ export const getProject = async (req, res, next) => {
   }
 };
 
+export const updateProject = async (req, res, next) => {
+  try {
+    const projectId = req.student.project;
+    const updateData = req.validatedBody;
+    
+    if (!projectId) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "No project assigned to your account"
+      });
+    }
+
+    const result = await projectService.updateProject(projectId, updateData);
+    
+    res.status(StatusCodes.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteProject = async (req, res, next) => {
+  try {
+    const projectId = req.student.project;
+    
+    if (!projectId) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "No project assigned to your account"
+      });
+    }
+
+    const result = await projectService.deleteProject(projectId);
+    
+    res.status(StatusCodes.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 export const getStudentsWithoutProject = async (req, res, next) => {
   try {
     const result = await projectService.getStudentsWithoutProject();
