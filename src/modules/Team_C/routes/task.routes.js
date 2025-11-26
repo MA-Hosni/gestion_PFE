@@ -1,14 +1,17 @@
-import express from "express"
-import { authenticateToken } from "../../Authentication/middlewares/auth.middleware.js"
-import{authorizeStudent , authorizeSupervisor} from "../../Team_A/middlewares/auth.middleware.js"
-import * as taskController from "../controllers/task.controller.js"
+import express from "express";
+import { authenticateToken } from "../../Authentication/middlewares/auth.middleware.js";
+import { authorizeStudent, authorizeSupervisor } from "../middlewares/auth.middleware.js";
+import * as taskController from "../controllers/task.controller.js";
 
-const router = express.Router()
-
-router.post("/", authenticateToken, authorizeStudent, taskController.createTask)
-router.get("/", authenticateToken, authorizeStudent , authorizeSupervisor, taskController.getAllTasks)
-router.get("/:id", authenticateToken, authorizeStudent , authorizeSupervisor, taskController.getTaskById)
-router.patch("/:id", authenticateToken,authorizeStudent , taskController.updateTask)
-router.delete("/:id", authenticateToken, authorizeStudent, taskController.deleteTask)
-
-export default router
+const router = express.Router();
+// Create a new task
+router.post("/",authenticateToken,authorizeStudent,taskController.createTask);
+// Get all tasks
+router.get("/",authenticateToken,authorizeStudent,authorizeSupervisor,taskController.getAllTasks);
+// Get a task by ID
+router.get("/:id",authenticateToken,authorizeStudent,authorizeSupervisor,taskController.getTaskById);
+// Update a task by ID
+router.patch("/:id",authenticateToken,authorizeStudent,taskController.updateTask);
+// Delete a task by ID
+router.delete("/:id",authenticateToken,authorizeStudent,taskController.deleteTask);
+export default router;
