@@ -3,60 +3,26 @@ import { authenticateToken } from "../../Authentication/middlewares/auth.middlew
 import { authorizeStudent, authorizeSupervisor } from "../../Team_A/middlewares/auth.middleware.js";
 
 import { validate } from "../../../shared/middlewares/validate.js";
-import { createUserStorySchema } from "../validators/UserStory.validator.js";
+import { createUserStorySchema , updateUserStorySchema } from "../validators/UserStory.validator.js";
 
 import * as userStoryController from "../controllers/UserStory.controller.js";
 
 const router = express.Router();
 
+
+// create User Storie 
 router.post("/",authenticateToken,authorizeStudent,validate(createUserStorySchema),userStoryController.createUserStory);
 
-/**
- * Get all User Stories for student's project
- * GET /
- */
+// Get all User Stories of student's project
 router.get("/",authenticateToken,authorizeStudent,userStoryController.getUserStories);
 
-/**
- * Get all User Stories for student's project
- * GET /
- */
-router.get("/",authenticateToken,authorizeStudent,userStoryController.getUserStories);
+//Get all User Stories related to sprint
+router.get("/sprint/:sprintId",authenticateToken,authorizeStudent,userStoryController.getUserStoriesRelatedToSprint);
 
+// get user storie by id 
+router.get("/:usId",authenticateToken,authorizeStudent,userStoryController.getUserStoryById);
 
+router.put("/", authenticateToken, authorizeStudent, validate(updateUserStorySchema), userStoryController.updateUserStory);
 
-
-/**
- * Get all User Stories for of sprint 
- * GET /
- */
-// router.get("/",authenticateToken,authorizeStudent,userStoryController.getUserStories);
-
-/**
- * Get all User Stori by id 
- * GET /
- */
-// router.get("/",authenticateToken,authorizeStudent,userStoryController.getUserStories);
-
-
-
-// /**
-//  * Update User Story
-//  * PUT /:id
-//  */
-// router.put("/:id",authenticateToken,authorizeStudent,validate(UserStorySchema),userStoryController.updateUserStory);
-
-
-// /**
-//  * Delete User Story
-//  * DELETE /:id
-//  */
-// router.delete("/:id",authenticateToken,authorizeStudent,userStoryController.deleteUserStory);
-
-// /**
-//  * Assign sprint to User Story
-//  * PUT /assign-sprint
-//  */
-// router.put("/assign-sprint",authenticateToken,authorizeStudent,userStoryController.assignSprint);
 
 export default router;

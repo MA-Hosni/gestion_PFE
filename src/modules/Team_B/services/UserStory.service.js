@@ -6,103 +6,7 @@ import Project from "../../Team_A/models/project.model.js";
 import Student from "../../Authentication/models/student.model.js";
 
 // 📌 CREATE USER STORY
-// export const createUserStory = async (data) => {
-//   const session = await mongoose.startSession();
-//   session.startTransaction();
 
-//   try {
-//     const {
-//       storyName,
-//       description = "",
-//       priority,
-//       storyPointEstimate,
-//       startDate,
-//       dueDate,
-//       sprintId,
-//       tasks = []
-//     } = data;
-
-//     // Validate dates
-//     const start = new Date(startDate);
-//     const due = new Date(dueDate);
-
-//     if (due <= start) {
-//       const error = new Error("Due date must be after start date");
-//       error.status = 400;
-//       throw error;
-//     }
-
-//     // Validate Sprint exists
-//     const sprint = await Sprint.findById(sprintId).session(session);
-
-//     if (!sprint || sprint.deletedAt) {
-//       const error = new Error("Sprint not found or deleted");
-//       error.status = 404;
-//       throw error;
-//     }
-
-//     // Validate tasks if provided
-//     if (tasks.length > 0) {
-//       const taskDocs = await Task.find({ _id: { $in: tasks } }).session(session);
-
-//       if (taskDocs.length !== tasks.length) {
-//         const error = new Error("One or more tasks not found");
-//         error.status = 404;
-//         throw error;
-//       }
-//     }
-
-//     // Create UserStory
-//     const newUserStory = new UserStory({
-//       storyName,
-//       description,
-//       priority,
-//       storyPointEstimate,
-//       startDate: start,
-//       dueDate: due,
-//       sprintId,
-//       tasks
-//     });
-
-//     const savedStory = await newUserStory.save({ session });
-
-//     // Add UserStory to Sprint
-//     await Sprint.findByIdAndUpdate(
-//       sprintId,
-//       { $push: { userStories: savedStory._id } },
-//       { session }
-//     );
-
-//     // Commit transaction
-//     await session.commitTransaction();
-
-//     return {
-//       success: true,
-//       message: "User story created successfully",
-//       data: {
-//         userStoryId: savedStory._id,
-//         storyName: savedStory.storyName,
-//         description: savedStory.description,
-//         priority: savedStory.priority,
-//         storyPointEstimate: savedStory.storyPointEstimate,
-//         startDate: savedStory.startDate,
-//         dueDate: savedStory.dueDate,
-//         sprintId: savedStory.sprintId,
-//         tasks: savedStory.tasks,
-//         createdAt: savedStory.createdAt
-//       }
-//     };
-
-//   } catch (error) {
-//     await session.abortTransaction();
-//     throw error;
-//   } finally {
-//     session.endSession();
-//   }
-// };
-
-
-// 
 export const createUserStory = async (data , studentId) => {
   const session = await mongoose.startSession();
   session.startTransaction();
@@ -208,31 +112,8 @@ export const createUserStory = async (data , studentId) => {
     session.endSession();
   }
 };
-// Create User Story Correcte : 
 
-
-// // 📌 GET USER STORY (with Sprint + Tasks populated)
-// export const getUserStory = async (projectId) => {
-//   const userStory = await UserStory.findOne({
-//     _id: userStoryId,
-//     deletedAt: null
-//   })
-//     .populate("sprintId", "title startDate endDate")
-//     .populate("tasks", "title status assignedTo");
-
-//   if (!userStory) {
-//     const error = new Error("User story not found");
-//     error.status = 404;
-//     throw error;
-//   }
-
-//   return {
-//     success: true,
-//     data: userStory
-//   };
-// };
-
-
+// get User Stories for student's project
 export const getUserStories = async (projectId) => {
   try {
 
@@ -294,104 +175,122 @@ export const getUserStories = async (projectId) => {
   }
 };
 
+// get User Stories related to sprint
+export const getUserStoriesRelatedToSprint = async (projectId, sprintId) => {
+  try {
 
-// 📌 UPDATE USER STORY
-// export const updateUserStory = async (userStoryId, updates) => {
-//   const session = await mongoose.startSession();
-//   session.startTransaction();
+    /** 1️⃣ Vérifier que l'étudiant a un projet */
+    if (!projectId) {
+      const error = new Error("No project assigned to your account");
+      error.status = 404;
+      throw error;
+    }
 
-//   try {
-//     const userStory = await UserStory.findById(userStoryId).session(session);
+    /** 2️⃣ Vérifier que le sprint existe */
+    const sprint = await Sprint.findById(sprintId);
 
-//     if (!userStory || userStory.deletedAt) {
-//       const error = new Error("User story not found");
-//       error.status = 404;
-//       throw error;
-//     }
+    if (!sprint || sprint.deletedAt) {
+      const error = new Error("Sprint not found or deleted");
+      error.status = 404;
+      throw error;
+    }
 
-//     // Handle sprint change
-//     if (updates.sprintId && updates.sprintId !== userStory.sprintId.toString()) {
-//       const newSprint = await Sprint.findById(updates.sprintId).session(session);
+    /** 3️⃣ Vérifier que le sprint appartient bien au projet */
+    if (String(sprint.projectId) !== String(projectId)) {
+      const error = new Error("Sprint does not belong to your project");
+      error.status = 403;
+      throw error;
+    }
 
-//       if (!newSprint || newSprint.deletedAt) {
-//         const error = new Error("New sprint not found or deleted");
-//         error.status = 404;
-//         throw error;
-//       }
+    /** 4️⃣ Récupérer user stories avec deletedAt = null */
+    const userStories = await UserStory.find({
+      sprintId: sprintId,
+      deletedAt: null
+    })
+      .select([
+        "storyName",
+        "description",
+        "priority",
+        "storyPointEstimate",
+        "startDate",
+        "dueDate",
+        "tasks"
+      ])
+      .sort({ createdAt: 1 })
+      .lean();
 
-//       // Remove from previous sprint
-//       await Sprint.findByIdAndUpdate(
-//         userStory.sprintId,
-//         { $pull: { userStories: userStoryId } },
-//         { session }
-//       );
+    return {
+      success: true,
+      message: "User stories retrieved successfully", 
+      data: {
+        sprint: {
+          _id: sprintId,
+          title: sprint.title,
+          goal: sprint.goal,
+          startDate: sprint.startDate,
+          endDate: sprint.endDate
+        },
+        userStories
+      }
+    };
 
-//       // Add to new sprint
-//       await Sprint.findByIdAndUpdate(
-//         newSprint._id,
-//         { $push: { userStories: userStoryId } },
-//         { session }
-//       );
-//     }
+  } catch (error) {
+    throw error;
+  }
+};
 
-//     // Apply updates
-//     Object.assign(userStory, updates);
-//     await userStory.save({ session });
+// get US by ID
+export const getUserStoryByID = async (projectId, userStoryId) => {
+  try {
+    /** 1️⃣ Vérifier que l'étudiant a un projet */
+    if (!projectId) {
+      const error = new Error("1️⃣ No project assigned to your account");
+      error.status = 404;
+      throw error;
+    }
 
-//     await session.commitTransaction();
+    /** 2️⃣ Vérifier que la user story existe */
+    const userStory = await UserStory.findById(userStoryId).lean();
+    if (!userStory || userStory.deletedAt) {
+      const error = new Error(" 2️⃣  User Story not found or deleted");
+      error.status = 404;
+      throw error;
+    }
 
-//     return {
-//       success: true,
-//       message: "User story updated successfully",
-//       data: userStory
-//     };
+    /** 3️⃣ Vérifier que le sprint auquel elle appartient existe */
+    const sprint = await Sprint.findById(userStory.sprintId ).lean();
+    if (!sprint || sprint.deletedAt) {
+      const error = new Error("3️⃣ Sprint not found or deleted");
+      error.status = 404;
+      throw error;
+    }
 
-//   } catch (error) {
-//     await session.abortTransaction();
-//     throw error;
-//   } finally {
-//     session.endSession();
-//   }
-// };
+    /** 4️⃣ Vérifier que le sprint appartient bien au projet de l'étudiant */
+    if (String(sprint.projectId) !== String(projectId)) {
+      const error = new Error(" 4️⃣ Sprint does not belong to your project");
+      error.status = 403;
+      throw error;
+    }
+
+    /** 5️⃣ Tout est ok, retourner la user story avec les infos du sprint */
+    return {
+      success: true,
+      message: "User Story retrieved successfully",
+      data: userStory
+    };
+
+  } catch (error) {
+    throw error; // Le controller gérera l'erreur
+  }
+};
+
+// 🚀 UPDATE USER STORY 
 
 
+export const updateUserStory = async (userStoryId , updateData , projectId) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  // al yardemek : update sprint 
+  
+};
 
-// 📌 SOFT DELETE USER STORY
-// export const deleteUserStory = async (userStoryId) => {
-//   const session = await mongoose.startSession();
-//   session.startTransaction();
-
-//   try {
-//     const userStory = await UserStory.findById(userStoryId).session(session);
-
-//     if (!userStory || userStory.deletedAt) {
-//       const error = new Error("User story not found");
-//       error.status = 404;
-//       throw error;
-//     }
-
-//     // Soft delete
-//     userStory.deletedAt = new Date();
-//     await userStory.save({ session });
-
-//     // Remove from Sprint
-//     await Sprint.findByIdAndUpdate(
-//       userStory.sprintId,
-//       { $pull: { userStories: userStoryId } },
-//       { session }
-//     );
-
-//     await session.commitTransaction();
-
-//     return {
-//       success: true,
-//       message: "User story deleted successfully"
-//     };
-
-//   } catch (error) {
-//     await session.abortTransaction();
-//     throw error;
-//   } finally {
-//     session.endSession();
-//   }
-// };

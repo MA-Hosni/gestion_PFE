@@ -82,12 +82,6 @@ export const updateUserStorySchema = Joi.object({
     'date.format': 'Due date must be a valid ISO date'
   }),
 
-  tasks: Joi.array().items(
-    Joi.string().pattern(objectIdPattern).messages({
-      'string.pattern.base': 'Invalid task ID format'
-    })
-  ),
-
   sprintId: Joi.string().pattern(objectIdPattern).messages({
     'string.pattern.base': 'Invalid sprint ID format'})})
   .min(1)

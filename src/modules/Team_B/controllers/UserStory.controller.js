@@ -20,12 +20,10 @@ export const createUserStory = async (req, res, next) => {
   }
 };
 
-
-// Get all User Stories for the student's project
+// Get all User Stories of the student's project
 export const getUserStories = async (req, res, next) => {
   try {
     const projectId = req.student.project;
-
     const result = await userStoryService.getUserStories(projectId);
 
     res.status(StatusCodes.OK).json({
@@ -38,21 +36,54 @@ export const getUserStories = async (req, res, next) => {
   }
 };
 
-// Update a User Story
+// Get all User Stories related to a specific sprint
+export const getUserStoriesRelatedToSprint = async (req, res, next) => {
+  try {
+
+    const { sprintId } = req.params;
+    const projectId = req.student.project;
+
+    const result = await userStoryService.getUserStoriesRelatedToSprint(projectId , sprintId);
+
+    res.status(StatusCodes.OK).json({
+      success: result.success,
+      message: result.message,
+      data: result.data
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// get US By ID 
+export const getUserStoryById = async (req, res, next) => {
+  try {
+
+    const { usId } = req.params;
+    const projectId = req.student.project;
+
+    const result = await userStoryService.getUserStoryByID(projectId , usId);
+
+    res.status(StatusCodes.OK).json({
+      success: result.success,
+      message: result.message,
+      data: result.data
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+
+// Update User Story 
 export const updateUserStory = async (req, res, next) => {
   try {
-    const storyId = req.params.id;
-    const updates = req.validatedBody;
-    const studentId = req.student.id;
 
-    if (!mongoose.Types.ObjectId.isValid(storyId)) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: "Invalid User Story ID"
-      });
-    }
+    const { userStoryId } = req.params;
+    const updateData = req.validatedBody;
+    const projectId = req.student.project;
 
-    const result = await userStoryService.updateUserStory(storyId, updates, studentId);
+    const result = await userStoryService.updateUserStory(userStoryId , updateData , projectId );
 
     res.status(StatusCodes.OK).json({
       success: result.success,
@@ -62,60 +93,5 @@ export const updateUserStory = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-};
+}
 
-// Delete User Story
-export const deleteUserStory = async (req, res, next) => {
-  try {
-    const storyId = req.params.id;
-    const studentId = req.student.id;
-
-    if (!mongoose.Types.ObjectId.isValid(storyId)) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: "Invalid User Story ID"
-      });
-    }
-
-    const result = await userStoryService.deleteUserStory(storyId, studentId);
-
-    res.status(StatusCodes.OK).json({
-      success: result.success,
-      message: result.message
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-// Assign Sprint to User Story
-export const assignSprint = async (req, res, next) => {
-  try {
-    const { storyId, sprintId } = req.body;
-    const studentId = req.student.id;
-
-    if (!mongoose.Types.ObjectId.isValid(storyId)) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: "Invalid User Story ID"
-      });
-    }
-
-    if (!mongoose.Types.ObjectId.isValid(sprintId)) {
-      return res.status(StatusCodes.BAD_REQUEST).json({
-        success: false,
-        message: "Invalid Sprint ID"
-      });
-    }
-
-    const result = await userStoryService.assignSprint({ storyId, sprintId, studentId });
-
-    res.status(StatusCodes.OK).json({
-      success: result.success,
-      message: result.message,
-      data: result.data
-    });
-  } catch (error) {
-    next(error);
-  }
-};
