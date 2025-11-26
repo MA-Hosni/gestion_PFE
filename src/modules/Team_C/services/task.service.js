@@ -1,60 +1,74 @@
 import Task from "../models/task.model.js"
+import UserStory from "../../Team_B/models/UserStory.model.js"
 
 async function verifyUserStoryExists(userStoryId) {
-  console.log("⚠️ Placeholder: User story existence check not yet implemented.")
-  return true
+  const userStory = await UserStory.findById(userStoryId);
+  if (!userStory) {
+    const error = new Error("User story not found.");
+    error.status = 404;
+    throw error;
+  }
+  return true;
 }
 
 export const createTask = async (data) => {
-  const { title, user_story_id } = data
+  const { title, user_story_id } = data;
 
-  await verifyUserStoryExists(user_story_id)
+  if (!title || !user_story_id) {
+    const error = new Error("Title and user_story_id are required.");
+    error.status = 400;
+    throw error;
+  }
 
-  const existing = await Task.findOne({ title, user_story_id})
+  await verifyUserStoryExists(user_story_id);
+
+  const existing = await Task.findOne({ title, user_story_id });
   if (existing) {
-    const error = new Error("Task with this title already exists for this user story.")
-    error.status = 409
-    throw error
+    const error = new Error("Task with this title already exists for this user story.");
+    error.status = 409;
+    throw error;
   }
-  const newTask = await Task.create(data)
-  return newTask
-}
+
+  const newTask = await Task.create(data);
+  return { message: "Task created successfully", task: newTask };
+};
+
 export const getAllTasks = async () => {
-  const tasks = await Task.find()
+  const tasks = await Task.find();
   if (!tasks.length) {
-    const error = new Error("No tasks found")
-    error.status = 404
-    throw error
+    const error = new Error("No tasks found.");
+    error.status = 404;
+    throw error;
   }
-  return tasks
-}
+  return { message: "Tasks retrieved successfully", tasks };
+};
 
 export const getTaskById = async (id) => {
-  const task = await Task.findById(id)
+  const task = await Task.findById(id);
   if (!task) {
-    const error = new Error("Task not found")
-    error.status = 404
-    throw error
+    const error = new Error("Task not found.");
+    error.status = 404;
+    throw error;
   }
-  return task
-}
+  return { message: "Task retrieved successfully", task };
+};
 
 export const updateTask = async (id, data) => {
-  const task = await Task.findByIdAndUpdate(id, data, { new: true })
+  const task = await Task.findByIdAndUpdate(id, data, { new: true });
   if (!task) {
-    const error = new Error("Task not found")
-    error.status = 404
-    throw error
+    const error = new Error("Task not found.");
+    error.status = 404;
+    throw error;
   }
-  return task
-}
+  return { message: "Task updated successfully", task };
+};
 
 export const deleteTask = async (id) => {
-  const task = await Task.findByIdAndDelete(id)
+  const task = await Task.findByIdAndDelete(id);
   if (!task) {
-    const error = new Error("Task not found")
-    error.status = 404
-    throw error
+    const error = new Error("Task not found.");
+    error.status = 404;
+    throw error;
   }
-  return { message: "Task deleted successfully" }
-}
+  return { message: "Task deleted successfully", task };
+};
