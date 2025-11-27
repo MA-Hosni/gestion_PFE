@@ -1,6 +1,5 @@
 import express from "express";
-import { authenticateToken } from "../../Authentication/middlewares/auth.middleware.js";
-import { authorizeStudent } from "../middlewares/auth.middleware.js";
+import { authenticateToken, authorizeStudent } from "../../../shared/middlewares/auth.middleware.js";
 import { validate } from "../../../shared/middlewares/validate.js";
 import {
   SprintSchema,

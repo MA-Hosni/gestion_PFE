@@ -98,7 +98,7 @@ export const addContributors = async (req, res, next) => {
     const { projectId, studentIds } = req.body;
     const requestingStudentId = req.student.id;
 
-    if (!projectId || !mongoose.Types.ObjectId.isValid(projectId)) {
+    if (!projectId) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
         message: "Valid project ID is required"
@@ -128,7 +128,7 @@ export const removeContributors = async (req, res, next) => {
     const { projectId, studentIds } = req.body;
     const requestingStudentId = req.student.id;
 
-    if (!projectId || !mongoose.Types.ObjectId.isValid(projectId)) {
+    if (!projectId) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
         message: "Valid project ID is required"

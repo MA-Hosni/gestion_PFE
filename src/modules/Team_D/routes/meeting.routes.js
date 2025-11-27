@@ -1,11 +1,8 @@
 // Team_D/routes/meeting.routes.js
 
 import express from "express";
-import { authenticateToken } from "../../Authentication/middlewares/auth.middleware.js";
-import {
-  authorizeStudent,
-  authorizeEncadrantUniversity
-} from "../middlewares/auth.middleware.js";
+import { authenticateToken, authorizeStudent } from "../../../shared/middlewares/auth.middleware.js";
+import { authorizeEncadrantUniversity } from "../middlewares/auth.middleware.js";
 
 import { validate } from "../../../shared/middlewares/validate.js";
 import {

@@ -1,6 +1,5 @@
 import express from "express";
-import { authenticateToken } from "../../Authentication/middlewares/auth.middleware.js";
-import { authorizeStudent, authorizeSupervisor } from "../middlewares/auth.middleware.js";
+import { authenticateToken, authorizeStudent, authorizeSupervisor } from "../../../shared/middlewares/auth.middleware.js";
 import * as taskController from "../controllers/task.controller.js";
 
 const router = express.Router();

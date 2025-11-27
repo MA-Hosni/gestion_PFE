@@ -1,7 +1,7 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
 import { validate } from "../../../shared/middlewares/validate.js";
-import { authenticateToken } from "../middlewares/auth.middleware.js";
+import { authenticateToken } from "../../../shared/middlewares/auth.middleware.js";
 import { 
   studentSignupSchema, 
   companySupervisorSignupSchema, 
