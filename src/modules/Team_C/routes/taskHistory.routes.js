@@ -1,4 +1,4 @@
-const express = require("express")
+import express from "express"
 const router = express.Router()
 import { authenticateToken } from "../../Authentication/middlewares/auth.middleware.js"
 import{authorizeStudent , authorizeSupervisor} from "../../Team_A/middlewares/auth.middleware.js"
