@@ -3,34 +3,36 @@ import mongoose from 'mongoose';
 const { Schema, model } = mongoose;
 
 const UserStorySchema = new Schema({
-    story_name: { type: String, required: true, trim: true },
+    storyName: { type: String, required: true, trim: true },
 
     description: { type: String, trim: true },
 
     priority: {
         type: String,
         required: true,
-        enum: ['highest', 'high', 'medium', 'low', 'lowest'], // enum
+        enum: ['highest', 'high', 'medium', 'low', 'lowest'],
         default: 'medium'
     },
 
-    story_point_estimate: {
+    storyPointEstimate: {
         type: Number,
         required: true,
         min: 0
     },
 
-    start_date: { type: Date, required: true },
+    startDate: { type: Date, required: true },
 
-    due_date: { type: Date, required: true },
+    dueDate: { type: Date, required: true },
 
     tasks: [{ type: Schema.Types.ObjectId, ref: 'Task' }],
+
+    sprintId: { type: Schema.Types.ObjectId, ref: 'Sprint', required: true },
 
     deletedAt: { type: Date, default: null, index: true }
 }, { timestamps: true });
 
 
-// Index pour améliorer les recherches par priorité et status (soft delete)
+// Index pour améliorer les recherches
 UserStorySchema.index(
     { priority: 1, deletedAt: 1 },
     {

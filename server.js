@@ -6,7 +6,7 @@ import { PORT } from './src/shared/config/index.js';
 import { connectDB } from './src/shared/db/db_config.js';
 import authRouter from './src/modules/Authentication/index.js';
 import teamARouter from './src/modules/Team_A/index.js';
-// import teamBRouter from './src/modules/Team_B/index.js';
+import teamBRouter from './src/modules/Team_B/index.js';
 import teamCRouter from './src/modules/Team_C/index.js';
 // import teamDRouter from './src/modules/Team_D/index.js';
 import swaggerUi from 'swagger-ui-express';
@@ -30,7 +30,7 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
 
 app.use('/api', authRouter);
 app.use('/api', teamARouter);
-// app.use('/api', teamBRouter);
+app.use('/api', teamBRouter);
 app.use('/api', teamCRouter);
 // app.use('/api', teamDRouter);
 

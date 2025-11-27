@@ -1,21 +1,97 @@
 import * as userStoryService from "../services/UserStory.service.js";
 import { StatusCodes } from "http-status-codes";
+import mongoose from "mongoose";
 
+// Create User Story
 export const createUserStory = async (req, res, next) => {
   try {
-    const userId = req.user.id;           // from authenticateToken
-    const sprintId = req.params.idSprint; // from route
-    const body = req.validatedBody;       // from Joi validator
+    const storyData = req.validatedBody;
+    const studentId = req.student.id;
 
-    const result = await userStoryService.creatUS(userId, sprintId, body);
+    const result = await userStoryService.createUserStory(storyData, studentId);
 
-    return res.status(result.status).json({
+    res.status(StatusCodes.CREATED).json({
       success: result.success,
       message: result.message,
-      data: result.data || undefined
+      data: result.data
     });
-
   } catch (error) {
     next(error);
   }
 };
+
+// Get all User Stories of the student's project
+export const getUserStories = async (req, res, next) => {
+  try {
+    const projectId = req.student.project;
+    const result = await userStoryService.getUserStories(projectId);
+
+    res.status(StatusCodes.OK).json({
+      success: result.success,
+      message: result.message,
+      data: result.data
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Get all User Stories related to a specific sprint
+export const getUserStoriesRelatedToSprint = async (req, res, next) => {
+  try {
+
+    const { sprintId } = req.params;
+    const projectId = req.student.project;
+
+    const result = await userStoryService.getUserStoriesRelatedToSprint(projectId , sprintId);
+
+    res.status(StatusCodes.OK).json({
+      success: result.success,
+      message: result.message,
+      data: result.data
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+// get US By ID 
+export const getUserStoryById = async (req, res, next) => {
+  try {
+
+    const { usId } = req.params;
+    const projectId = req.student.project;
+
+    const result = await userStoryService.getUserStoryByID(projectId , usId);
+
+    res.status(StatusCodes.OK).json({
+      success: result.success,
+      message: result.message,
+      data: result.data
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+
+// Update User Story 
+export const updateUserStory = async (req, res, next) => {
+  try {
+
+    const { userStoryId } = req.params;
+    const updateData = req.validatedBody;
+    const projectId = req.student.project;
+
+    const result = await userStoryService.updateUserStory(userStoryId , updateData , projectId );
+
+    res.status(StatusCodes.OK).json({
+      success: result.success,
+      message: result.message,
+      data: result.data
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+

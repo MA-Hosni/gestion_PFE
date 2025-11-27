@@ -1,15 +1,28 @@
 import express from "express";
-import userStoryController from "../UserStoryController.js";
-import { authorizeStudent } from "../middlewares/auth.middleware.js";
 import { authenticateToken } from "../../Authentication/middlewares/auth.middleware.js";
+import { authorizeStudent, authorizeSupervisor } from "../../Team_A/middlewares/auth.middleware.js";
 
 import { validate } from "../../../shared/middlewares/validate.js";
-import { UserStorySchema } from "../validators/UserStory.validator.js";
+import { createUserStorySchema , updateUserStorySchema } from "../validators/UserStory.validator.js";
+
+import * as userStoryController from "../controllers/UserStory.controller.js";
 
 const router = express.Router();
 
-// POST /:sprintId
-router.post("/:idSprint", authenticateToken, authorizeStudent, validate(UserStorySchema),  userStoryController.createUserStory);
+
+// create User Storie 
+router.post("/",authenticateToken,authorizeStudent,validate(createUserStorySchema),userStoryController.createUserStory);
+
+// Get all User Stories of student's project
+router.get("/",authenticateToken,authorizeStudent,userStoryController.getUserStories);
+
+//Get all User Stories related to sprint
+router.get("/sprint/:sprintId",authenticateToken,authorizeStudent,userStoryController.getUserStoriesRelatedToSprint);
+
+// get user storie by id 
+router.get("/:usId",authenticateToken,authorizeStudent,userStoryController.getUserStoryById);
+
+router.put("/", authenticateToken, authorizeStudent, validate(updateUserStorySchema), userStoryController.updateUserStory);
 
 
 export default router;
