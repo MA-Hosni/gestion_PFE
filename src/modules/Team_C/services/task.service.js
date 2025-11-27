@@ -22,17 +22,15 @@ export const createTask = async (data) => {
 
   await verifyUserStoryExists(user_story_id);
 
-  const existing = await Task.findOne({ title, user_story_id });
+  const existing = await Task.findOne({ title, user_story_id})
   if (existing) {
     const error = new Error("Task with this title already exists for this user story.");
     error.status = 409;
     throw error;
   }
-
-  const newTask = await Task.create(data);
-  return { message: "Task created successfully", task: newTask };
-};
-
+  const newTask = await Task.create(data)
+  return newTask
+}
 export const getAllTasks = async () => {
   const tasks = await Task.find();
   if (!tasks.length) {
