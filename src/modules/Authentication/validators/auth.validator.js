@@ -122,9 +122,6 @@ export const passwordResetRequestSchema = Joi.object({
 });
 
 export const passwordResetSchema = Joi.object({
-  resetToken: Joi.string().required().messages({
-    'any.required': 'Reset token is required'
-  }),
   newPassword: Joi.string().min(6).pattern(passwordPattern).required().messages({
     'string.min': 'New password must be at least 6 characters long',
     'string.pattern.base': 'Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character',

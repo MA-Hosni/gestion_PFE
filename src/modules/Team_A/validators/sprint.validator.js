@@ -63,7 +63,7 @@ export const reorderSprintsSchema = Joi.object({
         'any.required': 'Order index is required'
       })
     })
-  ).min(1).required().messages({
+  ).min(1).required().unique('sprintId').unique('orderIndex').messages({
     'array.min': 'At least one sprint must be provided',
     'any.required': 'Sprints array is required'
   })

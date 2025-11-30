@@ -1,13 +1,14 @@
 import mongoose from "mongoose";
+import jwt from "jsonwebtoken";
 import User from "../models/user.models.js";
 import Student from "../models/student.model.js";
 import CompSupervisor from "../models/compSupervisor.model.js";
 import UniSupervisor from "../models/uniSupervisor.model.js";
+import { JWT_SECRET } from "../../../shared/config/index.js";
 import { hashPassword, comparePassword } from "../utils/hash.js";
-import { signAccessToken, signRefreshToken, signSignupToken, verifySignupToken } from "../utils/jwt.js";
+import { signAccessToken, signRefreshToken } from "../utils/jwt.js";
 import { generateVerificationToken } from "../utils/generateToken.js";
 import { sendVerificationEmail, sendPasswordResetEmail } from "../../../shared/services/email.service.js";
-
 
 export const registerStudent = async (userData) => {
   const session = await mongoose.startSession();
@@ -144,21 +145,13 @@ export const registerStudent = async (userData) => {
       // Don't throw error - registration was successful, email is secondary
     }
 
-    const signupToken = signSignupToken({
-      userId: savedUser._id,
-      email: savedUser.email,
-      role: savedUser.role
-    });
-
     return {
       success: true,
       message: "Student registered successfully. Please check your email to verify your account.",
       data: {
         userId: savedUser._id,
         email: savedUser.email,
-        role: savedUser.role,
-        signupToken,
-        // verificationToken
+        role: savedUser.role
       }
     };
   } catch (error) {
@@ -225,21 +218,13 @@ export const registerCompanySupervisor = async (userData) => {
       // Don't throw error - registration was successful, email is secondary
     }
 
-    const signupToken = signSignupToken({
-      userId: savedUser._id,
-      email: savedUser.email,
-      role: savedUser.role
-    });
-
     return {
       success: true,
       message: "Company supervisor registered successfully. Please check your email to verify your account.",
       data: {
         userId: savedUser._id,
         email: savedUser.email,
-        role: savedUser.role,
-        signupToken,
-        // verificationToken
+        role: savedUser.role
       }
     };
   } catch (error) {
@@ -305,21 +290,13 @@ export const registerUniversitySupervisor = async (userData) => {
       // Don't throw error - registration was successful, email is secondary
     }
 
-    const signupToken = signSignupToken({
-      userId: savedUser._id,
-      email: savedUser.email,
-      role: savedUser.role
-    });
-
     return {
       success: true,
       message: "University supervisor registered successfully. Please check your email to verify your account.",
       data: {
         userId: savedUser._id,
         email: savedUser.email,
-        role: savedUser.role,
-        signupToken,
-        // verificationToken
+        role: savedUser.role
       }
     };
   } catch (error) {
@@ -482,41 +459,8 @@ export const logout = async (userId) => {
   };
 };
 
-export const completeSignup = async (signupToken) => {
-  const payload = verifySignupToken(signupToken);
-  
-  const user = await User.findById(payload.userId);
-  
-  if (!user) {
-    const error = new Error("User not found");
-    error.status = 404;
-    throw error;
-  }
-
-  if (!user.isVerified) {
-    const error = new Error("Please verify your email first");
-    error.status = 400;
-    throw error;
-  }
-
-  return {
-    success: true,
-    message: "Signup completed successfully",
-    data: {
-      userId: user._id,
-      email: user.email,
-      role: user.role
-    }
-  };
-};
-
 export const refreshAccessToken = async (refreshToken) => {
   try {
-    // Import jwt here to avoid circular dependency
-    const jwt = await import("jsonwebtoken");
-    const { JWT_SECRET } = await import("../../../shared/config/index.js");
-    
-    // Verify refresh token
     const payload = jwt.verify(refreshToken, JWT_SECRET);
     
     const user = await User.findById(payload.userId);
@@ -564,10 +508,11 @@ export const requestPasswordReset = async (email) => {
   
   // Generate password reset token
   const resetToken = generateVerificationToken();
-  
+  const resetTokenExpiry = Date.now() + 30 * 60 * 1000; // 30 minutes from now
   // Store reset token and expiration (30 minutes)
   user.passwordResetToken = resetToken;
-  user.passwordResetExpires = new Date(Date.now() + 30 * 60 * 1000);
+  user.passwordResetExpires = new Date(resetTokenExpiry);
+
   await user.save();
 
   // Send password reset email (non-blocking for user experience)

@@ -33,7 +33,7 @@ router.post(
 // =======================================================
 // 2. UPDATE MEETING (PUT /meetings/:id)
 // =======================================================
-router.put(
+router.patch(
   "/:id",
   authenticateToken,
   authorizeStudent,

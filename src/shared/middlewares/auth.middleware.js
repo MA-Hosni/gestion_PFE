@@ -1,9 +1,9 @@
 import jwt from "jsonwebtoken";
-import { JWT_SECRET } from "../../../shared/config/index.js";
-import User from "../models/user.models.js";
-import Student from "../../Authentication/models/student.model.js";
-import CompSupervisor from "../../Authentication/models/compSupervisor.model.js";
-import UniSupervisor from "../../Authentication/models/uniSupervisor.model.js";
+import { JWT_SECRET } from "../config/index.js";
+import User from "../../modules/Authentication/models/user.models.js";
+import Student from "../../modules/Authentication/models/student.model.js";
+import CompSupervisor from "../../modules/Authentication/models/compSupervisor.model.js";
+import UniSupervisor from "../../modules/Authentication/models/uniSupervisor.model.js";
 
 export const authenticateToken = async (req, res, next) => {
   try {
@@ -128,7 +128,7 @@ export const authorizeSupervisor = async (req, res, next) => {
     }
 
     let supervisor = null;
-    if (req.user.role === "compSupervisor") {
+    if (req.user.role === "CompSupervisor") {
       supervisor = await CompSupervisor.findOne({ userId: req.user.id }).select('-__v');
       if (!supervisor) {
         const error = new Error("Company supervisor profile not found");
@@ -141,7 +141,7 @@ export const authorizeSupervisor = async (req, res, next) => {
         companyName: supervisor.companyName,
         studentsId: supervisor.studentsId,
       };
-    } else if (req.user.role === "uniSupervisor") {
+    } else if (req.user.role === "UniSupervisor") {
       supervisor = await UniSupervisor.findOne({ userId: req.user.id }).select('-__v');
       if (!supervisor) {
         const error = new Error("University supervisor profile not found");

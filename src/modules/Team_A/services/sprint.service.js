@@ -262,6 +262,13 @@ export const reorderSprints = async (sprintsOrder, studentId) => {
 
     await Promise.all(updatePromises);
 
+    // 3. Verify that sprintsOrder length matches project sprints length
+    if (sprintsOrder.length !== project.sprints.length) {
+        const error = new Error(`Number of sprints to reorder (${sprintsOrder.length}) does not match project sprints count (${project.sprints.length})`);
+        error.status = StatusCodes.BAD_REQUEST;
+        throw error;
+    }
+
     await session.commitTransaction();
 
     return {

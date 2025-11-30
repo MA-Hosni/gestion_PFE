@@ -20,7 +20,7 @@ router.get("/sprint/:sprintId",authenticateToken,authorizeStudent,userStoryContr
 // get user storie by id 
 router.get("/:usId",authenticateToken,authorizeStudent,userStoryController.getUserStoryById);
 
-router.put("/", authenticateToken, authorizeStudent, validate(updateUserStorySchema), userStoryController.updateUserStory);
+router.patch("/", authenticateToken, authorizeStudent, validate(updateUserStorySchema), userStoryController.updateUserStory);
 
 
 export default router;
