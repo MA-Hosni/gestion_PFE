@@ -8,7 +8,7 @@ import authRouter from './src/modules/Authentication/index.js';
 import teamARouter from './src/modules/Team_A/index.js';
 import teamBRouter from './src/modules/Team_B/index.js';
 import teamCRouter from './src/modules/Team_C/index.js';
-import teamDRouter from './src/modules/Team_D/index.js';
+//import teamDRouter from './src/modules/Team_D/index.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './src/shared/config/swagger.js';
 
@@ -31,7 +31,7 @@ app.use('/api', authRouter);
 app.use('/api', teamARouter);
 app.use('/api', teamBRouter);
 app.use('/api', teamCRouter);
-app.use('/api', teamDRouter);
+//app.use('/api', teamDRouter);
 
 app.use(errorMiddleware);
 
