@@ -3,6 +3,7 @@ import Project from "../../Team_A/models/project.model.js"
 import CompSupervisor from "../../Authentication/models/compSupervisor.model.js"
 import UnivSupervisor from "../../Authentication/models/uniSupervisor.model.js"
 import UserStory from "../../Team_B/models/UserStory.model.js"
+import TaskValidator from "../models/taskValidator.model.js"
 
 async function verifyUserStoryExists(userStoryId) {
   const userStory = await UserStory.findById(userStoryId);
@@ -86,16 +87,7 @@ export const getAllTasksForUnivSupervisor = async (univSupervisorId) => {
 };
 
 
-export const getAllTasks = async () => {
-  const tasks = await Task.find();
-  if (!tasks.length) {
-    const error = new Error("No tasks found.");
-    error.status = 404;
-    throw error;
-  }
-  return { message: "Tasks retrieved successfully", tasks };
-};
-
+/*
 export const getTaskById = async (id) => {
   const task = await Task.findById(id);
   if (!task) {
@@ -105,6 +97,7 @@ export const getTaskById = async (id) => {
   }
   return { message: "Task retrieved successfully", task };
 };
+*/
 
 export const updateTask = async (id, data) => {
   const task = await Task.findByIdAndUpdate(id, data, { new: true });
@@ -125,3 +118,40 @@ export const deleteTask = async (id) => {
   }
   return { message: "Task deleted successfully", task };
 };
+
+
+// make a function that retreive all the tasks for a specific user story by it ID 
+export const getAllTasksForUserStory = async (userStoryId) => {
+  const tasks = await Task.find({ userStoryId });
+  if (!tasks.length) {
+    const error = new Error("No tasks found for this user story.");
+    error.status = 404;
+    throw error;
+  }
+  return { message: "Tasks retrieved successfully", tasks };
+};
+
+//function that allows the student to update the status of the task to ["ToDo", "InProgress", "Standby", "Done"] and put it inside the taskvalidator model  
+export const updateTaskStatus = async (id, data) => {
+  const task = await Task.findById(id);
+  if (!task) {
+    const error = new Error("Task not found.");
+    error.status = 404;
+    throw error;
+  }
+
+  // Create TaskValidator entry with fields from the request body
+  const taskValidator = await TaskValidator.create({
+    task_id: id,
+    status: data.status,
+    validator_id: data.validator_id,
+    meeting_type: data.meeting_type,
+    comment: data.comment, // Optional but good to include
+    // Removed priority, userStoryId, assignedTo as they are not in TaskValidator model
+  });
+
+  return { message: "Task updated successfully", task };
+};
+
+
+
