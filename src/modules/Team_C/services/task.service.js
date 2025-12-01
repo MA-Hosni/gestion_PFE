@@ -1,6 +1,7 @@
 import Task from "../models/task.model.js"
 import Project from "../../Team_A/models/project.model.js"
 import CompSupervisor from "../../Authentication/models/compSupervisor.model.js"
+import UnivSupervisor from "../../Authentication/models/uniSupervisor.model.js"
 import UserStory from "../../Team_B/models/UserStory.model.js"
 
 async function verifyUserStoryExists(userStoryId) {
@@ -62,6 +63,28 @@ export const getAllTasksForCompSupvisor = async (compSupervisorId) => {
   const tasks = await Task.find({ userStoryId: { $in: userStoryIds } });
   return { message: "Tasks retrieved successfully", tasks };
 };
+//function that allows the university supervisor to extract all the tasks he is envolved with 
+export const getAllTasksForUnivSupervisor = async (univSupervisorId) => {
+  const univSupervisor = await UnivSupervisor.findById(univSupervisorId).populate('studentsId');
+  if (!univSupervisor) {
+    const error = new Error("University supervisor not found.");
+    error.status = 404;
+    throw error;
+  }
+
+  const studentIds = univSupervisor.studentsId.map(student => student._id);
+  // Fetch all projects that include these students
+  const projects = await Project.find({ contributors: { $in: studentIds } }).populate('sprints');
+  const sprintIds = projects.flatMap(project => project.sprints.map(sprint => sprint._id));
+  // Fetch all user stories that belong to these sprints
+  const userStories = await UserStory.find({ sprintId: { $in: sprintIds } });
+  const userStoryIds = userStories.map(userStory => userStory._id);
+
+  // Fetch all tasks that belong to these user stories
+  const tasks = await Task.find({ userStoryId: { $in: userStoryIds } });
+  return { message: "Tasks retrieved successfully", tasks };
+};
+
 
 export const getAllTasks = async () => {
   const tasks = await Task.find();

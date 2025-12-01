@@ -14,6 +14,7 @@ router.patch("/:id", authenticateToken, authorizeStudent, taskController.updateT
 // Delete a task by ID
 router.delete("/:id", authenticateToken, authorizeStudent, taskController.deleteTask);
 // Get all tasks for a specific company supervisor
-router.get("/supervisor/:compSupervisorId", authenticateToken, authorizeSupervisor, taskController.getAllTasksForCompSupervisor);
-
+router.get("/compsupervisor/:compSupervisorId", authenticateToken, authorizeSupervisor, taskController.getAllTasksForCompSupervisor);
+// Get all tasks for a specific university supervisor
+router.get("/univsupervisor/:univSupervisorId", authenticateToken, authorizeSupervisor, taskController.getAllTasksForUnivSupervisor);
 export default router;
