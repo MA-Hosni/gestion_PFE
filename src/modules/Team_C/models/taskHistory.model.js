@@ -1,4 +1,4 @@
-const mongoose = require("mongoose")
+import mongoose from "mongoose"
 
 const taskHistorySchema = new mongoose.Schema({
   taskId: { type: mongoose.Schema.Types.ObjectId, ref: "Task", required: true },
@@ -9,4 +9,4 @@ const taskHistorySchema = new mongoose.Schema({
   fieldChanged: { type: String, required: true },
 })
 
-module.exports = mongoose.model("TaskHistory", taskHistorySchema)
+export default mongoose.model("TaskHistory", taskHistorySchema)

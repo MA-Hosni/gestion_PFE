@@ -1,7 +1,7 @@
 import express from "express";
 import rateLimit from "express-rate-limit";
 import { validate } from "../../../shared/middlewares/validate.js";
-import { authenticateToken } from "../middlewares/auth.middleware.js";
+import { authenticateToken } from "../../../shared/middlewares/auth.middleware.js";
 import { 
   studentSignupSchema, 
   companySupervisorSignupSchema, 
@@ -191,28 +191,6 @@ router.post("/login", loginLimiter, validate(loginSchema), authController.login)
  *         description: Invalid credentials
  *       403:
  *         description: Email not verified
- */
-router.post("/complete-signup", authController.completeSignup);
-/**
- * @swagger
- * /auth/complete-signup:
- *   post:
- *     summary: Complete signup flow
- *     tags: [Auth]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             properties:
- *               signupToken:
- *                 type: string
- *     responses:
- *       200:
- *         description: Signup completed
- *       400:
- *         $ref: '#/components/responses/BadRequest'
  */
 router.post("/refresh-token", authController.refreshToken);
 /**

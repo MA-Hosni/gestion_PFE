@@ -13,10 +13,7 @@ export const signupStudent = async (req, res, next) => {
       data: {
         userId: result.data.userId,
         email: result.data.email,
-        role: result.data.role,
-        signupToken: result.data.signupToken,
-        // Don't send verification token in response for security
-        // It should be sent via email instead
+        role: result.data.role
       }
     });
   } catch (error) {
@@ -36,10 +33,7 @@ export const signupCompanySupervisor = async (req, res, next) => {
       data: {
         userId: result.data.userId,
         email: result.data.email,
-        role: result.data.role,
-        signupToken: result.data.signupToken,
-        // Don't send verification token in response for security
-        // It should be sent via email instead
+        role: result.data.role
       }
     });
   } catch (error) {
@@ -59,10 +53,7 @@ export const signupUniversitySupervisor = async (req, res, next) => {
       data: {
         userId: result.data.userId,
         email: result.data.email,
-        role: result.data.role,
-        signupToken: result.data.signupToken,
-        // Don't send verification token in response for security
-        // It should be sent via email instead
+        role: result.data.role
       }
     });
   } catch (error) {
@@ -120,21 +111,6 @@ export const login = async (req, res, next) => {
   }
 };
 
-export const resendVerificationEmail = async (req, res, next) => {
-  try {
-    const { email } = req.validatedBody;
-    
-    const result = await authService.resendVerificationEmail(email);
-    
-    res.status(StatusCodes.OK).json({
-      success: result.success,
-      message: result.message
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const logout = async (req, res, next) => {
   try {
     const userId = req.user?.id;
@@ -152,26 +128,10 @@ export const logout = async (req, res, next) => {
   }
 };
 
-export const completeSignup = async (req, res, next) => {
-  try {
-    const { signupToken } = req.body;
-    
-    const result = await authService.completeSignup(signupToken);
-    
-    res.status(StatusCodes.OK).json({
-      success: result.success,
-      message: result.message,
-      data: result.data
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 export const refreshToken = async (req, res, next) => {
   try {
     const refreshToken = req.cookies.refreshToken;
-    
+    console.log("Refresh Token:", refreshToken);
     if (!refreshToken) {
       const error = new Error("Refresh token not provided");
       error.status = StatusCodes.UNAUTHORIZED;
@@ -213,7 +173,15 @@ export const requestPasswordReset = async (req, res, next) => {
 
 export const resetPassword = async (req, res, next) => {
   try {
-    const { resetToken, newPassword } = req.validatedBody;
+    const resetToken = req.query.resetToken;
+    const { newPassword } = req.validatedBody;
+    
+    if (!resetToken) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Reset token is required"
+      });
+    }
     
     const result = await authService.resetPassword(resetToken, newPassword);
     

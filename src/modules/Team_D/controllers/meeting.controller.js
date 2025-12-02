@@ -9,7 +9,7 @@ import { StatusCodes } from "http-status-codes";
 // =========================================================
 export const createMeeting = async (req, res, next) => {
   try {
-    const meetingData = req.validatedBody;
+    const meetingData = req.body;
     const studentId = req.student.id;
 
     const result = await meetingService.createMeeting(meetingData, studentId);
@@ -79,16 +79,19 @@ export const completeMeeting = async (req, res, next) => {
 
 
 // =========================================================
-// 5. VALIDATE MEETING
-// Enc_University ONLY
+// 5. VALIDATE MEETING  (Supervisor ONLY)
 // =========================================================
 export const validateMeeting = async (req, res, next) => {
   try {
     const meetingId = req.params.id;
-    const validatorId = req.user.id;
-    const { validation_status } = req.validatedBody;
+    const validatorId = req.supervisor.id;
+    const { validationStatus } = req.body;
 
-    const result = await meetingService.validateMeeting(meetingId, validatorId, validation_status);
+    const result = await meetingService.validateMeeting(
+      meetingId,
+      validatorId,
+      validationStatus
+    );
 
     res.status(result.status || StatusCodes.OK).json(result);
   } catch (error) {
@@ -98,11 +101,28 @@ export const validateMeeting = async (req, res, next) => {
 
 
 // =========================================================
-/** 6. LIST MEETINGS BY PROJECT */
+// 6. LIST MEETINGS BY STUDENT
+// ⚠ FIX MAJEUR : tu utilisais req.student.id comme projectId ❌
+// =========================================================
+export const listMeetingsByStudent = async (req, res, next) => {
+  try {
+    const studentId = req.student.id;
+
+    const result = await meetingService.listMeetingsByStudent(studentId);
+
+    res.status(StatusCodes.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+// =========================================================
+// 7. LIST MEETINGS BY PROJECT
 // =========================================================
 export const listMeetingsByProject = async (req, res, next) => {
   try {
-    const projectId = req.query.project_id;
+    const projectId = req.params.projectId;
 
     const result = await meetingService.listMeetingsByProject(projectId);
 
@@ -114,13 +134,13 @@ export const listMeetingsByProject = async (req, res, next) => {
 
 
 // =========================================================
-// 7. LIST MEETINGS BY REFERENCE (US | TASK | REPORT)
+// 8. LIST MEETINGS BY REFERENCE (US | TASK | REPORT)
 // =========================================================
 export const listMeetingsByReference = async (req, res, next) => {
   try {
     const { type, id } = req.params;
 
-    const result = await meetingService.listByReference(type, id);
+    const result = await meetingService.listMeetingsByReference(type, id);
 
     res.status(result.status || StatusCodes.OK).json(result);
   } catch (error) {
@@ -130,7 +150,7 @@ export const listMeetingsByReference = async (req, res, next) => {
 
 
 // =========================================================
-// 8. CHANGE MEETING REFERENCE
+// 9. CHANGE MEETING REFERENCE
 // =========================================================
 export const changeMeetingReference = async (req, res, next) => {
   try {
@@ -148,11 +168,11 @@ export const changeMeetingReference = async (req, res, next) => {
 
 
 // =========================================================
-// 9. LIST PENDING VALIDATION (Enc_University)
+// 10. LIST PENDING VALIDATIONS (Supervisor)
 // =========================================================
 export const listPendingValidation = async (req, res, next) => {
   try {
-    const projectId = req.query.project_id;
+    const projectId = req.query.projectId;
 
     const result = await meetingService.listPendingValidation(projectId);
 

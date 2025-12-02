@@ -47,3 +47,18 @@ export const UpdateProjectSchema = Joi.object({
 }).min(1).messages({
   'object.min': 'At least one field must be provided for update'
 });
+
+export const AddRemoveContributorsSchema = Joi.object({
+  projectId: Joi.string().pattern(objectIdPattern).required().messages({
+    'string.pattern.base': 'Project ID must be a valid ID',
+    'any.required': 'Project ID is required'
+  }),
+  studentIds: Joi.array().items(
+    Joi.string().pattern(objectIdPattern).messages({
+      'string.pattern.base': 'Each student ID must be a valid ID'
+    })
+  ).required().messages({
+    'array.base': 'Student IDs must be an array',
+    'any.required': 'Student IDs are required'
+  })
+});

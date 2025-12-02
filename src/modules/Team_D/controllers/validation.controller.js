@@ -4,7 +4,7 @@ import { StatusCodes } from "http-status-codes";
 
 export const createValidation = async (req, res, next) => {
   try {
-    const validatorId = req.student.id; // Enc_Company / Enc_University
+    const validatorId = req.supervisor.id; // Enc_Company / Enc_University
     const data = req.body;
 
     const result = await validationService.createValidation(data, validatorId);
@@ -52,7 +52,7 @@ export const getValidationsByTask = async (req, res, next) => {
 export const deleteValidation = async (req, res, next) => {
   try {
     const validationId = req.params.id;
-    const validatorId = req.student.id;
+    const validatorId = req.supervisor.id;
 
     const result = await validationService.deleteValidation(validationId, validatorId);
 

@@ -37,14 +37,21 @@ export const createProject = async (projectData, studentId) => {
       }
     }
 
+    // Remove studentId from contributors and remove duplicates
+    const uniqueContributors = [...new Set(
+      contributors
+        .map(id => id.toString())
+        .filter(id => id !== studentId.toString())
+    )];
+
     // Validate contributors if provided
     let validatedContributors = [];
-    if (contributors.length > 0) {
+    if (uniqueContributors.length > 0) {
       const contributorStudents = await Student.find({
-        _id: { $in: contributors }
+        _id: { $in: uniqueContributors }
       }).session(session);
 
-      if (contributorStudents.length !== contributors.length) {
+      if (contributorStudents.length !== uniqueContributors.length) {
         const error = new Error("One or more contributors not found");
         error.status = 404;
         throw error;
@@ -62,7 +69,7 @@ export const createProject = async (projectData, studentId) => {
         }
       }
 
-      validatedContributors = contributors;
+      validatedContributors = uniqueContributors;
     }
 
     // Create the project
@@ -167,7 +174,7 @@ export const getProject = async (projectId) => {
           { $sort: { orderIndex: 1 } },
           { 
             $project: { 
-              _id: 0,
+              _id: 1,
               title: 1,
               goal: 1,
               startDate: 1,
@@ -231,6 +238,7 @@ export const getProject = async (projectId) => {
         email: c.email
       })),
       sprints: result.sprints.map(s => ({
+        _id: s._id.toString(),
         title: s.title,
         goal: s.goal,
         startDate: s.startDate.toISOString(),
@@ -317,57 +325,53 @@ export const deleteProject = async (projectId) => {
 };
 
 export const getStudentsWithoutProject = async () => {
-  try {
-    // Get all student IDs that are assigned to projects (in one optimized query)
-    const studentsWithProjects = await Project.distinct("contributors", { 
-      deletedAt: null 
-    });
+  // Get all student IDs that are assigned to projects (in one optimized query)
+  const studentsWithProjects = await Project.distinct("contributors", { 
+    deletedAt: null 
+  });
 
-    // Get students NOT in that list with user details
-    const studentsWithoutProject = await Student.aggregate([
-      {
-        $match: {
-          _id: { $nin: studentsWithProjects },
-          deletedAt: null
-        }
-      },
-      {
-        $lookup: {
-          from: "users",
-          localField: "userId",
-          foreignField: "_id",
-          as: "user"
-        }
-      },
-      {
-        $unwind: "$user"
-      },
-      {
-        $match: {
-          "user.isActive": true,
-          "user.deletedAt": null,
-          "user.role": "Student"
-        }
-      },
-      {
-        $project: {
-          _id: 1,
-          fullName: "$user.fullName"
-        }
-      },
-      {
-        $sort: { fullName: 1 }
+  // Get students NOT in that list with user details
+  const studentsWithoutProject = await Student.aggregate([
+    {
+      $match: {
+        _id: { $nin: studentsWithProjects },
+        deletedAt: null
       }
-    ]);
+    },
+    {
+      $lookup: {
+        from: "users",
+        localField: "userId",
+        foreignField: "_id",
+        as: "user"
+      }
+    },
+    {
+      $unwind: "$user"
+    },
+    {
+      $match: {
+        "user.isActive": true,
+        "user.deletedAt": null,
+        "user.role": "Student"
+      }
+    },
+    {
+      $project: {
+        _id: 1,
+        fullName: "$user.fullName"
+      }
+    },
+    {
+      $sort: { fullName: 1 }
+    }
+  ]);
 
-    return {
-      success: true,
-      message: "Students without project retrieved successfully",
-      data: studentsWithoutProject
-    };
-  } catch (error) {
-    throw error;
-  }
+  return {
+    success: true,
+    message: "Students without project retrieved successfully",
+    data: studentsWithoutProject
+  };
 };
 
 export const addContributors = async ({ projectId, studentIds, requestingStudentId }) => {
@@ -394,7 +398,6 @@ export const addContributors = async ({ projectId, studentIds, requestingStudent
         $match: {
           _id: { $in: studentIds.map(id => new mongoose.Types.ObjectId(id)) },
           project: { $exists: false }, // No assigned project
-          deletedAt: null // Not soft-deleted (if applicable)
         }
       },
       {
@@ -448,7 +451,7 @@ export const addContributors = async ({ projectId, studentIds, requestingStudent
   }
 };
 
-export const removeContributors = async ({ projectId, studentId, requestingStudentId }) => {
+export const removeContributors = async ({ projectId, studentIds, requestingStudentId }) => {
   const session = await mongoose.startSession();
   session.startTransaction();
 
@@ -469,18 +472,20 @@ export const removeContributors = async ({ projectId, studentId, requestingStude
     }
 
     // 2. Prevent self-removal (critical security constraint)
-    if (studentIds.includes(requestingStudentId)) {
+    const requestingStudentIdStr = requestingStudentId.toString();
+    if (studentIds.includes(requestingStudentIdStr)) {
       const error = new Error("You cannot remove yourself from the project");
       error.status = 409;
       throw error;
     }
 
     // 3. Validate students to remove in single aggregation
+    const projectObjectId = new mongoose.Types.ObjectId(projectId);
     const validStudents = await Student.aggregate([
       {
         $match: {
           _id: { $in: studentIds.map(id => new mongoose.Types.ObjectId(id)) },
-          project: projectId, // Must be assigned to THIS project
+          project: projectObjectId, // Must be assigned to THIS project
           deletedAt: null
         }
       },
@@ -538,7 +543,9 @@ export const removeContributors = async ({ projectId, studentId, requestingStude
     
     // Handle specific transaction errors
     if (error.message.includes("Concurrent modification")) {
-      throw new ConflictError("Project modified by another user. Please refresh and retry.");
+      const conflictError = new Error("Project modified by another user. Please refresh and retry.");
+      conflictError.status = 409;
+      throw conflictError;
     }
     throw error;
   } finally {

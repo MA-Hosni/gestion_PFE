@@ -1,6 +1,6 @@
 import express from "express";
 import { validate } from "../../../shared/middlewares/validate.js";
-import { authenticateToken } from "../middlewares/auth.middleware.js";
+import { authenticateToken } from "../../../shared/middlewares/auth.middleware.js";
 import { passwordChangeSchema } from "../validators/auth.validator.js";
 import * as userController from "../controllers/user.controller.js";
 

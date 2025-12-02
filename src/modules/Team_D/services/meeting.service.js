@@ -1,241 +1,357 @@
-// Team_D/services/meeting.service.js
-
 import mongoose from "mongoose";
 import Meeting from "../models/meeting.model.js";
-import Student from "../../Team_A/models/student.model.js"; // only if needed for referencing
-import Project from "../../Team_A/models/project.model.js"; // if needed for queries
+import Task from "../../Team_C/models/task.model.js";
+import Sprint from "../../Team_A/models/sprint.model.js";
+import Project from "../../Team_A/models/project.model.js";
+import Report from "../../Team_B/models/report.model.js";
+import UserStory from "../../Team_B/models/UserStory.model.js";
+import Student from "../../Authentication/models/student.model.js";
 
-export default class MeetingService {
+//
+// =========================================================
+// 1. CREATE MEETING
+// =========================================================
+export const createMeeting = async (data, studentId) => {
+  const { scheduledDate, agenda, referenceType, referenceId } = data;
 
-    // =========================================================
-    // 1. CREATE MEETING
-    // =========================================================
-    static async createMeeting(data, studentId) {
-        const session = await mongoose.startSession();
-        session.startTransaction();
+  if (!scheduledDate || !referenceType) {
+    return {
+      success: false,
+      code: 400,
+      message: "scheduledDate and referenceType are required"
+    };
+  }
 
-        try {
-            const { scheduled_date, agenda, reference_type, reference_id } = data;
+  let projectId = null;
 
-            const newMeeting = await Meeting.create(
-                [{
-                    scheduled_date,
-                    agenda,
-                    reference_type,
-                    reference_id,
-                    created_by: studentId
-                }],
-                { session }
-            );
+  // USER STORY
+  if (referenceType === "user_story") {
+    const us = await UserStory.findById(referenceId);
+    if (!us) return { success: false, code: 404, message: "User Story not found" };
 
-            await session.commitTransaction();
-            session.endSession();
+    const sprint = us.sprintId ? await Sprint.findById(us.sprintId) : null;
+    projectId = sprint?.projectId || null;
 
-            return {
-                success: true,
-                message: "Meeting created successfully",
-                data: newMeeting[0]
-            };
+  // TASK
+  } else if (referenceType === "task") {
+    const task = await Task.findById(referenceId);
+    if (!task) return { success: false, code: 404, message: "Task not found" };
 
-        } catch (error) {
-            await session.abortTransaction();
-            session.endSession();
-            throw error;
-        }
+    const us = await UserStory.findById(task.userStoryId);
+    if (!us) return { success: false, code: 404, message: "User Story for Task not found" };
+
+    const sprint = await Sprint.findById(us.sprintId);
+    projectId = sprint.projectId;
+
+  // REPORT
+  } else if (referenceType === "report") {
+    const report = await Report.findById(referenceId);
+    if (!report) return { success: false, code: 404, message: "Report not found" };
+
+    projectId = report.projectId;
+  }
+
+  if (!projectId) {
+    return { success: false, code: 400, message: "Unable to determine project" };
+  }
+
+  // CREATE MEETING
+  const newMeeting = await Meeting.create({
+    scheduledDate,
+    agenda,
+    referenceType,
+    referenceId,
+    projectId,
+    createdBy: studentId
+  });
+
+  const student = await Student.findById(studentId);
+  if (!student) {
+    return { success: false, code: 404, message: "Student not found" };
+  }
+
+  student.meetings.push(newMeeting._id);
+  await student.save();
+
+  return {
+    success: true,
+    message: "Meeting created successfully",
+    data: newMeeting
+  };
+};
+
+//
+// =========================================================
+// 2. UPDATE MEETING
+// =========================================================
+export const updateMeeting = async (meetingId, studentId, data) => {
+  if (!mongoose.Types.ObjectId.isValid(meetingId)) {
+    return { success: false, code: 400, message: "Invalid meeting ID" };
+  }
+
+  const meeting = await Meeting.findById(meetingId);
+
+  if (!meeting || meeting.deletedAt) {
+    return { success: false, code: 404, message: "Meeting not found" };
+  }
+
+  if (!meeting.createdBy.equals(studentId)) {
+    return { success: false, code: 403, message: "You cannot update this meeting" };
+  }
+
+  // If reference changed, validate the new one
+  if (data.referenceType && data.referenceId) {
+    if (!mongoose.Types.ObjectId.isValid(data.referenceId)) {
+      return { success: false, code: 400, message: "Invalid referenceId" };
     }
 
+    if (data.referenceType === "user_story") {
+      const us = await UserStory.findById(data.referenceId);
+      if (!us) return { success: false, code: 404, message: "User Story not found" };
 
+    } else if (data.referenceType === "task") {
+      const task = await Task.findById(data.referenceId);
+      if (!task) return { success: false, code: 404, message: "Task not found" };
 
-    // =========================================================
-    // 2. UPDATE MEETING
-    // Only creator can update
-    // =========================================================
-    static async updateMeeting(meetingId, studentId, data) {
-        const meeting = await Meeting.findById(meetingId);
-
-        if (!meeting || meeting.deletedAt)
-            return { success: false, status: 404, message: "Meeting not found" };
-
-        if (meeting.created_by.toString() !== studentId)
-            return { success: false, status: 403, message: "Only the creator can update this meeting" };
-
-        Object.assign(meeting, data);
-        await meeting.save();
-
-        return {
-            success: true,
-            message: "Meeting updated successfully",
-            data: meeting
-        };
+    } else if (data.referenceType === "report") {
+      const report = await Report.findById(data.referenceId);
+      if (!report) return { success: false, code: 404, message: "Report not found" };
     }
+  }
 
+  Object.assign(meeting, data);
+  await meeting.save();
 
+  return {
+    success: true,
+    message: "Meeting updated successfully",
+    data: meeting
+  };
+};
 
-    // =========================================================
-    // 3. DELETE MEETING (Soft delete)
-    // Cannot delete if validated
-    // =========================================================
-    static async deleteMeeting(meetingId, studentId) {
-        const meeting = await Meeting.findById(meetingId);
+//
+// =========================================================
+// 3. DELETE MEETING
+// =========================================================
+export const deleteMeeting = async (meetingId, studentId) => {
+  if (!mongoose.Types.ObjectId.isValid(meetingId)) {
+    return { success: false, code: 400, message: "Invalid meeting ID" };
+  }
 
-        if (!meeting || meeting.deletedAt)
-            return { success: false, status: 404, message: "Meeting not found" };
+  const meeting = await Meeting.findById(meetingId);
 
-        if (meeting.created_by.toString() !== studentId)
-            return { success: false, status: 403, message: "Only the creator can delete this meeting" };
+  if (!meeting || meeting.deletedAt) {
+    return { success: false, code: 404, message: "Meeting not found" };
+  }
 
-        if (meeting.validation_status === "valid")
-            return { success: false, status: 409, message: "Cannot delete a validated meeting" };
+  if (!meeting.createdBy.equals(studentId)) {
+    return { success: false, code: 403, message: "You cannot delete this meeting" };
+  }
 
-        meeting.deletedAt = new Date();
-        await meeting.save();
+  if (meeting.validationStatus === "valid") {
+    return { success: false, code: 409, message: "Cannot delete a validated meeting" };
+  }
 
-        return {
-            success: true,
-            message: "Meeting deleted successfully"
-        };
-    }
+  meeting.deletedAt = new Date();
+  await meeting.save();
 
+  return { success: true, message: "Meeting deleted successfully" };
+};
 
+//
+// =========================================================
+// 4. COMPLETE MEETING
+// =========================================================
+export const completeMeeting = async (meetingId, studentId, data) => {
+  const { actualMinutes } = data;
 
-    // =========================================================
-    // 4. COMPLETE MEETING (Actual minutes)
-    // =========================================================
-    static async completeMeeting(meetingId, studentId, data) {
-        const { actual_minutes } = data;
+  if (!actualMinutes) {
+    return { success: false, code: 400, message: "actualMinutes is required" };
+  }
 
-        if (!actual_minutes)
-            return { success: false, status: 400, message: "Actual minutes are required" };
+  const meeting = await Meeting.findById(meetingId);
 
-        const meeting = await Meeting.findById(meetingId);
+  if (!meeting || meeting.deletedAt) {
+    return { success: false, code: 404, message: "Meeting not found" };
+  }
 
-        if (!meeting || meeting.deletedAt)
-            return { success: false, status: 404, message: "Meeting not found" };
+  if (!meeting.createdBy.equals(studentId)) {
+    return { success: false, code: 403, message: "You cannot complete this meeting" };
+  }
 
-        if (meeting.created_by.toString() !== studentId)
-            return { success: false, status: 403, message: "Only the creator can complete this meeting" };
+  meeting.actualMinutes = actualMinutes;
+  await meeting.save();
 
-        meeting.actual_minutes = actual_minutes;
-        await meeting.save();
+  return {
+    success: true,
+    message: "Meeting completed successfully",
+    data: meeting
+  };
+};
 
-        return {
-            success: true,
-            message: "Meeting minutes saved successfully",
-            data: meeting
-        };
-    }
+//
+// =========================================================
+// 5. VALIDATE MEETING
+// =========================================================
+export const validateMeeting = async (meetingId, validatorId, status) => {
+  if (!mongoose.Types.ObjectId.isValid(meetingId)) {
+    return { success: false, code: 400, message: "Invalid meeting ID" };
+  }
 
+  const meeting = await Meeting.findById(meetingId);
 
+  if (!meeting || meeting.deletedAt) {
+    return { success: false, code: 404, message: "Meeting not found" };
+  }
 
-    // =========================================================
-    // 5. VALIDATE MEETING (Enc_University)
-    // =========================================================
-    static async validateMeeting(meetingId, validatorId, validation_status) {
-        const meeting = await Meeting.findById(meetingId);
+  if (!["valid", "invalid"].includes(status)) {
+    return { success: false, code: 400, message: "Invalid validation status" };
+  }
 
-        if (!meeting || meeting.deletedAt)
-            return { success: false, status: 404, message: "Meeting not found" };
+  meeting.validationStatus = status;
+  meeting.validatorId = validatorId;
+  await meeting.save();
 
-        if (!["valid", "invalid"].includes(validation_status))
-            return { success: false, status: 400, message: "Invalid validation status" };
+  return {
+    success: true,
+    message: "Meeting validation updated",
+    data: meeting
+  };
+};
 
-        meeting.validation_status = validation_status;
-        meeting.validator_id = validatorId;
-        await meeting.save();
+//
+// =========================================================
+// 6. LIST BY STUDENT
+// =========================================================
+export const listMeetingsByStudent = async (studentId) => {
+  const student = await Student.findById(studentId);
+  if (!student) {
+    return { success: false, code: 404, message: "Student not found" };
+  }
 
-        return {
-            success: true,
-            message: "Meeting validation updated",
-            data: meeting
-        };
-    }
+  const meetings = await Meeting.find({
+    createdBy: studentId,
+    deletedAt: null
+  });
 
+  return { success: true, data: meetings };
+};
 
+//
+// =========================================================
+// 7. LIST BY PROJECT
+// =========================================================
+export const listMeetingsByProject = async (projectId) => {
+  const project = await Project.findById(projectId);
+  if (!project) {
+    return { success: false, code: 404, message: "Project not found" };
+  }
 
-    // =========================================================
-    // 6. LIST MEETINGS BY PROJECT
-    // =========================================================
-    static async listMeetingsByProject(projectId) {
-        const meetings = await Meeting.find({
-            deletedAt: null,
-            project_id: projectId
-        });
+  const meetings = await Meeting.find({
+    deletedAt: null,
+    projectId
+  });
 
-        return {
-            success: true,
-            data: meetings
-        };
-    }
+  return { success: true, data: meetings };
+};
 
+//
+// =========================================================
+// 8. LIST BY REFERENCE
+// =========================================================
+export const listMeetingsByReference = async (referenceType, referenceId) => {
+  if (!["user_story", "task", "report"].includes(referenceType)) {
+    return { success: false, code: 400, message: "Invalid reference type" };
+  }
 
+  if (!mongoose.Types.ObjectId.isValid(referenceId)) {
+    return { success: false, code: 400, message: "Invalid reference ID" };
+  }
 
-    // =========================================================
-    // 7. LIST MEETINGS BY REFERENCE
-    // (user_story | task | report)
-    // =========================================================
-    static async listByReference(type, id) {
-        if (!["user_story", "task", "report"].includes(type))
-            return { success: false, status: 400, message: "Invalid reference type" };
+  // Validate the referenced object exists
+  if (referenceType === "user_story") {
+    const us = await UserStory.findById(referenceId);
+    if (!us) return { success: false, code: 404, message: "User Story not found" };
 
-        const meetings = await Meeting.find({
-            reference_type: type,
-            reference_id: id,
-            deletedAt: null
-        });
+  } else if (referenceType === "task") {
+    const task = await Task.findById(referenceId);
+    if (!task) return { success: false, code: 404, message: "Task not found" };
 
-        if (!meetings)
-            return { success: false, status: 404, message: "No meetings found for this reference" };
+  } else if (referenceType === "report") {
+    const report = await Report.findById(referenceId);
+    if (!report) return { success: false, code: 404, message: "Report not found" };
+  }
 
-        return {
-            success: true,
-            data: meetings
-        };
-    }
+  const meetings = await Meeting.find({
+    referenceType,
+    referenceId,
+    deletedAt: null
+  });
 
+  return { success: true, data: meetings };
+};
 
+//
+// =========================================================
+// 9. CHANGE REFERENCE
+// =========================================================
+export const changeReference = async (meetingId, studentId, data) => {
+  const { referenceType, referenceId } = data;
 
-    // =========================================================
-    // 8. CHANGE MEETING REFERENCE
-    // (creator only)
-    // =========================================================
-    static async changeReference(meetingId, studentId, newData) {
-        const meeting = await Meeting.findById(meetingId);
+  if (!["user_story", "task", "report"].includes(referenceType)) {
+    return { success: false, code: 400, message: "Invalid reference type" };
+  }
 
-        if (!meeting || meeting.deletedAt)
-            return { success: false, status: 404, message: "Meeting not found" };
+  const meeting = await Meeting.findById(meetingId);
 
-        if (meeting.created_by.toString() !== studentId)
-            return { success: false, status: 403, message: "Only creator can change the reference" };
+  if (!meeting || meeting.deletedAt) {
+    return { success: false, code: 404, message: "Meeting not found" };
+  }
 
-        const { reference_type, reference_id } = newData;
+  if (!meeting.createdBy.equals(studentId)) {
+    return { success: false, code: 403, message: "You cannot change meeting reference" };
+  }
 
-        meeting.reference_type = reference_type;
-        meeting.reference_id = reference_id;
+  // Validate reference exists
+  if (referenceType === "user_story") {
+    const us = await UserStory.findById(referenceId);
+    if (!us) return { success: false, code: 404, message: "User Story not found" };
 
-        await meeting.save();
+  } else if (referenceType === "task") {
+    const task = await Task.findById(referenceId);
+    if (!task) return { success: false, code: 404, message: "Task not found" };
 
-        return {
-            success: true,
-            message: "Meeting reference updated successfully",
-            data: meeting
-        };
-    }
+  } else if (referenceType === "report") {
+    const report = await Report.findById(referenceId);
+    if (!report) return { success: false, code: 404, message: "Report not found" };
+  }
 
+  meeting.referenceType = referenceType;
+  meeting.referenceId = referenceId;
+  await meeting.save();
 
+  return {
+    success: true,
+    message: "Reference updated successfully",
+    data: meeting
+  };
+};
 
-    // =========================================================
-    // 9. LIST PENDING VALIDATION (Enc_University)
-    // =========================================================
-    static async listPendingValidation(projectId) {
-        const meetings = await Meeting.find({
-            validation_status: "pending",
-            project_id: projectId,
-            deletedAt: null
-        }).populate("created_by", "firstName lastName");
+//
+// =========================================================
+// 10. LIST PENDING VALIDATION
+// =========================================================
+export const listPendingValidation = async (projectId) => {
+  const project = await Project.findById(projectId);
+  if (!project) {
+    return { success: false, code: 404, message: "Project not found" };
+  }
 
-        return {
-            success: true,
-            data: meetings
-        };
-    }
-}
+  const meetings = await Meeting.find({
+    projectId,
+    validationStatus: "pending",
+    deletedAt: null
+  }).populate("createdBy", "firstName lastName");
+
+  return { success: true, data: meetings };
+};
