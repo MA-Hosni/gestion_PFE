@@ -4,6 +4,8 @@ import CompSupervisor from "../../Authentication/models/compSupervisor.model.js"
 import UnivSupervisor from "../../Authentication/models/uniSupervisor.model.js"
 import UserStory from "../../Team_B/models/UserStory.model.js"
 import TaskValidator from "../models/taskValidator.model.js"
+import TaskHistory from "../models/taskHistory.model.js"
+import Sprint from "../../Team_A/models/sprint.model.js"
 
 async function verifyUserStoryExists(userStoryId) {
   const userStory = await UserStory.findById(userStoryId);
@@ -44,7 +46,6 @@ export const createTask = async (data) => {
 
 //function that allows the supervisor to extract all the tasks he is envolved with 
 export const getAllTasksForCompSupvisor = async (compSupervisorId) => {
-  // Fetch the company supervisor to get the list of student IDs they are in charge of
   const compSupervisor = await CompSupervisor.findById(compSupervisorId).populate('studentsId');
   if (!compSupervisor) {
     const error = new Error("Company supervisor not found.");
@@ -53,14 +54,10 @@ export const getAllTasksForCompSupvisor = async (compSupervisorId) => {
   }
 
   const studentIds = compSupervisor.studentsId.map(student => student._id);
-  // Fetch all projects that include these students
   const projects = await Project.find({ contributors: { $in: studentIds } }).populate('sprints');
   const sprintIds = projects.flatMap(project => project.sprints.map(sprint => sprint._id));
-  // Fetch all user stories that belong to these sprints
   const userStories = await UserStory.find({ sprintId: { $in: sprintIds } });
   const userStoryIds = userStories.map(userStory => userStory._id);
-
-  // Fetch all tasks that belong to these user stories
   const tasks = await Task.find({ userStoryId: { $in: userStoryIds } });
   return { message: "Tasks retrieved successfully", tasks };
 };
@@ -99,7 +96,7 @@ export const getTaskById = async (id) => {
 };
 */
 
-export const updateTask = async (id, data) => {
+/*export const updateTask = async (id, data) => {
   const task = await Task.findByIdAndUpdate(id, data, { new: true });
   if (!task) {
     const error = new Error("Task not found.");
@@ -108,7 +105,7 @@ export const updateTask = async (id, data) => {
   }
   return { message: "Task updated successfully", task };
 };
-
+*/
 export const deleteTask = async (id) => {
   const task = await Task.findByIdAndDelete(id);
   if (!task) {
@@ -116,6 +113,14 @@ export const deleteTask = async (id) => {
     error.status = 404;
     throw error;
   }
+  // Delete all associated TaskValidator entries
+  await TaskValidator.deleteMany({ task_id: id });
+
+  // Remove the task from its associated UserStory's tasks array
+  await UserStory.findByIdAndUpdate(task.user_story_id, {
+    $pull: { tasks: id }
+  });
+
   return { message: "Task deleted successfully", task };
 };
 
@@ -139,19 +144,146 @@ export const updateTaskStatus = async (id, data) => {
     error.status = 404;
     throw error;
   }
-
-  // Create TaskValidator entry with fields from the request body
+  if (task.status === data.status) {
+    const error = new Error("Task is already in this status.");
+    error.status = 400;
+    throw error;
+  }
   const taskValidator = await TaskValidator.create({
     task_id: id,
-    status: data.status,
+    task_status: data.status, // This is the proposed new status
     validator_id: data.validator_id,
     meeting_type: data.meeting_type,
-    comment: data.comment, // Optional but good to include
-    // Removed priority, userStoryId, assignedTo as they are not in TaskValidator model
+    comment: data.comment,
   });
 
-  return { message: "Task updated successfully", task };
+  return { message: "Task status validation request created successfully", taskValidator };
 };
 
+//function that allows the supervisor to validate the status of the task
+export const validateTaskStatus = async (id, data) => {
+  const taskValidator = await TaskValidator.findById(id);
+  if (!taskValidator) {
+    const error = new Error("Task validator not found.");
+    error.status = 404;
+    throw error;
+  }
+  const task = await Task.findById(taskValidator.task_id);
+  if (!task) {
+    const error = new Error("Task not found.");
+    error.status = 404;
+    throw error;
+  }
 
+  if (data.validator_status === "valid") {
+    const oldStatus = task.status;
+    task.status = taskValidator.task_status;
+    await task.save();
 
+    await TaskHistory.create({
+      taskId: task._id,
+      modifiedBy: taskValidator.validator_id,
+      oldValue: { status: oldStatus },
+      newValue: { status: taskValidator.task_status },
+      fieldChanged: "status"
+    });
+
+    await TaskValidator.findByIdAndDelete(id);
+    return { message: "Task status updated and validated successfully", task };
+  } else {
+    taskValidator.status = data.validator_status;
+    await taskValidator.save();
+    return { message: "Task validation request updated", taskValidator };
+  }
+};
+
+//Function that makes a full report about the project in a json file as follow -> Project -> Userstories -> Sprints -> Tasks
+//Function that makes a full report about the project in a json file as follow -> Project -> Userstories -> Sprints -> Tasks
+export const makeFullReport = async (projectId) => {
+  const project = await Project.findById(projectId).populate('sprints');
+  if (!project) {
+    const error = new Error("Project not found.");
+    error.status = 404;
+    throw error;
+  }
+
+  // Fetch sprints associated with the project
+  const sprints = await Sprint.find({ projectId: projectId });
+  const sprintIds = sprints.map(sprint => sprint._id);
+
+  // Fetch user stories associated with these sprints
+  const userStories = await UserStory.find({ sprintId: { $in: sprintIds } });
+  const userStoryIds = userStories.map(us => us._id);
+
+  // Fetch tasks associated with these user stories
+  const tasks = await Task.find({ userStoryId: { $in: userStoryIds } });
+
+  const report = {
+    project: {
+      title: project.title,
+      description: project.description,
+      startDate: project.startDate,
+      endDate: project.endDate,
+    },
+    sprints: sprints.map(sprint => ({
+      name: sprint.title, // Assuming sprintName based on typical naming, verify Sprint model if needed
+      startDate: sprint.startDate,
+      endDate: sprint.endDate,
+    })),
+    userStories: userStories.map(userStory => ({
+      name: userStory.storyName,
+      description: userStory.description,
+      priority: userStory.priority,
+      storyPointEstimate: userStory.storyPointEstimate,
+      startDate: userStory.startDate,
+      dueDate: userStory.dueDate,
+    })),
+    tasks: tasks.map(task => ({
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      priority: task.priority,
+    })),
+  };
+  return report;
+};
+
+//function that make get a global report for a sprint , same thing as the project report but for a sprint
+export const makeSprintReport = async (sprintId) => {
+  const sprint = await Sprint.findById(sprintId).populate('userStories');
+  if (!sprint) {
+    const error = new Error("Sprint not found.");
+    error.status = 404;
+    throw error;
+  }
+
+  // Fetch user stories associated with the sprint
+  const userStories = await UserStory.find({ sprintId: sprintId });
+  const userStoryIds = userStories.map(us => us._id);
+
+  // Fetch tasks associated with these user stories
+  const tasks = await Task.find({ userStoryId: { $in: userStoryIds } });
+
+  const report = {
+    sprint: {
+      title: sprint.title,
+      startDate: sprint.startDate,
+      endDate: sprint.endDate,
+    },
+    userStories: userStories.map(userStory => ({
+      name: userStory.storyName,
+      description: userStory.description,
+      priority: userStory.priority,
+      storyPointEstimate: userStory.storyPointEstimate,
+      startDate: userStory.startDate,
+      dueDate: userStory.dueDate,
+    })),
+    tasks: tasks.map(task => ({
+      title: task.title,
+      description: task.description,
+      status: task.status,
+      priority: task.priority,
+    })),
+  };
+  return report;  
+};
