@@ -1,20 +1,19 @@
-// services/validation.service.js
 import Validation from "../models/validation.model.js";
-import Task from "../models/task.model.js";
+import Task from "../../Team_C/models/task.model.js";
 import Meeting from "../models/meeting.model.js";
 import mongoose from "mongoose";
 
 export const createValidation = async (data, validatorId) => {
   const {
-    task_id,
+    taskId,
     status,
-    meeting_type,
-    meeting_reference,
+    meetingType,
+    meetingReference,
     comment
   } = data;
 
   // 1️⃣ Validate required fields
-  if (!task_id || !status || !meeting_type) {
+  if (!taskId || !status || !meetingType) {
     return {
       success: false,
       code: 400,
@@ -22,16 +21,16 @@ export const createValidation = async (data, validatorId) => {
     };
   }
 
-  if (!mongoose.Types.ObjectId.isValid(task_id)) {
+  if (!mongoose.Types.ObjectId.isValid(taskId)) {
     return {
       success: false,
       code: 400,
-      message: "Invalid task_id format"
+      message: "Invalid taskId format"
     };
   }
 
   // 2️⃣ Check task exists
-  const task = await Task.findById(task_id);
+  const task = await Task.findById(taskId);
   if (!task) {
     return {
       success: false,
@@ -49,17 +48,17 @@ export const createValidation = async (data, validatorId) => {
     };
   }
 
-  // 4️⃣ If meeting type = reunion → meeting_reference must exist
-  if (meeting_type === "reunion") {
-    if (!meeting_reference || !mongoose.Types.ObjectId.isValid(meeting_reference)) {
+  // 4️⃣ If meetingType = reunion → meetingReference must exist
+  if (meetingType === "reunion") {
+    if (!meetingReference || !mongoose.Types.ObjectId.isValid(meetingReference)) {
       return {
         success: false,
         code: 400,
-        message: "meeting_reference is required for reunion"
+        message: "meetingReference is required for reunion"
       };
     }
 
-    const meeting = await Meeting.findById(meeting_reference);
+    const meeting = await Meeting.findById(meetingReference);
     if (!meeting) {
       return {
         success: false,
@@ -67,15 +66,21 @@ export const createValidation = async (data, validatorId) => {
         message: "Meeting not found"
       };
     }
+    const task = await Task.findById(referenceId);
+    if (!task) return { 
+      success: false, 
+      code: 404,
+      message: "Task not found" 
+    };
   }
 
   // 5️⃣ Create validation entry
   const validation = await Validation.create({
-    task_id,
+    taskId,
     status,
-    validator_id: validatorId,
-    meeting_type,
-    meeting_reference: meeting_reference || null,
+    validatorId,
+    meetingType,
+    meetingReference: meetingReference || null,
     comment
   });
 
@@ -95,9 +100,15 @@ export const getValidationsByTask = async (taskId) => {
       message: "Invalid taskId format"
     };
   }
+  const task = await Task.findById(taskId);
+    if (!task) return { 
+      success: false, 
+      code: 404,
+      message: "Task not found" 
+    };
 
   const validations = await Validation.find({
-    task_id: taskId,
+    taskId,
     deletedAt: null
   }).sort({ createdAt: -1 });
 
@@ -128,7 +139,7 @@ export const deleteValidation = async (id, requestingValidatorId) => {
   }
 
   // 403: Only original validator can delete
-  if (validation.validator_id.toString() !== requestingValidatorId.toString()) {
+  if (validation.validatorId.toString() !== requestingValidatorId.toString()) {
     return {
       success: false,
       code: 403,

@@ -1,13 +1,14 @@
 // Team_D/routes/meeting.routes.js
 
 import express from "express";
-import { authenticateToken, authorizeStudent } from "../../../shared/middlewares/auth.middleware.js";
-import { authorizeEncadrantUniversity } from "../middlewares/auth.middleware.js";
+import { authenticateToken } from "../../../shared/middlewares/auth.middleware.js";
+import {
+  authorizeStudent,
+  authorizeSupervisor
+} from "../../../shared/middlewares/auth.middleware.js";
 
 import { validate } from "../../../shared/middlewares/validate.js";
-import {
-  CreateMeetingSchema,
-  UpdateMeetingSchema,
+import { MeetingSchema,
   CompleteMeetingSchema,
   ValidateMeetingSchema,
   ChangeReferenceSchema
@@ -25,7 +26,7 @@ router.post(
   "/",
   authenticateToken,
   authorizeStudent,
-  validate(CreateMeetingSchema),
+  validate(MeetingSchema),
   meetingController.createMeeting
 );
 
@@ -33,11 +34,11 @@ router.post(
 // =======================================================
 // 2. UPDATE MEETING (PUT /meetings/:id)
 // =======================================================
-router.patch(
+router.put(
   "/:id",
   authenticateToken,
   authorizeStudent,
-  validate(UpdateMeetingSchema),
+  validate(MeetingSchema),
   meetingController.updateMeeting
 );
 
@@ -67,26 +68,35 @@ router.patch(
 
 // =======================================================
 // 5. VALIDATE MEETING (PATCH /meetings/:id/validate)
-// Encadrant universitaire ONLY
 // =======================================================
 router.patch(
   "/:id/validate",
   authenticateToken,
-  authorizeEncadrantUniversity,
+  authorizeSupervisor,
   validate(ValidateMeetingSchema),
-  meetingController.validateMeeting
+  meetingController.validateMeeting 
 );
 
 
 // =======================================================
-// 6. LIST MEETINGS (GET /meetings?project_id=xxx)
+// 6. LIST MEETINGS BY STUDENT (GET /meetings)
 // =======================================================
 router.get(
   "/",
   authenticateToken,
-  meetingController.listMeetingsByProject
+  authorizeStudent,
+  meetingController.listMeetingsByStudent
 );
 
+// =======================================================
+// 6. LIST MEETINGS (GET /meetings?projectId=xxx)
+// =======================================================
+router.get(
+  "/project/:projectId",
+  authenticateToken,
+  authorizeSupervisor,
+  meetingController.listMeetingsByProject
+);
 
 // =======================================================
 // 7. LIST MEETINGS BY REFERENCE (GET /meetings/reference/:type/:id)
@@ -117,7 +127,7 @@ router.patch(
 router.get(
   "/pending-validation",
   authenticateToken,
-  authorizeEncadrantUniversity,
+  authorizeSupervisor,
   meetingController.listPendingValidation
 );
 
