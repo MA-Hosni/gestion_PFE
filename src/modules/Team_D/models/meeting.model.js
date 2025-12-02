@@ -30,11 +30,20 @@ const MeetingSchema = new Schema({
         default: 'pending' 
     },
 
+    validatorId: { 
+        type: Schema.Types.ObjectId, 
+        ref: "Supervisor",
+        default: null
+    },
+
+    projectId: { type: Schema.Types.ObjectId, ref: 'Project', required: true },
+
     deletedAt: {
         type: Date, 
         default: null, 
-        index: true }
-    }, { timestamps: true });
+        index: true
+    }
+}, { timestamps: true });
 
 MeetingSchema.index(
     { createdBy: 1, deletedAt: 1 },

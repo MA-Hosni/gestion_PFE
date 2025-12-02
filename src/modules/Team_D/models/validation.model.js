@@ -9,7 +9,7 @@ const ValidationSchema = new Schema({
         required: true 
     },
 
-    status: {
+    status: { 
         type: String, 
         enum: ['valid', 'invalid'], 
         required: true 
@@ -17,7 +17,7 @@ const ValidationSchema = new Schema({
 
     validatorId: { 
         type: Schema.Types.ObjectId, 
-        ref: 'Student', 
+        ref: 'Supervisor', 
         required: true 
     },
 
@@ -35,7 +35,11 @@ const ValidationSchema = new Schema({
 
     comment: { type: String, trim: true },
 
-    deletedAt: { type: Date, default: null, index: true }
+    deletedAt: { 
+        type: Date, 
+        default: null, 
+        index: true 
+    }
 }, { timestamps: true });
 
 ValidationSchema.index(
