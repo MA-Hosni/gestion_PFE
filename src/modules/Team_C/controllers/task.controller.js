@@ -55,7 +55,6 @@ export const updateTask = async (req, res) => {
     res.status(err.status || 500).json({ message: err.message });
   }
 };
-
 export const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
@@ -70,7 +69,6 @@ export const deleteTask = async (req, res) => {
     res.status(err.status || 500).json({ message: err.message });
   }
 };
-
 export const getAllTasksForCompSupervisor = async (req, res) => {
   try {
     const { compSupervisorId } = req.params;
@@ -90,7 +88,6 @@ export const getAllTasksForCompSupervisor = async (req, res) => {
         return res.status(404).json({ message: "Supervisor not found." });
       }
     }
-
     // Fetch tasks for the supervisor
     const tasks = await taskService.getAllTasksForCompSupvisor(compSupervisorId);
     res.status(200).json({ message: `${supervisorType} tasks retrieved successfully`, tasks });
@@ -98,7 +95,6 @@ export const getAllTasksForCompSupervisor = async (req, res) => {
     res.status(err.status || 500).json({ message: err.message });
   }
 };
-
 export const getAllTasksForUnivSupervisor = async (req, res) => {
   try {
     const { univSupervisorId } = req.params;
@@ -118,7 +114,6 @@ export const getAllTasksForUnivSupervisor = async (req, res) => {
         return res.status(404).json({ message: "Supervisor not found." });
       }
     }
-
     // Fetch tasks for the supervisor
     const tasks = await taskService.getAllTasksForUnivSupervisor(univSupervisorId);
     res.status(200).json({ message: `${supervisorType} tasks retrieved successfully`, tasks });
@@ -126,7 +121,6 @@ export const getAllTasksForUnivSupervisor = async (req, res) => {
     res.status(err.status || 500).json({ message: err.message });
   }
 };
-
 
 //controller for getAllTasksForUserStory  
 export const getAllTasksForUserStory = async (req, res) => {
@@ -149,9 +143,50 @@ export const updateTaskStatus = async (req, res) => {
     if (!id) {
       return res.status(400).json({ message: "Task ID is required." });
     }
-
     const task = await taskService.updateTaskStatus(id, req.body);
     res.status(200).json({ message: "Task updated successfully and waiting for validation", task });
+  } catch (err) {
+    res.status(err.status || 500).json({ message: err.message });
+  }
+};
+
+//controller for validateTaskStatus
+export const validateTaskStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!id) {
+      return res.status(400).json({ message: "Task ID is required." });
+    }
+
+    const task = await taskService.validateTaskStatus(id, req.body);
+    res.status(200).json({ message: "Task validated successfully", task });
+  } catch (err) {
+    res.status(err.status || 500).json({ message: err.message });
+  }
+};
+
+//controller for makeFullReport
+export const makeFullReport = async (req, res) => {
+  try {
+    const { projectId } = req.params;
+    if (!projectId) {
+      return res.status(400).json({ message: "Project ID is required." });
+    }
+    const report = await taskService.makeFullReport(projectId);
+    res.status(200).json({ message: "Report generated successfully", report });
+  } catch (err) {
+    res.status(err.status || 500).json({ message: err.message });
+  }
+};
+//controller for getSprintReport
+export const getSprintReport = async (req, res) => {
+  try {
+    const { sprintId } = req.params;
+    if (!sprintId) {
+      return res.status(400).json({ message: "Sprint ID is required." });
+    }
+    const report = await taskService.makeSprintReport(sprintId);
+    res.status(200).json({ message: "Report generated successfully", report });
   } catch (err) {
     res.status(err.status || 500).json({ message: err.message });
   }

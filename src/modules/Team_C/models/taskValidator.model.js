@@ -6,10 +6,15 @@ const taskValidatorSchema = new mongoose.Schema({
     ref: "Task",
     required: true,
   },
-  status: {
+  task_status: {
+    type: String,
+    enum: ["ToDo", "InProgress", "Standby", "Done"],
+    required: true,
+  },
+  validator_status: {
     type: String,
     enum: ["valid", "invalid", "in progress"],
-    default: "in progress",
+    default:"in progress",
     required: true,
   },
   validator_id: {
