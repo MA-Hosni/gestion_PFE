@@ -26,6 +26,8 @@ const swaggerDefinition = {
     { name: 'Users', description: 'User profile and helpers' },
     { name: 'Projects', description: 'Project management' },
     { name: 'Sprints', description: 'Sprint management' },
+    { name: 'User Stories', description: 'User story management' }
+
   ],
   components: {
     securitySchemes: {
@@ -168,6 +170,163 @@ const swaggerDefinition = {
           },
         },
       },
+      // User Story Schemas
+  UserStory: {
+    type: 'object',
+    required: ['storyName', 'priority', 'storyPointEstimate', 'startDate', 'dueDate', 'sprintId'],
+    properties: {
+      userStoryId: { 
+        type: 'string', 
+        example: '507f1f77bcf86cd799439011',
+        description: 'Unique identifier of the user story'
+      },
+      storyName: { 
+        type: 'string', 
+        example: 'User Authentication System',
+        description: 'Name of the user story'
+      },
+      description: { 
+        type: 'string', 
+        example: 'As a user, I want to log in securely so that I can access my account',
+        description: 'Detailed description of the user story'
+      },
+      priority: {
+        type: 'string',
+        enum: ['highest', 'high', 'medium', 'low', 'lowest'],
+        example: 'high',
+        description: 'Priority level of the user story'
+      },
+      storyPointEstimate: {
+        type: 'number',
+        minimum: 0,
+        example: 8,
+        description: 'Story points estimate for the user story'
+      },
+      startDate: {
+        type: 'string',
+        format: 'date-time',
+        example: '2025-01-01T00:00:00.000Z',
+        description: 'Start date of the user story'
+      },
+      dueDate: {
+        type: 'string',
+        format: 'date-time',
+        example: '2025-01-15T00:00:00.000Z',
+        description: 'Due date of the user story'
+      },
+      sprintId: {
+        type: 'string',
+        example: '507f1f77bcf86cd799439012',
+        description: 'ID of the sprint this user story belongs to'
+      },
+      sprint: {
+        type: 'object',
+        description: 'Populated sprint information',
+        properties: {
+          sprintId: { type: 'string' },
+          title: { type: 'string', example: 'Sprint 1' },
+          goal: { type: 'string', example: 'Complete MVP features' },
+          startDate: { type: 'string', format: 'date-time' },
+          endDate: { type: 'string', format: 'date-time' },
+          orderIndex: { type: 'number', example: 1 }
+        }
+      },
+      tasks: {
+        type: 'array',
+        description: 'List of tasks associated with this user story',
+        items: {
+          type: 'object',
+          properties: {
+            _id: { type: 'string' },
+            taskName: { type: 'string' },
+            status: { type: 'string' },
+            priority: { type: 'string' }
+          }
+        }
+      },
+      tasksCount: {
+        type: 'number',
+        example: 3,
+        description: 'Number of tasks in this user story'
+      },
+      createdAt: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Creation timestamp'
+      },
+      updatedAt: {
+        type: 'string',
+        format: 'date-time',
+        description: 'Last update timestamp'
+      }
+    }
+  },
+
+  CreateUserStoryRequest: {
+    type: 'object',
+    required: ['storyName', 'priority', 'storyPointEstimate', 'startDate', 'dueDate', 'sprintId'],
+    properties: {
+      storyName: { 
+        type: 'string', 
+        example: 'User Authentication System' 
+      },
+      description: { 
+        type: 'string', 
+        example: 'As a user, I want to log in securely' 
+      },
+      priority: {
+        type: 'string',
+        enum: ['highest', 'high', 'medium', 'low', 'lowest'],
+        example: 'high'
+      },
+      storyPointEstimate: {
+        type: 'number',
+        minimum: 0,
+        example: 8
+      },
+      startDate: {
+        type: 'string',
+        format: 'date-time',
+        example: '2025-01-01T00:00:00.000Z'
+      },
+      dueDate: {
+        type: 'string',
+        format: 'date-time',
+        example: '2025-01-15T00:00:00.000Z'
+      },
+      sprintId: {
+        type: 'string',
+        example: '507f1f77bcf86cd799439012'
+      }
+    }
+  },
+  UpdateUserStoryRequest: {
+    type: 'object',
+    properties: {
+      storyName: { type: 'string' },
+      description: { type: 'string' },
+      priority: {
+        type: 'string',
+        enum: ['highest', 'high', 'medium', 'low', 'lowest']
+      },
+      storyPointEstimate: {
+        type: 'number',
+        minimum: 0
+      },
+      startDate: {
+        type: 'string',
+        format: 'date-time'
+      },
+      dueDate: {
+        type: 'string',
+        format: 'date-time'
+      },
+      sprintId: {
+        type: 'string',
+        description: 'Change the sprint of this user story'
+      }
+    }
+  }
     },
     responses: {
       BadRequest: {
