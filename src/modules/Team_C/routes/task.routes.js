@@ -31,3 +31,4 @@ router.get("/report/:projectId", authenticateToken, authorizeSupervisor, taskCon
 // get sprint report
 router.get("/sprintreport/:sprintId", authenticateToken, authorizeSupervisor, taskController.getSprintReport)
 export default router;
+  

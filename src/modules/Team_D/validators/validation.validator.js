@@ -3,7 +3,7 @@ import Joi from "joi";
 const objectIdPattern = /^[0-9a-fA-F]{24}$/;
 
 export const ValidationSchema = Joi.object({
-  task_id: Joi.string()
+  taskId: Joi.string()
     .pattern(objectIdPattern)
     .required()
     .messages({
@@ -19,15 +19,7 @@ export const ValidationSchema = Joi.object({
       'any.required': 'Status is required'
     }),
 
-  validator_id: Joi.string()
-    .pattern(objectIdPattern)
-    .required()
-    .messages({
-      'string.pattern.base': 'Validator ID must be a valid ObjectId',
-      'any.required': 'Validator ID is required'
-    }),
-
-  meeting_type: Joi.string()
+  meetingType: Joi.string()
     .valid('reunion', 'hors_reunion')
     .required()
     .messages({
@@ -35,7 +27,7 @@ export const ValidationSchema = Joi.object({
       'any.required': 'Meeting type is required'
     }),
 
-  meeting_reference: Joi.string()
+  meetingReference: Joi.string()
     .pattern(objectIdPattern)
     .allow(null)
     .messages({
