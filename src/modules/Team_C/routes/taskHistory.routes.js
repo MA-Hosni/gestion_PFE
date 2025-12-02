@@ -1,4 +1,4 @@
-const express = require("express")
+import express from "express"
 const router = express.Router()
 import { authenticateToken, authorizeStudent, authorizeSupervisor } from "../../../shared/middlewares/auth.middleware.js"
 const taskHistoryController = require("../controllers/taskHistory.controller")
