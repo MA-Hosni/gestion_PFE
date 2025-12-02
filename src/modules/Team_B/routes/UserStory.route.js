@@ -20,9 +20,10 @@ router.get("/",authenticateToken,authorizeStudent,userStoryController.getUserSto
 router.get("/sprint/:sprintId",authenticateToken,authorizeStudent,userStoryController.getUserStoriesRelatedToSprint);
 
 // get user storie by id 
-router.get("/:usId",authenticateToken,authorizeStudent,userStoryController.getUserStoryById);
+router.get("/:userStoryId",authenticateToken,authorizeStudent,userStoryController.getUserStoryById);
 
-router.put("/", authenticateToken, authorizeStudent, validate(updateUserStorySchema), userStoryController.updateUserStory);
+router.put("/:userStoryId", authenticateToken, authorizeStudent, validate(updateUserStorySchema), userStoryController.updateUserStory);
 
+router.delete("/:userStoryId",authenticateToken,authorizeStudent,userStoryController.deleteUserStory);
 
 export default router;

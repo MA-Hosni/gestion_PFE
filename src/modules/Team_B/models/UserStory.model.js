@@ -41,4 +41,10 @@ UserStorySchema.index(
     }
 );
 
+// Unicité du nom de la UserStory dans un même sprint
+UserStorySchema.index(
+    { storyName: 1, sprintId: 1 },
+    { unique: true }
+);
+
 export default model('UserStory', UserStorySchema);

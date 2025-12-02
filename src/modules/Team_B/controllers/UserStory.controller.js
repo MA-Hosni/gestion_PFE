@@ -56,13 +56,14 @@ export const getUserStoriesRelatedToSprint = async (req, res, next) => {
 }
 
 // get US By ID 
+// Get User Story by ID
+// Get User Story by ID
 export const getUserStoryById = async (req, res, next) => {
   try {
-
-    const { usId } = req.params;
+    const { userStoryId } = req.params;
     const projectId = req.student.project;
 
-    const result = await userStoryService.getUserStoryByID(projectId , usId);
+    const result = await userStoryService.getUserStoryByID(userStoryId,projectId);
 
     res.status(StatusCodes.OK).json({
       success: result.success,
@@ -72,18 +73,16 @@ export const getUserStoryById = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}
-
-
+};
 // Update User Story 
 export const updateUserStory = async (req, res, next) => {
   try {
 
     const { userStoryId } = req.params;
     const updateData = req.validatedBody;
-    const projectId = req.student.project;
+    const studentId  = req.student.id;
 
-    const result = await userStoryService.updateUserStory(userStoryId , updateData , projectId );
+    const result = await userStoryService.updateUserStory(userStoryId , updateData , studentId  );
 
     res.status(StatusCodes.OK).json({
       success: result.success,
@@ -95,3 +94,23 @@ export const updateUserStory = async (req, res, next) => {
   }
 }
 
+// Delete User Story
+export const deleteUserStory = async (req, res, next) => {
+  try {
+    const { userStoryId } = req.params;
+    const studentId = req.student.id;
+
+    const result = await userStoryService.deleteUserStory(
+      userStoryId,
+      studentId
+    );
+
+    res.status(StatusCodes.OK).json({
+      success: result.success,
+      message: result.message,
+      data: result.data
+    });
+  } catch (error) {
+    next(error);
+  }
+};

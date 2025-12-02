@@ -4,7 +4,7 @@ import Sprint from "../../Team_A/models/sprint.model.js";
 import Project from "../../Team_A/models/project.model.js";
 
 import Student from "../../Authentication/models/student.model.js";
-
+import Task from "../../Team_C/models/task.model.js"
 // 📌 CREATE USER STORY
 
 export const createUserStory = async (data , studentId) => {
@@ -51,7 +51,22 @@ export const createUserStory = async (data , studentId) => {
     }
 
     /** --------------------
-     * 3. Validate dates
+     * 3. Validate UserStoryName doesnt exist in the sprint
+     * -------------------- */
+    const existingUserStory = await UserStory.findOne({
+      storyName,
+      sprintId,
+      deletedAt: null
+    }).session(session);
+
+    if (existingUserStory) {
+      const error = new Error("A user story with this name already exists in this sprint");
+      error.status = 409; // Conflict
+      throw error;
+    }
+
+    /** --------------------
+     * 4. Validate dates
      * -------------------- */
     const start = new Date(startDate);
     const due = new Date(dueDate);
@@ -284,13 +299,313 @@ export const getUserStoryByID = async (projectId, userStoryId) => {
   }
 };
 
+
 // 🚀 UPDATE USER STORY 
 
 
-export const updateUserStory = async (userStoryId , updateData , projectId) => {
+export const updateUserStory = async (userStoryId, updateData, studentId) => {
   const session = await mongoose.startSession();
   session.startTransaction();
-  // al yardemek : update sprint 
-  
+
+  try {
+    const {
+      storyName,
+      description,
+      priority,
+      storyPointEstimate,
+      startDate,
+      dueDate,
+      sprintId
+    } = updateData;
+
+    /** ----------------------------------------------------
+     * 1. Validate that the user story exists and not deleted
+     * ---------------------------------------------------- */
+    const userStory = await UserStory.findOne({
+      _id: userStoryId,
+      deletedAt: null
+    }).session(session);
+
+    if (!userStory) {
+      const error = new Error("User story not found or deleted");
+      error.status = 404;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 2. Validate that the student has a project
+     * ---------------------------------------------------- */
+    const student = await Student.findById(studentId).session(session);
+
+    if (!student) {
+      const error = new Error("Student not found");
+      error.status = 404;
+      throw error;
+    }
+
+    if (!student.project) {
+      const error = new Error("Student has no assigned project");
+      error.status = 400;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 3. Validate that the user story belongs to student's project
+     * ---------------------------------------------------- */
+    const currentSprint = await Sprint.findOne({
+      _id: userStory.sprintId,
+      deletedAt: null
+    }).session(session);
+
+    if (!currentSprint) {
+      const error = new Error("Current sprint not found");
+      error.status = 404;
+      throw error;
+    }
+
+    if (String(currentSprint.projectId) !== String(student.project)) {
+      const error = new Error("User story does not belong to your project");
+      error.status = 403;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 4. If sprintId is being changed, validate new sprint
+     * ---------------------------------------------------- */
+    let newSprint = null;
+    const isSprintChanging = sprintId && String(sprintId) !== String(userStory.sprintId);
+
+    if (isSprintChanging) {
+      newSprint = await Sprint.findOne({
+        _id: sprintId,
+        deletedAt: null
+      }).session(session);
+
+      if (!newSprint) {
+        const error = new Error("New sprint not found or deleted");
+        error.status = 404;
+        throw error;
+      }
+
+      // Validate new sprint belongs to the same project
+      if (String(newSprint.projectId) !== String(student.project)) {
+        const error = new Error("New sprint does not belong to your project");
+        error.status = 403;
+        throw error;
+      }
+    }
+
+    /** ----------------------------------------------------
+     * 5. Validate storyName uniqueness (if storyName is being changed)
+     * ---------------------------------------------------- */
+    const finalStoryName = storyName || userStory.storyName;
+    const finalSprintId = sprintId || userStory.sprintId;
+
+    // Check uniqueness only if storyName OR sprintId is changing
+    if (
+      (storyName && storyName !== userStory.storyName) ||
+      isSprintChanging
+    ) {
+      const existingUserStory = await UserStory.findOne({
+        _id: { $ne: userStoryId }, // Exclude current user story
+        storyName: finalStoryName,
+        sprintId: finalSprintId,
+        deletedAt: null
+      }).session(session);
+
+      if (existingUserStory) {
+        const error = new Error(
+          "A user story with this name already exists in this sprint"
+        );
+        error.status = 409;
+        throw error;
+      }
+    }
+
+    /** ----------------------------------------------------
+     * 6. Validate dates
+     * ---------------------------------------------------- */
+    const finalStartDate = startDate ? new Date(startDate) : userStory.startDate;
+    const finalDueDate = dueDate ? new Date(dueDate) : userStory.dueDate;
+
+    if (finalDueDate <= finalStartDate) {
+      const error = new Error("Due date must be after start date");
+      error.status = 400;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 7. Update user story
+     * ---------------------------------------------------- */
+    const updateFields = {};
+
+    if (storyName !== undefined) updateFields.storyName = storyName;
+    if (description !== undefined) updateFields.description = description;
+    if (priority !== undefined) updateFields.priority = priority;
+    if (storyPointEstimate !== undefined) updateFields.storyPointEstimate = storyPointEstimate;
+    if (startDate !== undefined) updateFields.startDate = finalStartDate;
+    if (dueDate !== undefined) updateFields.dueDate = finalDueDate;
+    if (sprintId !== undefined) updateFields.sprintId = sprintId;
+
+    const updatedUserStory = await UserStory.findByIdAndUpdate(
+      userStoryId,
+      { $set: updateFields },
+      { new: true, session, runValidators: true }
+    );
+
+    /** ----------------------------------------------------
+     * 8. Update sprint references if sprint is changing
+     * ---------------------------------------------------- */
+    if (isSprintChanging) {
+      // Remove from old sprint
+      await Sprint.findByIdAndUpdate(
+        userStory.sprintId,
+        { $pull: { userStories: userStoryId } },
+        { session }
+      );
+
+      // Add to new sprint
+      await Sprint.findByIdAndUpdate(
+        sprintId,
+        { $push: { userStories: userStoryId } },
+        { session }
+      );
+    }
+
+    await session.commitTransaction();
+
+    return {
+      success: true,
+      message: "User story updated successfully",
+      data: {
+        userStoryId: updatedUserStory._id,
+        storyName: updatedUserStory.storyName,
+        description: updatedUserStory.description,
+        priority: updatedUserStory.priority,
+        storyPointEstimate: updatedUserStory.storyPointEstimate,
+        startDate: updatedUserStory.startDate,
+        dueDate: updatedUserStory.dueDate,
+        sprintId: updatedUserStory.sprintId,
+        updatedAt: updatedUserStory.updatedAt
+      }
+    };
+
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
 };
 
+
+// DELETE USER STORY (soft delete) 
+
+export const deleteUserStory = async (userStoryId, studentId) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    /** ----------------------------------------------------
+     * 1. Validate that the user story exists and not deleted
+     * ---------------------------------------------------- */
+    const userStory = await UserStory.findOne({
+      _id: userStoryId,
+      deletedAt: null
+    }).session(session);
+
+    if (!userStory) {
+      const error = new Error("User story not found or already deleted");
+      error.status = 404;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 2. Validate that the student has a project
+     * ---------------------------------------------------- */
+    const student = await Student.findById(studentId).session(session);
+
+    if (!student) {
+      const error = new Error("Student not found");
+      error.status = 404;
+      throw error;
+    }
+
+    if (!student.project) {
+      const error = new Error("Student has no assigned project");
+      error.status = 400;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 3. Validate that the user story belongs to student's project
+     * ---------------------------------------------------- */
+    const sprint = await Sprint.findOne({
+      _id: userStory.sprintId,
+      deletedAt: null
+    }).session(session);
+
+    if (!sprint) {
+      const error = new Error("Sprint not found");
+      error.status = 404;
+      throw error;
+    }
+
+    if (String(sprint.projectId) !== String(student.project)) {
+      const error = new Error("User story does not belong to your project");
+      error.status = 403;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 4. Soft delete all tasks associated with this user story
+     * ---------------------------------------------------- */
+    const deletedTasksResult = await Task.updateMany(
+      {
+        userStoryId: userStoryId,
+        deletedAt: null
+      },
+      {
+        $set: { deletedAt: new Date() }
+      },
+      { session }
+    );
+
+    /** ----------------------------------------------------
+     * 5. Soft delete the user story
+     * ---------------------------------------------------- */
+    const deletedUserStory = await UserStory.findByIdAndUpdate(
+      userStoryId,
+      { $set: { deletedAt: new Date() } },
+      { new: true, session }
+    );
+
+    /** ----------------------------------------------------
+     * 6. Remove user story reference from sprint
+     * ---------------------------------------------------- */
+    await Sprint.findByIdAndUpdate(
+      userStory.sprintId,
+      { $pull: { userStories: userStoryId } },
+      { session }
+    );
+
+    await session.commitTransaction();
+
+    return {
+      success: true,
+      message: "User story and associated tasks deleted successfully",
+      data: {
+        userStoryId: deletedUserStory._id,
+        storyName: deletedUserStory.storyName,
+        deletedTasksCount: deletedTasksResult.modifiedCount,
+        deletedAt: deletedUserStory.deletedAt
+      }
+    };
+
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
