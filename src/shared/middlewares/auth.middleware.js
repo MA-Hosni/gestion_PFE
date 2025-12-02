@@ -73,14 +73,14 @@ export const authorizeStudent = async (req, res, next) => {
     if (!req.user) {
       const error = new Error("Authentication required");
       error.status = 401;
-      return next(error);
+      throw error;
     }
 
     // Check if user has student role
     if (req.user.role !== "Student") {
       const error = new Error("Access denied. Only students can access this resource");
       error.status = 403;
-      return next(error);
+      throw error;
     }
 
     // Get student document with userId
@@ -89,7 +89,7 @@ export const authorizeStudent = async (req, res, next) => {
     if (!student) {
       const error = new Error("Student profile not found");
       error.status = 404;
-      return next(error);
+      throw error;
     }
 
     // Attach student info to request
@@ -117,14 +117,14 @@ export const authorizeSupervisor = async (req, res, next) => {
     if (!req.user) {
       const error = new Error("Authentication required");
       error.status = 401;
-      return next(error);
+      throw error;
     }
 
     // Check if user is not a student
     if (req.user.role === "Student") {
       const error = new Error("Access denied. Only Supervisors can access this resource");
       error.status = 403;
-      return next(error);
+      throw error;
     }
 
     let supervisor = null;
@@ -133,7 +133,7 @@ export const authorizeSupervisor = async (req, res, next) => {
       if (!supervisor) {
         const error = new Error("Company supervisor profile not found");
         error.status = 404;
-        return next(error);
+        throw error;
       }
       req.supervisor = {
         id: supervisor._id,
@@ -146,7 +146,7 @@ export const authorizeSupervisor = async (req, res, next) => {
       if (!supervisor) {
         const error = new Error("University supervisor profile not found");
         error.status = 404;
-        return next(error);
+        throw error;
       }
       req.supervisor = {
         id: supervisor._id,
@@ -156,7 +156,7 @@ export const authorizeSupervisor = async (req, res, next) => {
     } else {
       const error = new Error("Access denied. Only Company or University Supervisors can access this resource");
       error.status = 403;
-      return next(error);
+      throw error;
     }
 
     next();
