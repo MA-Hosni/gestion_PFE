@@ -9,7 +9,7 @@ export const authenticateToken = async (req, res, next) => {
     if (!authHeader) {
       const error = new Error("Access token is required");
       error.status = 401;
-      throw error;
+      return next(error);
     }
     
     const token = authHeader.split(' ')[1];
@@ -17,7 +17,7 @@ export const authenticateToken = async (req, res, next) => {
     if (!token) {
       const error = new Error("Access token is required");
       error.status = 401;
-      throw error;
+      return next(error);
     }
     
     let decoded;
@@ -26,7 +26,7 @@ export const authenticateToken = async (req, res, next) => {
     } catch {
       const error = new Error("Invalid or expired access token");
       error.status = 401;
-      throw error;
+      return next(error);
     }
     
     const user = await User.findById(decoded.userId).select('-password');
@@ -34,19 +34,19 @@ export const authenticateToken = async (req, res, next) => {
     if (!user) {
       const error = new Error("User not found");
       error.status = 401;
-      throw error;
+      return next(error);
     }
     
     if (!user.isActive) {
       const error = new Error("User account is deactivated");
       error.status = 401;
-      throw error;
+      return next(error);
     }
     
     if (!user.isVerified) {
       const error = new Error("Please verify your email before accessing this resource");
       error.status = 403;
-      throw error;
+      return next(error);
     }
     
     req.user = {

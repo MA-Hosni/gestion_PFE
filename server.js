@@ -18,7 +18,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(logger('combined'));
-app.use(errorMiddleware);
 
 await connectDB();
 
@@ -33,6 +32,20 @@ app.use('/api', teamARouter);
 app.use('/api', teamBRouter);
 app.use('/api', teamCRouter);
 // app.use('/api', teamDRouter);
+
+// ========================================
+// 5️⃣ 404 HANDLER (Route non trouvée)
+// ========================================
+app.use((req, res, next) => {
+  const error = new Error(`Route not found: ${req.method} ${req.originalUrl}`);
+  error.status = 404;
+  next(error);
+});
+
+// ========================================
+// 6️⃣ ERROR MIDDLEWARE (DOIT ÊTRE EN DERNIER)
+// ========================================
+app.use(errorMiddleware);
 
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
