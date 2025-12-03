@@ -171,162 +171,377 @@ const swaggerDefinition = {
         },
       },
       // User Story Schemas
-  UserStory: {
-    type: 'object',
-    required: ['storyName', 'priority', 'storyPointEstimate', 'startDate', 'dueDate', 'sprintId'],
-    properties: {
-      userStoryId: { 
-        type: 'string', 
-        example: '507f1f77bcf86cd799439011',
-        description: 'Unique identifier of the user story'
-      },
-      storyName: { 
-        type: 'string', 
-        example: 'User Authentication System',
-        description: 'Name of the user story'
-      },
-      description: { 
-        type: 'string', 
-        example: 'As a user, I want to log in securely so that I can access my account',
-        description: 'Detailed description of the user story'
-      },
-      priority: {
-        type: 'string',
-        enum: ['highest', 'high', 'medium', 'low', 'lowest'],
-        example: 'high',
-        description: 'Priority level of the user story'
-      },
-      storyPointEstimate: {
-        type: 'number',
-        minimum: 0,
-        example: 8,
-        description: 'Story points estimate for the user story'
-      },
-      startDate: {
-        type: 'string',
-        format: 'date-time',
-        example: '2025-01-01T00:00:00.000Z',
-        description: 'Start date of the user story'
-      },
-      dueDate: {
-        type: 'string',
-        format: 'date-time',
-        example: '2025-01-15T00:00:00.000Z',
-        description: 'Due date of the user story'
-      },
-      sprintId: {
-        type: 'string',
-        example: '507f1f77bcf86cd799439012',
-        description: 'ID of the sprint this user story belongs to'
-      },
-      sprint: {
+      UserStory: {
         type: 'object',
-        description: 'Populated sprint information',
+        required: ['storyName', 'priority', 'storyPointEstimate', 'startDate', 'dueDate', 'sprintId'],
         properties: {
-          sprintId: { type: 'string' },
-          title: { type: 'string', example: 'Sprint 1' },
-          goal: { type: 'string', example: 'Complete MVP features' },
-          startDate: { type: 'string', format: 'date-time' },
-          endDate: { type: 'string', format: 'date-time' },
-          orderIndex: { type: 'number', example: 1 }
-        }
-      },
-      tasks: {
-        type: 'array',
-        description: 'List of tasks associated with this user story',
-        items: {
-          type: 'object',
-          properties: {
-            _id: { type: 'string' },
-            taskName: { type: 'string' },
-            status: { type: 'string' },
-            priority: { type: 'string' }
+          userStoryId: {
+            type: 'string',
+            example: '507f1f77bcf86cd799439011',
+            description: 'Unique identifier of the user story'
+          },
+          storyName: {
+            type: 'string',
+            example: 'User Authentication System',
+            description: 'Name of the user story'
+          },
+          description: {
+            type: 'string',
+            example: 'As a user, I want to log in securely so that I can access my account',
+            description: 'Detailed description of the user story'
+          },
+          priority: {
+            type: 'string',
+            enum: ['highest', 'high', 'medium', 'low', 'lowest'],
+            example: 'high',
+            description: 'Priority level of the user story'
+          },
+          storyPointEstimate: {
+            type: 'number',
+            minimum: 0,
+            example: 8,
+            description: 'Story points estimate for the user story'
+          },
+          startDate: {
+            type: 'string',
+            format: 'date-time',
+            example: '2025-01-01T00:00:00.000Z',
+            description: 'Start date of the user story'
+          },
+          dueDate: {
+            type: 'string',
+            format: 'date-time',
+            example: '2025-01-15T00:00:00.000Z',
+            description: 'Due date of the user story'
+          },
+          sprintId: {
+            type: 'string',
+            example: '507f1f77bcf86cd799439012',
+            description: 'ID of the sprint this user story belongs to'
+          },
+          sprint: {
+            type: 'object',
+            description: 'Populated sprint information',
+            properties: {
+              sprintId: { type: 'string' },
+              title: { type: 'string', example: 'Sprint 1' },
+              goal: { type: 'string', example: 'Complete MVP features' },
+              startDate: { type: 'string', format: 'date-time' },
+              endDate: { type: 'string', format: 'date-time' },
+              orderIndex: { type: 'number', example: 1 }
+            }
+          },
+          tasks: {
+            type: 'array',
+            description: 'List of tasks associated with this user story',
+            items: {
+              type: 'object',
+              properties: {
+                _id: { type: 'string' },
+                taskName: { type: 'string' },
+                status: { type: 'string' },
+                priority: { type: 'string' }
+              }
+            }
+          },
+          tasksCount: {
+            type: 'number',
+            example: 3,
+            description: 'Number of tasks in this user story'
+          },
+          createdAt: {
+            type: 'string',
+            format: 'date-time',
+            description: 'Creation timestamp'
+          },
+          updatedAt: {
+            type: 'string',
+            format: 'date-time',
+            description: 'Last update timestamp'
           }
         }
       },
-      tasksCount: {
-        type: 'number',
-        example: 3,
-        description: 'Number of tasks in this user story'
-      },
-      createdAt: {
-        type: 'string',
-        format: 'date-time',
-        description: 'Creation timestamp'
-      },
-      updatedAt: {
-        type: 'string',
-        format: 'date-time',
-        description: 'Last update timestamp'
-      }
-    }
-  },
 
-  CreateUserStoryRequest: {
-    type: 'object',
-    required: ['storyName', 'priority', 'storyPointEstimate', 'startDate', 'dueDate', 'sprintId'],
-    properties: {
-      storyName: { 
-        type: 'string', 
-        example: 'User Authentication System' 
+      CreateUserStoryRequest: {
+        type: 'object',
+        required: ['storyName', 'priority', 'storyPointEstimate', 'startDate', 'dueDate', 'sprintId'],
+        properties: {
+          storyName: {
+            type: 'string',
+            example: 'User Authentication System'
+          },
+          description: {
+            type: 'string',
+            example: 'As a user, I want to log in securely'
+          },
+          priority: {
+            type: 'string',
+            enum: ['highest', 'high', 'medium', 'low', 'lowest'],
+            example: 'high'
+          },
+          storyPointEstimate: {
+            type: 'number',
+            minimum: 0,
+            example: 8
+          },
+          startDate: {
+            type: 'string',
+            format: 'date-time',
+            example: '2025-01-01T00:00:00.000Z'
+          },
+          dueDate: {
+            type: 'string',
+            format: 'date-time',
+            example: '2025-01-15T00:00:00.000Z'
+          },
+          sprintId: {
+            type: 'string',
+            example: '507f1f77bcf86cd799439012'
+          }
+        }
       },
-      description: { 
-        type: 'string', 
-        example: 'As a user, I want to log in securely' 
+      UpdateUserStoryRequest: {
+        type: 'object',
+        properties: {
+          storyName: { type: 'string' },
+          description: { type: 'string' },
+          priority: {
+            type: 'string',
+            enum: ['highest', 'high', 'medium', 'low', 'lowest']
+          },
+          storyPointEstimate: {
+            type: 'number',
+            minimum: 0
+          },
+          startDate: {
+            type: 'string',
+            format: 'date-time'
+          },
+          dueDate: {
+            type: 'string',
+            format: 'date-time'
+          },
+          sprintId: {
+            type: 'string',
+            description: 'Change the sprint of this user story'
+          }
+        }
       },
-      priority: {
-        type: 'string',
-        enum: ['highest', 'high', 'medium', 'low', 'lowest'],
-        example: 'high'
+      // ==== TEAM C - TASKS MODULE SCHEMAS ====
+
+      // Task model
+      Task: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string', example: '6771b93d5f1a2d001fa3c541' },
+          title: { type: 'string', example: 'Design database schema' },
+          description: { type: 'string', example: 'Define initial MongoDB models' },
+          status: {
+            type: 'string',
+            enum: ['ToDo', 'InProgress', 'Standby', 'Done'],
+            example: 'InProgress'
+          },
+          priority: {
+            type: 'string',
+            enum: ['Low', 'Medium', 'High'],
+            example: 'Medium'
+          },
+          userStoryId: {
+            type: 'string',
+            example: '665f1f77bcf86cd799439011'
+          },
+          assignedTo: {
+            type: 'string',
+            example: '665f1f77bcf86cd799439099'
+          },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' }
+        }
       },
-      storyPointEstimate: {
-        type: 'number',
-        minimum: 0,
-        example: 8
+
+      // Task Creation
+      CreateTaskRequest: {
+        type: 'object',
+        required: ['title', 'userStoryId', 'status'],
+        properties: {
+          title: {
+            type: 'string',
+            example: 'Implement login system'
+          },
+          description: {
+            type: 'string',
+            example: 'Add JWT authentication'
+          },
+          status: {
+            type: 'string',
+            enum: ['ToDo', 'InProgress', 'Standby', 'Done'],
+            example: 'ToDo'
+          },
+          priority: {
+            type: 'string',
+            enum: ['Low', 'Medium', 'High'],
+            example: 'High'
+          },
+          userStoryId: {
+            type: 'string',
+            example: '507f1f77bcf86cd799439011'
+          },
+          assignedTo: {
+            type: 'string',
+            example: '665f1f77bcf86cd799439099'
+          }
+        }
       },
-      startDate: {
-        type: 'string',
-        format: 'date-time',
-        example: '2025-01-01T00:00:00.000Z'
+
+      // Task Update
+      UpdateTaskRequest: {
+        type: 'object',
+        properties: {
+          title: {
+            type: 'string',
+            example: 'Update frontend API integration'
+          },
+          description: {
+            type: 'string',
+            example: 'Fix endpoint compatibility'
+          },
+          status: {
+            type: 'string',
+            enum: ['ToDo', 'InProgress', 'Standby', 'Done'],
+            example: 'Done'
+          },
+          priority: {
+            type: 'string',
+            enum: ['Low', 'Medium', 'High'],
+            example: 'High'
+          },
+          userStoryId: {
+            type: 'string',
+            example: '507f1f77bcf86cd799439011'
+          },
+          assignedTo: {
+            type: 'string',
+            example: '665f1f77bcf86cd799439099'
+          }
+        }
       },
-      dueDate: {
-        type: 'string',
-        format: 'date-time',
-        example: '2025-01-15T00:00:00.000Z'
+
+      // Task History model
+      TaskHistory: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string', example: '67a1b02aa5d1c90017cd1a42' },
+          taskId: {
+            type: 'string',
+            example: '6771b93d5f1a2d001fa3c541'
+          },
+          modifiedBy: {
+            type: 'string',
+            example: '665f1f77bcf86cd799439099'
+          },
+          oldValue: {
+            type: 'object',
+            example: { status: 'InProgress' }
+          },
+          newValue: {
+            type: 'object',
+            example: { status: 'Done' }
+          },
+          fieldChanged: {
+            type: 'string',
+            example: 'status'
+          },
+          modifiedAt: {
+            type: 'string',
+            format: 'date-time'
+          }
+        }
       },
-      sprintId: {
-        type: 'string',
-        example: '507f1f77bcf86cd799439012'
+
+      // Create Task Status Change Request
+      UpdateTaskStatusRequest: {
+        type: 'object',
+        required: ['status', 'validator_id', 'meeting_type'],
+        properties: {
+          status: {
+            type: 'string',
+            enum: ['ToDo', 'InProgress', 'Standby', 'Done'],
+            example: 'Done'
+          },
+          validator_id: {
+            type: 'string',
+            example: '665f1f77bcf86cd799439099'
+          },
+          meeting_type: {
+            type: 'string',
+            enum: ['reunion', 'hors reunion'],
+            example: 'reunion'
+          },
+          comment: {
+            type: 'string',
+            example: 'Completed after supervisor review'
+          }
+        }
+      },
+
+      // Validate Task Status Request (Supervisor)
+      ValidateStatusRequest: {
+        type: 'object',
+        required: ['validator_status'],
+        properties: {
+          validator_status: {
+            type: 'string',
+            enum: ['valid', 'invalid', 'in progress'],
+            example: 'valid'
+          },
+          comment: {
+            type: 'string',
+            example: 'Good work'
+          }
+        }
+      },
+
+      // TaskValidator model
+      TaskValidator: {
+        type: 'object',
+        properties: {
+          _id: { type: 'string', example: '67b12c9ad512b40012de913a' },
+          task_id: {
+            type: 'string',
+            example: '6771b93d5f1a2d001fa3c541'
+          },
+          task_status: {
+            type: 'string',
+            enum: ['ToDo', 'InProgress', 'Standby', 'Done'],
+            example: 'Done'
+          },
+          validator_status: {
+            type: 'string',
+            enum: ['valid', 'invalid', 'in progress'],
+            example: 'in progress'
+          },
+          validator_id: {
+            type: 'string',
+            example: '665f1f77bcf86cd799439099'
+          },
+          meeting_type: {
+            type: 'string',
+            enum: ['reunion', 'hors reunion'],
+            example: 'hors reunion'
+          },
+          meeting_reference: {
+            type: 'string',
+            example: '6771b93d5f1a2d00abc3f312'
+          },
+          comment: {
+            type: 'string',
+            example: 'Waiting for meeting confirmation'
+          },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' }
+        }
       }
-    }
-  },
-  UpdateUserStoryRequest: {
-    type: 'object',
-    properties: {
-      storyName: { type: 'string' },
-      description: { type: 'string' },
-      priority: {
-        type: 'string',
-        enum: ['highest', 'high', 'medium', 'low', 'lowest']
-      },
-      storyPointEstimate: {
-        type: 'number',
-        minimum: 0
-      },
-      startDate: {
-        type: 'string',
-        format: 'date-time'
-      },
-      dueDate: {
-        type: 'string',
-        format: 'date-time'
-      },
-      sprintId: {
-        type: 'string',
-        description: 'Change the sprint of this user story'
-      }
-    }
-  }
+
     },
     responses: {
       BadRequest: {
