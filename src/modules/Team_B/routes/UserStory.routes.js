@@ -1,6 +1,5 @@
 import express from "express";
-import { authenticateToken } from "../../Authentication/middlewares/auth.middleware.js";
-import { authorizeStudent, authorizeSupervisor } from "../../Team_A/middlewares/auth.middleware.js";
+import { authenticateToken , authorizeStudent } from "../../../shared/middlewares/auth.middleware.js";
 
 import { validate } from "../../../shared/middlewares/validate.js";
 import { createUserStorySchema , updateUserStorySchema } from "../validators/UserStory.validator.js";
