@@ -1,0 +1,1122 @@
+{
+	"info": {
+		"_postman_id": "7e7f45ff-51c9-4e48-9e0d-a508ddac6ede",
+		"name": "AUTHENTICATION",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "32457936",
+		"_collection_link": "https://pfe666-3775.postman.co/workspace/pfe-Workspace~884f7d8e-8e55-4cbd-8b17-bea13124f0f7/collection/32457936-7e7f45ff-51c9-4e48-9e0d-a508ddac6ede?action=share&source=collection_link&creator=32457936"
+	},
+	"item": [
+		{
+			"name": "Signup Student",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"fullName\": \"student2\",\r\n  \"phoneNumber\": \"22222222\",\r\n  \"email\": \"medalihosni123456789@gmail.com\",\r\n  \"password\": \"Password123!\",\r\n  \"role\": \"Student\",\r\n  \"studentIdCardIMG\": \"ghjkhbytnhgkuntitnbjdnygjhnbdtnub\",\r\n  \"cin\": \"00000000\",\r\n  \"degree\": \"Engineer\",\r\n  \"degreeType\": \"INREV\",\r\n  \"companyName\": \"Focus\",\r\n  \"uniSupervisorId\": \"692ad7791d7783a501e6ed70\",\r\n  \"compSupervisorId\": \"692ad7561d7783a501e6ed6b\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/auth/signup/student",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"signup",
+						"student"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Student 1",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"fullName\": \"student1\",\r\n  \"phoneNumber\": \"11111111\",\r\n  \"email\": \"mohamedalihosni25@gmail.com\",\r\n  \"password\": \"Password123!\",\r\n  \"role\": \"Student\",\r\n  \"studentIdCardIMG\": \"ghjkhbytnhgkuntitnbjdnygjhnbdtnub\",\r\n  \"cin\": \"12345678\",\r\n  \"degree\": \"Engineer\",\r\n  \"degreeType\": \"INREV\",\r\n  \"companyName\": \"Focus\",\r\n  \"uniSupervisorId\": \"692ad7791d7783a501e6ed70\",\r\n  \"compSupervisorId\": \"692ad7561d7783a501e6ed6b\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/signup/student",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup",
+								"student"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "RateLimit-Policy",
+							"value": "10;w=3600"
+						},
+						{
+							"key": "RateLimit-Limit",
+							"value": "10"
+						},
+						{
+							"key": "RateLimit-Remaining",
+							"value": "8"
+						},
+						{
+							"key": "RateLimit-Reset",
+							"value": "3532"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "513"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"201-Kxx4NOuBb9dEjUfMNZUQvBVL3Sk\""
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 29 Nov 2025 14:46:30 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Student registered successfully. Please check your email to verify your account.\",\n    \"data\": {\n        \"userId\": \"692b07441d7783a501e6ed84\",\n        \"email\": \"mohamedalihosni25@gmail.com\",\n        \"role\": \"Student\",\n        \"signupToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTJiMDc0NDFkNzc4M2E1MDFlNmVkODQiLCJlbWFpbCI6Im1vaGFtZWRhbGlob3NuaTI1QGdtYWlsLmNvbSIsInJvbGUiOiJTdHVkZW50IiwicHVycG9zZSI6InNpZ251cF9jb21wbGV0ZSIsImlhdCI6MTc2NDQyNzU5MCwiZXhwIjoxNzY0NDI4NDkwfQ.nwhIfMjup7_usU6v8LCmgu23YhqR6QUsClRvV82EmFw\"\n    }\n}"
+				},
+				{
+					"name": "Student 2",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"fullName\": \"student2\",\r\n  \"phoneNumber\": \"22222222\",\r\n  \"email\": \"medalihosni123456789@gmail.com\",\r\n  \"password\": \"Password123!\",\r\n  \"role\": \"Student\",\r\n  \"studentIdCardIMG\": \"ghjkhbytnhgkuntitnbjdnygjhnbdtnub\",\r\n  \"cin\": \"00000000\",\r\n  \"degree\": \"Engineer\",\r\n  \"degreeType\": \"INREV\",\r\n  \"companyName\": \"Focus\",\r\n  \"uniSupervisorId\": \"692ad7791d7783a501e6ed70\",\r\n  \"compSupervisorId\": \"692ad7561d7783a501e6ed6b\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/signup/student",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup",
+								"student"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "RateLimit-Policy",
+							"value": "10;w=3600"
+						},
+						{
+							"key": "RateLimit-Limit",
+							"value": "10"
+						},
+						{
+							"key": "RateLimit-Remaining",
+							"value": "8"
+						},
+						{
+							"key": "RateLimit-Reset",
+							"value": "3574"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "212"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"d4-ATlOQhft0Vf9N754P14u248rCf4\""
+						},
+						{
+							"key": "Date",
+							"value": "Sun, 30 Nov 2025 10:02:16 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Student registered successfully. Please check your email to verify your account.\",\n    \"data\": {\n        \"userId\": \"692c16264bcfa614d2e420bf\",\n        \"email\": \"medalihosni123456789@gmail.com\",\n        \"role\": \"Student\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Signup Company Supervisor",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"fullName\": \"company supervisor 1\",\r\n  \"phoneNumber\": \"+21600000000\",\r\n  \"email\": \"lisi1e2022@gmail.com\",\r\n  \"password\": \"Password123!\",\r\n  \"role\": \"CompSupervisor\",\r\n  \"companyName\": \"Focus\",\r\n  \"badgeIMG\": \"badgeIMG\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/auth/signup/supervisor-company",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"signup",
+						"supervisor-company"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Company Supervisor 1",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"fullName\": \"company supervisor 1\",\r\n  \"phoneNumber\": \"+21600000000\",\r\n  \"email\": \"lisi1e2022@gmail.com\",\r\n  \"password\": \"Password123!\",\r\n  \"role\": \"CompSupervisor\",\r\n  \"companyName\": \"Focus\",\r\n  \"badgeIMG\": \"badgeIMG\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/signup/supervisor-company",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup",
+								"supervisor-company"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "RateLimit-Policy",
+							"value": "10;w=3600"
+						},
+						{
+							"key": "RateLimit-Limit",
+							"value": "10"
+						},
+						{
+							"key": "RateLimit-Remaining",
+							"value": "9"
+						},
+						{
+							"key": "RateLimit-Reset",
+							"value": "3600"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "524"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"20c-XW7itI3DejhMeTFkhxqnlF6a5YU\""
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 29 Nov 2025 11:22:02 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Company supervisor registered successfully. Please check your email to verify your account.\",\n    \"data\": {\n        \"userId\": \"692ad7561d7783a501e6ed6b\",\n        \"email\": \"lisi1e2022@gmail.com\",\n        \"role\": \"CompSupervisor\",\n        \"signupToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTJhZDc1NjFkNzc4M2E1MDFlNmVkNmIiLCJlbWFpbCI6Imxpc2kxZTIwMjJAZ21haWwuY29tIiwicm9sZSI6IkNvbXBTdXBlcnZpc29yIiwicHVycG9zZSI6InNpZ251cF9jb21wbGV0ZSIsImlhdCI6MTc2NDQxNTMyMiwiZXhwIjoxNzY0NDE2MjIyfQ.88NcbzSbQGmbfy5vj4w9nzPuQsDw6lxzIKpVowoUPYU\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Signup University Supervisor",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"fullName\": \"university supervisor 1\",\r\n  \"phoneNumber\": \"00000000\",\r\n  \"email\": \"iot2b2023@gmail.com\",\r\n  \"password\": \"Password123!\",\r\n  \"role\": \"UniSupervisor\",\r\n  \"badgeIMG\": \"badgeIMG\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/auth/signup/supervisor-university",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"signup",
+						"supervisor-university"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "University Supervisor 1",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"fullName\": \"university supervisor 1\",\r\n  \"phoneNumber\": \"00000000\",\r\n  \"email\": \"iot2b2023@gmail.com\",\r\n  \"password\": \"Password123!\",\r\n  \"role\": \"UniSupervisor\",\r\n  \"badgeIMG\": \"badgeIMG\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/signup/supervisor-university",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"signup",
+								"supervisor-university"
+							]
+						}
+					},
+					"status": "Created",
+					"code": 201,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "RateLimit-Policy",
+							"value": "10;w=3600"
+						},
+						{
+							"key": "RateLimit-Limit",
+							"value": "10"
+						},
+						{
+							"key": "RateLimit-Remaining",
+							"value": "8"
+						},
+						{
+							"key": "RateLimit-Reset",
+							"value": "3566"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "522"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"20a-9tjUv+FYjq2ZCV1KLFO7pIVyWDw\""
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 29 Nov 2025 11:22:34 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"University supervisor registered successfully. Please check your email to verify your account.\",\n    \"data\": {\n        \"userId\": \"692ad7791d7783a501e6ed70\",\n        \"email\": \"iot2b2023@gmail.com\",\n        \"role\": \"UniSupervisor\",\n        \"signupToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTJhZDc3OTFkNzc4M2E1MDFlNmVkNzAiLCJlbWFpbCI6ImlvdDJiMjAyM0BnbWFpbC5jb20iLCJyb2xlIjoiVW5pU3VwZXJ2aXNvciIsInB1cnBvc2UiOiJzaWdudXBfY29tcGxldGUiLCJpYXQiOjE3NjQ0MTUzNTQsImV4cCI6MTc2NDQxNjI1NH0.LNsdizPlRzDpmZgvBTg-YccwvLqXecRloPeEoFejn1A\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Verify Email",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/auth/verify-email?token=fdf7bea8-0a40-4c49-abb1-10769a1c0817",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"verify-email"
+					],
+					"query": [
+						{
+							"key": "token",
+							"value": "fdf7bea8-0a40-4c49-abb1-10769a1c0817"
+						}
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Verify company supervisor",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/verify-email?token=3d9c3267-432d-4ba3-bf2d-b1679830ce7a",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"verify-email"
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": "3d9c3267-432d-4ba3-bf2d-b1679830ce7a"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "RateLimit-Policy",
+							"value": "5;w=3600"
+						},
+						{
+							"key": "RateLimit-Limit",
+							"value": "5"
+						},
+						{
+							"key": "RateLimit-Remaining",
+							"value": "4"
+						},
+						{
+							"key": "RateLimit-Reset",
+							"value": "3600"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "73"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"49-JJImp+Gml3ULmzCSiOJ8JLrO2wk\""
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 29 Nov 2025 14:37:00 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Email verified successfully! Welcome aboard!\"\n}"
+				},
+				{
+					"name": "Verify university supervisor",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/verify-email?token=00073b56-eae6-476c-85bc-d2a65f0344ef",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"verify-email"
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": "00073b56-eae6-476c-85bc-d2a65f0344ef"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "RateLimit-Policy",
+							"value": "5;w=3600"
+						},
+						{
+							"key": "RateLimit-Limit",
+							"value": "5"
+						},
+						{
+							"key": "RateLimit-Remaining",
+							"value": "3"
+						},
+						{
+							"key": "RateLimit-Reset",
+							"value": "3458"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "73"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"49-JJImp+Gml3ULmzCSiOJ8JLrO2wk\""
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 29 Nov 2025 14:39:22 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Email verified successfully! Welcome aboard!\"\n}"
+				},
+				{
+					"name": "Verify stuent",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/verify-email?token=fdf7bea8-0a40-4c49-abb1-10769a1c0817",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"verify-email"
+							],
+							"query": [
+								{
+									"key": "token",
+									"value": "fdf7bea8-0a40-4c49-abb1-10769a1c0817"
+								}
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "RateLimit-Policy",
+							"value": "5;w=3600"
+						},
+						{
+							"key": "RateLimit-Limit",
+							"value": "5"
+						},
+						{
+							"key": "RateLimit-Remaining",
+							"value": "2"
+						},
+						{
+							"key": "RateLimit-Reset",
+							"value": "2532"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "73"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"49-JJImp+Gml3ULmzCSiOJ8JLrO2wk\""
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 29 Nov 2025 14:54:49 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Email verified successfully! Welcome aboard!\"\n}"
+				}
+			]
+		},
+		{
+			"name": "Login",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"email\": \"mohamedalihosni25@gmail.com\",\r\n  \"password\": \"Password123!\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/auth/login",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"login"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Login",
+					"originalRequest": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"email\": \"mohamedalihosni25@gmail.com\",\r\n  \"password\": \"Password123!\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{baseURL}}/api/auth/login",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"auth",
+								"login"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "RateLimit-Policy",
+							"value": "5;w=900"
+						},
+						{
+							"key": "RateLimit-Limit",
+							"value": "5"
+						},
+						{
+							"key": "RateLimit-Remaining",
+							"value": "4"
+						},
+						{
+							"key": "RateLimit-Reset",
+							"value": "900"
+						},
+						{
+							"key": "Set-Cookie",
+							"value": "refreshToken=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTJiMDc0NDFkNzc4M2E1MDFlNmVkODQiLCJlbWFpbCI6Im1vaGFtZWRhbGlob3NuaTI1QGdtYWlsLmNvbSIsInJvbGUiOiJTdHVkZW50IiwiaWF0IjoxNzY0NDM3MDg2LCJleHAiOjE3NjUwNDE4ODZ9.RMgLmahnXoqFlv6Mzn22Hhj5uqhwa82JXykzttcbwzU; Max-Age=604800; Path=/; Expires=Sat, 06 Dec 2025 17:24:46 GMT; HttpOnly; SameSite=Strict"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "888"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"378-xzfccsRY+5pLjWOx/ReR9S/OHoQ\""
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 29 Nov 2025 17:24:46 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"Login successful\",\n    \"data\": {\n        \"user\": {\n            \"id\": \"692b07441d7783a501e6ed84\",\n            \"fullName\": \"student1\",\n            \"email\": \"mohamedalihosni25@gmail.com\",\n            \"phoneNumber\": \"11111111\",\n            \"role\": \"Student\",\n            \"isVerified\": true,\n            \"profile\": {\n                \"_id\": \"692b07441d7783a501e6ed86\",\n                \"cin\": \"12345678\",\n                \"studentIdCardIMG\": \"ghjkhbytnhgkuntitnbjdnygjhnbdtnub\",\n                \"companyName\": \"Focus\",\n                \"degree\": \"Engineer\",\n                \"degreeType\": \"INREV\",\n                \"userId\": \"692b07441d7783a501e6ed84\",\n                \"compSupervisorId\": \"692ad7561d7783a501e6ed6b\",\n                \"uniSupervisorId\": \"692ad7791d7783a501e6ed70\",\n                \"meetings\": [],\n                \"createdAt\": \"2025-11-29T14:46:28.912Z\",\n                \"updatedAt\": \"2025-11-29T14:46:28.912Z\",\n                \"__v\": 0\n            }\n        },\n        \"accessToken\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTJiMDc0NDFkNzc4M2E1MDFlNmVkODQiLCJlbWFpbCI6Im1vaGFtZWRhbGlob3NuaTI1QGdtYWlsLmNvbSIsInJvbGUiOiJTdHVkZW50IiwiaWF0IjoxNzY0NDM3MDg2LCJleHAiOjE3NjQ0Mzc5ODZ9.ExK5KOCs2wI93opFMGBwiFeCsxO00IHKRyEO3Y7cST4\"\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Refresh Token",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": ""
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/auth/refresh-token",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"refresh-token"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Logout",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/auth/logout",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"logout"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Request Password Reset",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"email\" : \"mohamedalihosni25@gmail.com\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/auth/request-password-reset",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"request-password-reset"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Reset Password",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"newPassword\": \"Password123!\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/auth/reset-password?resetToken=b266c489-37a9-4818-946a-49296034e239",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"auth",
+						"reset-password"
+					],
+					"query": [
+						{
+							"key": "resetToken",
+							"value": "b266c489-37a9-4818-946a-49296034e239"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Change Password",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"currentPassword\": \"Password123!\",\r\n  \"newPassword\": \"Password123!\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/change-password",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"change-password"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Profile",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/profile",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"profile"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "Student 1 Profile",
+					"originalRequest": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseURL}}/api/profile",
+							"host": [
+								"{{baseURL}}"
+							],
+							"path": [
+								"api",
+								"profile"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": null,
+					"header": [
+						{
+							"key": "X-Powered-By",
+							"value": "Express"
+						},
+						{
+							"key": "Content-Type",
+							"value": "application/json; charset=utf-8"
+						},
+						{
+							"key": "Content-Length",
+							"value": "641"
+						},
+						{
+							"key": "ETag",
+							"value": "W/\"281-15V5URDF/aFAZ7wgBwGYky8MZ9Y\""
+						},
+						{
+							"key": "Date",
+							"value": "Sat, 29 Nov 2025 17:27:19 GMT"
+						},
+						{
+							"key": "Connection",
+							"value": "keep-alive"
+						},
+						{
+							"key": "Keep-Alive",
+							"value": "timeout=5"
+						}
+					],
+					"cookie": [],
+					"body": "{\n    \"success\": true,\n    \"message\": \"User profile retrieved successfully\",\n    \"data\": {\n        \"user\": {\n            \"id\": \"692b07441d7783a501e6ed84\",\n            \"fullName\": \"student1\",\n            \"email\": \"mohamedalihosni25@gmail.com\",\n            \"phoneNumber\": \"11111111\",\n            \"role\": \"Student\",\n            \"isVerified\": true,\n            \"profile\": {\n                \"_id\": \"692b07441d7783a501e6ed86\",\n                \"cin\": \"12345678\",\n                \"studentIdCardIMG\": \"ghjkhbytnhgkuntitnbjdnygjhnbdtnub\",\n                \"companyName\": \"Focus\",\n                \"degree\": \"Engineer\",\n                \"degreeType\": \"INREV\",\n                \"userId\": \"692b07441d7783a501e6ed84\",\n                \"compSupervisorId\": \"692ad7561d7783a501e6ed6b\",\n                \"uniSupervisorId\": \"692ad7791d7783a501e6ed70\",\n                \"meetings\": [],\n                \"createdAt\": \"2025-11-29T14:46:28.912Z\",\n                \"updatedAt\": \"2025-11-29T14:46:28.912Z\",\n                \"__v\": 0\n            }\n        }\n    }\n}"
+				}
+			]
+		},
+		{
+			"name": "Get Company Supervisors",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/supervisors/company",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"supervisors",
+						"company"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get University Supervisors",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/supervisors/university",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"supervisors",
+						"university"
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	]
+}
