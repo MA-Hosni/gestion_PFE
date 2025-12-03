@@ -26,8 +26,13 @@ const swaggerDefinition = {
     { name: 'Users', description: 'User profile and helpers' },
     { name: 'Projects', description: 'Project management' },
     { name: 'Sprints', description: 'Sprint management' },
-    { name: 'User Stories', description: 'User story management' }
-
+    { name: 'User Stories', description: 'User story management' },
+    { name: 'Dashboard', description: 'Dashboard analytics and summaries' },
+    { name: 'Reports', description: 'Report management' },
+    { name: 'Tasks', description: 'Task management' },
+    { name: 'Task History', description: 'Task history management' },
+    { name: 'Meetings', description: 'Meeting management' },
+    { name: 'Validations', description: 'Validation management' }
   ],
   components: {
     securitySchemes: {
