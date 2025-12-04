@@ -104,7 +104,7 @@ router.post("/", authenticateToken, authorizeStudent, validate(TaskSchema), task
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-router.get("/:id", authenticateToken, authorizeStudent, authorizeSupervisor, taskController.getTaskById);
+router.get("/:id", authenticateToken, taskController.getTaskById);
 
 /**
  * @swagger
@@ -136,7 +136,7 @@ router.get("/:id", authenticateToken, authorizeStudent, authorizeSupervisor, tas
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-router.patch("/:id", authenticateToken, authorizeStudent, validate(UpdateTaskSchema), taskController.updateTask);
+/*router.patch("/:id", authenticateToken, authorizeStudent, validate(UpdateTaskSchema), taskController.updateTask);*/
 
 /**
  * @swagger
@@ -329,4 +329,3 @@ router.get("/report/:projectId", authenticateToken, authorizeSupervisor, taskCon
  */
 router.get("/sprintreport/:sprintId", authenticateToken, authorizeSupervisor, taskController.getSprintReport)
 export default router;
-  
