@@ -84,7 +84,7 @@ export const getAllTasksForUnivSupervisor = async (univSupervisorId) => {
 };
 
 
-/*
+
 export const getTaskById = async (id) => {
   const task = await Task.findById(id);
   if (!task) {
@@ -94,7 +94,7 @@ export const getTaskById = async (id) => {
   }
   return { message: "Task retrieved successfully", task };
 };
-*/
+
 
 /*export const updateTask = async (id, data) => {
   const task = await Task.findByIdAndUpdate(id, data, { new: true });
@@ -285,5 +285,5 @@ export const makeSprintReport = async (sprintId) => {
       priority: task.priority,
     })),
   };
-  return report;  
+  return report;
 };
