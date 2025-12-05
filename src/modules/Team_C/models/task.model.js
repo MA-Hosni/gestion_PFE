@@ -19,6 +19,6 @@ const taskSchema = new Schema({
   assignedTo: { type: Schema.Types.ObjectId, ref: "User" },
 }, { timestamps: true })
 
-taskSchema.index({ title: 1, userStoryId: 1 }, { unique: true })
+taskSchema.index({ title: 1, userStoryId: 1 })
 
 export default model("Task", taskSchema)

@@ -4,10 +4,10 @@ import UniSupervisor from "../../Authentication/models/uniSupervisor.model.js";
 
 export const createTask = async (req, res) => {
   try {
-    const { title, user_story_id, status } = req.body;
+    const { title, userStoryId, status } = req.body;
 
-    if (!title || !user_story_id || !status) {
-      return res.status(400).json({ message: "Title, user_story_id, and status are required." });
+    if (!title || !userStoryId || !status) {
+      return res.status(400).json({ message: "Title, userStoryId, and status are required." });
     }
 
     const task = await taskService.createTask(req.body);
@@ -40,7 +40,7 @@ export const getTaskById = async (req, res) => {
     res.status(err.status || 500).json({ message: err.message });
   }
 };
-
+/*
 export const updateTask = async (req, res) => {
   try {
     const { id } = req.params;
@@ -55,6 +55,7 @@ export const updateTask = async (req, res) => {
     res.status(err.status || 500).json({ message: err.message });
   }
 };
+*/
 export const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;

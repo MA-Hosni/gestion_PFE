@@ -4,6 +4,6 @@ import userStoryRoutes from "./routes/UserStory.routes.js";
 
 const router = express.Router();
 
-router.use("/userStory", userStoryRoutes);
+router.use("/user-story", userStoryRoutes);
 
 export default router;
