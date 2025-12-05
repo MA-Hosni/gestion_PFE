@@ -1,6 +1,6 @@
 import express from "express";
 import upload from "../middlewares/uploadReport.middleware.js";
-import { authenticateToken } from "../../Authentication/middlewares/auth.middleware.js";
+import { authenticateToken } from "src/shared/middlewares/auth.middleware.js";
 import { authorizeStudent } from "../../Team_A/middlewares/auth.middleware.js";
 import { validate } from "../../../shared/middlewares/validate.js";
 import { createReportSchema } from "../validators/Report.validator.js";
