@@ -76,10 +76,7 @@ router.post("/", authenticateToken, authorizeStudent, validate(TaskSchema), task
  *       404:
  *         description: Task not found
  */
-router.get("/:id", authenticateToken, authorizeStudent, taskController.getTaskById);
-
-
-// Update a task by ID
+router.get("/:id", authenticateToken, taskController.getTaskById);
 
 /**
  * @swagger
@@ -108,7 +105,7 @@ router.get("/:id", authenticateToken, authorizeStudent, taskController.getTaskBy
  *       404:
  *         description: Task not found
  */
-router.patch("/:id", authenticateToken, authorizeStudent, validate(UpdateTaskSchema), taskController.updateTask);
+/*router.patch("/:id", authenticateToken, authorizeStudent, validate(UpdateTaskSchema), taskController.updateTask);*/
 
 // Delete a task by ID
 /**

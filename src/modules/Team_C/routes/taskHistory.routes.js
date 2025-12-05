@@ -1,3 +1,4 @@
+import { authenticateToken } from "../../../shared/middlewares/auth.middleware.js";
 import { getHistoryByTask } from "../controllers/taskHistory.controller.js";
 import express from "express"
 
@@ -28,7 +29,7 @@ const router = express.Router()
  *       404:
  *         $ref: '#/components/responses/NotFound'
  */
-router.get("/:task_id", getHistoryByTask)
+router.get("/:task_id", authenticateToken, getHistoryByTask)
 
 export default router
 
