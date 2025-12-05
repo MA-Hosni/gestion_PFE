@@ -21,14 +21,14 @@ export const createUserStory = async (data , studentId) => {
         
     if (!student) {
           const error = new Error("Student not found");
-          error.status = 404;
+          error.statusCode = 404;
           throw error;
         }
  
 
     if (!student.project) {
       const error = new Error("Student has no assigned project");
-      error.status = 400;
+      error.statusCode = 400;
       throw error;
     }
 
@@ -39,14 +39,14 @@ export const createUserStory = async (data , studentId) => {
 
     if (!sprint || sprint.deletedAt) {
       const error = new Error("Sprint not found or deleted");
-      error.status = 404;
+      error.statusCode = 404;
       throw error;
     }
 
     // Check sprint belongs to student's project
     if (String(sprint.projectId) !== String(student.project)) {
       const error = new Error("Sprint does not belong to your project");
-      error.status = 403;
+      error.statusCode = 403;
       throw error;
     }
 
@@ -61,7 +61,7 @@ export const createUserStory = async (data , studentId) => {
 
     if (existingUserStory) {
       const error = new Error("A user story with this name already exists in this sprint");
-      error.status = 409; // Conflict
+      error.statusCode = 409; // Conflict
       throw error;
     }
 
@@ -73,7 +73,7 @@ export const createUserStory = async (data , studentId) => {
 
     if (due <= start) {
       const error = new Error("Due date must be after start date");
-      error.status = 400;
+      error.statusCode = 400;
       throw error;
     }
 
@@ -328,7 +328,7 @@ export const updateUserStory = async (userStoryId, updateData, studentId) => {
 
     if (!userStory) {
       const error = new Error("User story not found or deleted");
-      error.status = 404;
+      error.statusCode = 404;
       throw error;
     }
 
@@ -339,13 +339,13 @@ export const updateUserStory = async (userStoryId, updateData, studentId) => {
 
     if (!student) {
       const error = new Error("Student not found");
-      error.status = 404;
+      error.statusCode = 404;
       throw error;
     }
 
     if (!student.project) {
       const error = new Error("Student has no assigned project");
-      error.status = 400;
+      error.statusCode = 400;
       throw error;
     }
 
@@ -359,13 +359,13 @@ export const updateUserStory = async (userStoryId, updateData, studentId) => {
 
     if (!currentSprint) {
       const error = new Error("Current sprint not found");
-      error.status = 404;
+      error.statusCode = 404;
       throw error;
     }
 
     if (String(currentSprint.projectId) !== String(student.project)) {
       const error = new Error("User story does not belong to your project");
-      error.status = 403;
+      error.statusCode = 403;
       throw error;
     }
 
@@ -383,14 +383,14 @@ export const updateUserStory = async (userStoryId, updateData, studentId) => {
 
       if (!newSprint) {
         const error = new Error("New sprint not found or deleted");
-        error.status = 404;
+        error.statusCode = 404;
         throw error;
       }
 
       // Validate new sprint belongs to the same project
       if (String(newSprint.projectId) !== String(student.project)) {
         const error = new Error("New sprint does not belong to your project");
-        error.status = 403;
+        error.statusCode = 403;
         throw error;
       }
     }
@@ -417,7 +417,7 @@ export const updateUserStory = async (userStoryId, updateData, studentId) => {
         const error = new Error(
           "A user story with this name already exists in this sprint"
         );
-        error.status = 409;
+        error.statusCode = 409;
         throw error;
       }
     }
@@ -430,7 +430,7 @@ export const updateUserStory = async (userStoryId, updateData, studentId) => {
 
     if (finalDueDate <= finalStartDate) {
       const error = new Error("Due date must be after start date");
-      error.status = 400;
+      error.statusCode = 400;
       throw error;
     }
 

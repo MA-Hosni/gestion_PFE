@@ -42,4 +42,18 @@ ReportSchema.index(
   }
 );
 
+// INDEX UNIQUE : Garantit qu'un versionLabel est unique par projet (seulement pour les rapports non supprimés)
+ReportSchema.index(
+  {
+    projectId: 1,
+    versionLabel: 1,
+  },
+  {
+    unique: true,
+    partialFilterExpression: { deletedAt: { $eq: null } },
+    background: true,
+    name: 'unique_version_per_project'
+  }
+);
+
 export default model('Report', ReportSchema);

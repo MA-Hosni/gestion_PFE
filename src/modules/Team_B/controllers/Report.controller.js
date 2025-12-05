@@ -1,11 +1,11 @@
-import * as reportService from "../services/Report.service.js";
+import * as reportService from "../services/report.service.js";
 import { StatusCodes } from "http-status-codes";
 
 // CREATE REPORT
 export const createReport = async (req, res, next) => {
   try {
     const studentId = req.student.id;
-
+    
     if (!req.file) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
@@ -13,12 +13,11 @@ export const createReport = async (req, res, next) => {
       });
     }
 
-    const filePath = `/uploads/reports/${req.file.filename}`;
-
+    // ✅ Passe le buffer et le nom du fichier au service
     const result = await reportService.createReport(
       studentId,
       req.validatedBody,
-      filePath
+      req.file  // Passe l'objet file complet
     );
 
     res.status(StatusCodes.CREATED).json(result);
