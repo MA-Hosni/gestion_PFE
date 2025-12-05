@@ -95,7 +95,7 @@ export const getTaskById = async (id) => {
 };
 
 
-/*export const updateTask = async (id, data) => {
+export const updateTask = async (id, data) => {
   const task = await Task.findByIdAndUpdate(id, data, { new: true });
   if (!task) {
     const error = new Error("Task not found.");
@@ -104,7 +104,6 @@ export const getTaskById = async (id) => {
   }
   return { message: "Task updated successfully", task };
 };
-*/
 export const deleteTask = async (id) => {
   const task = await Task.findByIdAndDelete(id);
   if (!task) {

@@ -40,7 +40,6 @@ export const getTaskById = async (req, res) => {
     res.status(err.status || 500).json({ message: err.message });
   }
 };
-/*
 export const updateTask = async (req, res) => {
   try {
     const { id } = req.params;
@@ -55,7 +54,6 @@ export const updateTask = async (req, res) => {
     res.status(err.status || 500).json({ message: err.message });
   }
 };
-*/
 export const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
