@@ -60,18 +60,37 @@ Chaque équipe dispose de 4 deadlines correspondant aux mêmes périodes, avec d
 # Équipe A — Projets & Sprints
 
 ### **Deadline 1 — 09/11/2025**
-
+- Created the project structure and established database connection setup with Mongoose.
+- Set up this GitHub repository and our team workflow.
+- Implement authentication routes and middleware, add error handling and validation
+- Developed email service for sending verification and password reset emails.
+- Configured Nodemailer for email transport and created email templates for verification and password reset.
+- Set up environment configuration for sensitive data management.
 ---
 
 ### **Deadline 2 — 16/11/2025**
-
+- Add project management functionality with CRUD operations and authorization middleware
+- Integrate Swagger for API documentation
 ---
 
 ### **Deadline 3 — 25/11/2025**
-
+- Add sprint management functionality with CRUD operations and authorization middleware
+- Refactor authentication middleware, and enhance project routes
+- Adjusted project routes to streamline authorization checks and improve code organization.
 ---
 
 ### **Deadline 4 — 07/12/2025**
+- Enhance API documentation with Swagger for various routes
+- Endpoints Dashboard :
+  - État d’avancement global par projet.
+  - État d’avancement par sprint.
+- Journal du stage (fil chronologique unifié) combinant :
+  - Réunions.
+  - Validations.
+  - Changements de statut de tâche.
+  - Dépôts de rapports.
+- Calcul et exposition des “items en Standby” (tâches bloquées).
+- Finalisez toutes les fonctionnalités, complétez le collections Postman et corrigez tous les bugs restants.
 
 ---
 
