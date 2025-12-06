@@ -95,6 +95,34 @@ Chaque équipe dispose de 4 deadlines correspondant aux mêmes périodes, avec d
 ---
 
 # Équipe B — User Stories & Report Versions
+### **Deadline 1 — 24/11/2025**
+Implémentation du CRUD complet sur les User Stories :
+
+- Création d’une User Story
+
+- Consultation de toutes les User Stories
+
+- Mise à jour d’une User Story
+
+- Suppression d’une User Story
+
+### **Deadline 2 — 30/11/2025**
+- Correction des erreurs liées à la mise à jour des User Stories
+
+- Début de l’implémentation du CRUD des Rapports
+
+
+### **Deadline 3 — 3/12/2025**
+- Finalisation du CRUD des Rapports
+
+- Mise en place de la documentation API avec Swagger 
+
+### **Deadline 4 — 07/12/2025**
+- Finalisation de toutes les fonctionnalités
+
+- Complétion de la collection Postman
+
+- Correction des bugs restants
 
 # Équipe C — Tasks & Workflow
 
