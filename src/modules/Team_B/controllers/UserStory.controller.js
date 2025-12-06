@@ -1,6 +1,5 @@
 import * as userStoryService from "../services/UserStory.service.js";
 import { StatusCodes } from "http-status-codes";
-import mongoose from "mongoose";
 
 // Create User Story
 export const createUserStory = async (req, res, next) => {

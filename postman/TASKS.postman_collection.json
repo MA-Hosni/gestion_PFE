@@ -1,0 +1,373 @@
+{
+	"info": {
+		"_postman_id": "04dc13fd-1476-4201-9b8d-480b1e00a67b",
+		"name": "TASKS",
+		"description": "Still not sure about the updatetask ...",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "50492763",
+		"_collection_link": "https://pfe666-3775.postman.co/workspace/pfe-Workspace~884f7d8e-8e55-4cbd-8b17-bea13124f0f7/collection/32457936-04dc13fd-1476-4201-9b8d-480b1e00a67b?action=share&source=collection_link&creator=50492763"
+	},
+	"item": [
+		{
+			"name": "createTask",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTI4MjdiYTkyNDdiZjUxNzM4MjUzYzIiLCJlbWFpbCI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwicm9sZSI6IlN0dWRlbnQiLCJpYXQiOjE1MTYyMzkwMjIsImV4cCI6MTgzMjgzMzAxMX0.Gcd3jVytf-DimMwMwfaFTSlr4YunkIEvcvPm2PdiEiY",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n  \"title\":\"Test_task\",\n  \"userStoryId\":\"674f1a9e3ccf4e12a3000003\",\n  \"status\":\"ToDo\"\n}\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/tasks",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"tasks"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getTaskById",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTI4MjdiYTkyNDdiZjUxNzM4MjUzYzIiLCJlbWFpbCI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwicm9sZSI6IlN0dWRlbnQiLCJpYXQiOjE1MTYyMzkwMjIsImV4cCI6MTgzMjgzMzAxMX0.Gcd3jVytf-DimMwMwfaFTSlr4YunkIEvcvPm2PdiEiY",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/tasks/{taskid}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"tasks",
+						"{taskid}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "deleteTask",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTI4MjdiYTkyNDdiZjUxNzM4MjUzYzIiLCJlbWFpbCI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwicm9sZSI6IlN0dWRlbnQiLCJpYXQiOjE1MTYyMzkwMjIsImV4cCI6MTgzMjgzMzAxMX0.Gcd3jVytf-DimMwMwfaFTSlr4YunkIEvcvPm2PdiEiY",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}//api/tasks/{taskID}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"",
+						"api",
+						"tasks",
+						"{taskID}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getAllTasksForCompSupervisor",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTI4MjhmMTU5M2E0MDU5ZTY5ODVlZTciLCJlbWFpbCI6ImNvbXBzdXBlcnZpc29yQGV4YW1wbGUuY29tIiwicm9sZSI6IkNvbXBTdXBlcnZpc29yIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE4MzI4MzMwMTF9.r6hyshf5qk1VVGhvjjpXTGWH2jynRb7FXwQyzWoGXEI",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}//api/tasks/compsupervisor/{compsupervisorId}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"",
+						"api",
+						"tasks",
+						"compsupervisor",
+						"{compsupervisorId}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getAllTasksForUnivSupervisor",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTI4MjkxMWIyODdiNzZhN2UzNjQ5OTgiLCJlbWFpbCI6InVuaXZzdXBlcnZpc29yQGV4YW1wbGUuY29tIiwicm9sZSI6IlVuaXZTdXBlcnZpc29yIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE4MzI4MzMwMTF9.AtoR0wWACdHEZft-p3mQxacH5Bm1wevUqsAuKqag8Go",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}//api/tasks/univsupervisor/{univsupervisorID}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"",
+						"api",
+						"tasks",
+						"univsupervisor",
+						"{univsupervisorID}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getAllTasksForUserStory",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTI4MjdiYTkyNDdiZjUxNzM4MjUzYzIiLCJlbWFpbCI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwicm9sZSI6IlN0dWRlbnQiLCJpYXQiOjE1MTYyMzkwMjIsImV4cCI6MTgzMjgzMzAxMX0.Gcd3jVytf-DimMwMwfaFTSlr4YunkIEvcvPm2PdiEiY",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}//api/tasks/userstory/{userstoryid}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"",
+						"api",
+						"tasks",
+						"userstory",
+						"{userstoryid}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "updateTaskStatus",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTI4MjdiYTkyNDdiZjUxNzM4MjUzYzIiLCJlbWFpbCI6InRlc3R1c2VyQGV4YW1wbGUuY29tIiwicm9sZSI6IlN0dWRlbnQiLCJpYXQiOjE1MTYyMzkwMjIsImV4cCI6MTgzMjgzMzAxMX0.Gcd3jVytf-DimMwMwfaFTSlr4YunkIEvcvPm2PdiEiY",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"status\":\"Done\",\n    \"validator_id\":\"69282b8bbb3a49c47674686f\",\n    \"meeting_type\":\"reunion\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}//api/tasks/status/{taskID}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"",
+						"api",
+						"tasks",
+						"status",
+						"{taskID}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "validateTaskStatus",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTI4MjkxMWIyODdiNzZhN2UzNjQ5OTgiLCJlbWFpbCI6InVuaXZzdXBlcnZpc29yQGV4YW1wbGUuY29tIiwicm9sZSI6IlVuaXZTdXBlcnZpc29yIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE4MzI4MzMwMTF9.AtoR0wWACdHEZft-p3mQxacH5Bm1wevUqsAuKqag8Go",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"validator_status\":\"valid\"\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}//api/tasks/validate/{taskvalidationID}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"",
+						"api",
+						"tasks",
+						"validate",
+						"{taskvalidationID}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getHistoryByTask",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}//api/tasks/history/{taskID}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"",
+						"api",
+						"tasks",
+						"history",
+						"{taskID}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "makeFullReport",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTI4MjkxMWIyODdiNzZhN2UzNjQ5OTgiLCJlbWFpbCI6InVuaXZzdXBlcnZpc29yQGV4YW1wbGUuY29tIiwicm9sZSI6IlVuaXZTdXBlcnZpc29yIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE4MzI4MzMwMTF9.AtoR0wWACdHEZft-p3mQxacH5Bm1wevUqsAuKqag8Go",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}//api/tasks/report/{projectID}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"",
+						"api",
+						"tasks",
+						"report",
+						"{projectID}"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "getSprintReport",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OTI4MjkxMWIyODdiNzZhN2UzNjQ5OTgiLCJlbWFpbCI6InVuaXZzdXBlcnZpc29yQGV4YW1wbGUuY29tIiwicm9sZSI6IlVuaXZTdXBlcnZpc29yIiwiaWF0IjoxNTE2MjM5MDIyLCJleHAiOjE4MzI4MzMwMTF9.AtoR0wWACdHEZft-p3mQxacH5Bm1wevUqsAuKqag8Go",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}//api/tasks/sprintreport/{springID}",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"",
+						"api",
+						"tasks",
+						"sprintreport",
+						"{springID}"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}

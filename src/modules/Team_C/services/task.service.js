@@ -18,17 +18,16 @@ async function verifyUserStoryExists(userStoryId) {
 }
 
 export const createTask = async (data) => {
-  const { title, user_story_id } = data;
-
-  if (!title || !user_story_id) {
-    const error = new Error("Title and user_story_id are required.");
+  const { title, userStoryId } = data;
+  if (!title || !userStoryId) {
+    const error = new Error("Title and userStoryId are required.");
     error.status = 400;
     throw error;
   }
 
-  await verifyUserStoryExists(user_story_id);
+  await verifyUserStoryExists(userStoryId);
 
-  const existing = await Task.findOne({ title, user_story_id });
+  const existing = await Task.findOne({ title, userStoryId });
   if (existing) {
     const error = new Error("Task with this title already exists for this user story.");
     error.status = 409;
@@ -38,7 +37,7 @@ export const createTask = async (data) => {
   const newTask = await Task.create(data);
 
   // Add the created task to the UserStory's tasks array
-  await UserStory.findByIdAndUpdate(user_story_id, {
+  await UserStory.findByIdAndUpdate(userStoryId, {
     $push: { tasks: newTask._id }
   });
   return newTask;
@@ -84,7 +83,7 @@ export const getAllTasksForUnivSupervisor = async (univSupervisorId) => {
 };
 
 
-/*
+
 export const getTaskById = async (id) => {
   const task = await Task.findById(id);
   if (!task) {
@@ -94,7 +93,7 @@ export const getTaskById = async (id) => {
   }
   return { message: "Task retrieved successfully", task };
 };
-*/
+
 
 /*export const updateTask = async (id, data) => {
   const task = await Task.findByIdAndUpdate(id, data, { new: true });
@@ -153,7 +152,6 @@ export const updateTaskStatus = async (id, data) => {
     task_id: id,
     task_status: data.status, // This is the proposed new status
     validator_id: data.validator_id,
-    meeting_type: data.meeting_type,
     comment: data.comment,
   });
 
@@ -285,5 +283,5 @@ export const makeSprintReport = async (sprintId) => {
       priority: task.priority,
     })),
   };
-  return report;  
+  return report;
 };
