@@ -116,13 +116,9 @@ export const createReport = async (studentId, data, file) => {
     await session.abortTransaction();
     
     // Delete uploaded file if transaction fails
-    if (filePath) {
-      const fullPath = path.join(process.cwd(), filePath);
-      if (fs.existsSync(fullPath)) {
-        fs.unlinkSync(fullPath);
-      }
+    if (savedFilePath && fs.existsSync(savedFilePath)) {
+      fs.unlinkSync(savedFilePath);
     }
-    
     
     throw error;
   } finally {

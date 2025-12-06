@@ -13,11 +13,10 @@ export const createReport = async (req, res, next) => {
       });
     }
 
-    // ✅ Passe le buffer et le nom du fichier au service
     const result = await reportService.createReport(
       studentId,
       req.validatedBody,
-      req.file  // Passe l'objet file complet
+      req.file  
     );
 
     res.status(StatusCodes.CREATED).json(result);
