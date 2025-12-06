@@ -1,45 +1,65 @@
-import Report from "../models/report.model.js";
-import Project from "../../Team_A/models/project.model.js";
+import * as reportService from "../services/Report.service.js";
+import { StatusCodes } from "http-status-codes";
 
-export const createVersion = async (projectId, studentId, { versionNumber, notes, fileUrl }) => {
-  // 1. vérifier projet
-  const project = await Project.findOne({ _id: projectId, deletedAt: null });
-  if (!project) {
-    return { success: false, message: "Project not found", data: null };
+// CREATE REPORT
+export const createReport = async (req, res, next) => {
+  try {
+    const studentId = req.student.id;
+
+    if (!req.file) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "File is required",
+      });
+    }
+
+    const filePath = `/uploads/reports/${req.file.filename}`;
+
+    const result = await reportService.createReport(
+      studentId,
+      req.validatedBody,
+      filePath
+    );
+
+    res.status(StatusCodes.CREATED).json(result);
+  } catch (error) {
+    next(error);
   }
+};
 
-  // 2. Optionnel : vérifier unicité versionNumber pour ce projet
-  const exists = await Report.findOne({ projectId, versionNumber, deletedAt: null });
-  if (exists) {
-    return { success: false, message: "Version number already exists", data: null };
+// GET ALL
+export const getAllReports = async (req, res, next) => {
+  try {
+    const studentId = req.student.id;
+    const result = await reportService.getAllReports(studentId);
+    res.status(StatusCodes.OK).json(result);
+  } catch (error) {
+    next(error);
   }
-
-  const report = await Report.create({
-    projectId,
-    versionNumber,
-    notes,
-    fileUrl,
-    uploadedBy: studentId
-  });
-
-  return { success: true, message: "Report version uploaded", data: report };
 };
 
-export const getAllVersions = async (projectId) => {
-  const versions = await Report.find({ projectId, deletedAt: null }).sort({ versionNumber: -1 });
-  return { success: true, message: "Versions retrieved", data: versions };
+// GET BY ID
+export const getReportById = async (req, res, next) => {
+  try {
+    const studentId = req.student.id;
+    const reportId = req.params.id;
+
+    const result = await reportService.getReportById(studentId, reportId);
+    res.status(StatusCodes.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const getVersionById = async (projectId, id) => {
-  const v = await Report.findOne({ _id: id, projectId, deletedAt: null });
-  if (!v) return { success: false, message: "Version not found", data: null };
-  return { success: true, message: "Version found", data: v };
-};
+// DELETE
+export const deleteReport = async (req, res, next) => {
+  try {
+    const studentId = req.student.id;
+    const reportId = req.params.id;
 
-export const deleteVersion = async (projectId, id) => {
-  const v = await Report.findOne({ _id: id, projectId, deletedAt: null });
-  if (!v) return { success: false, message: "Version not found", data: null };
-  v.deletedAt = new Date();
-  await v.save();
-  return { success: true, message: "Version deleted (soft)", data: null };
+    const result = await reportService.deleteReport(studentId, reportId);
+    res.status(StatusCodes.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
 };

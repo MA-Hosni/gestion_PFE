@@ -1,19 +1,25 @@
 import * as reportService from "../services/Report.service.js";
 import { StatusCodes } from "http-status-codes";
 
-export const addReportVersion = async (req, res, next) => {
+// CREATE REPORT
+export const createReport = async (req, res, next) => {
   try {
     const studentId = req.student.id;
-    const projectId = req.student.project;
-    const { versionNumber, notes } = req.body;
 
     if (!req.file) {
-      return res.status(StatusCodes.BAD_REQUEST).json({ success: false, message: "File is required" });
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "File is required",
+      });
     }
 
-    const fileUrl = `/uploads/reports/${req.file.filename}`; // chemin relatif
+    const filePath = `/uploads/reports/${req.file.filename}`;
 
-    const result = await reportService.createVersion(projectId, studentId, { versionNumber, notes, fileUrl });
+    const result = await reportService.createReport(
+      studentId,
+      req.validatedBody,
+      filePath
+    );
 
     res.status(StatusCodes.CREATED).json(result);
   } catch (error) {
@@ -21,32 +27,37 @@ export const addReportVersion = async (req, res, next) => {
   }
 };
 
-export const getAllVersions = async (req, res, next) => {
+// GET ALL
+export const getAllReports = async (req, res, next) => {
   try {
-    const projectId = req.student.project;
-    const result = await reportService.getAllVersions(projectId);
+    const studentId = req.student.id;
+    const result = await reportService.getAllReports(studentId);
     res.status(StatusCodes.OK).json(result);
   } catch (error) {
     next(error);
   }
 };
 
-export const getVersionById = async (req, res, next) => {
+// GET BY ID
+export const getReportById = async (req, res, next) => {
   try {
-    const projectId = req.student.project;
-    const id = req.params.id;
-    const result = await reportService.getVersionById(projectId, id);
+    const studentId = req.student.id;
+    const reportId = req.params.id;
+
+    const result = await reportService.getReportById(studentId, reportId);
     res.status(StatusCodes.OK).json(result);
   } catch (error) {
     next(error);
   }
 };
 
-export const deleteVersion = async (req, res, next) => {
+// DELETE
+export const deleteReport = async (req, res, next) => {
   try {
-    const projectId = req.student.project;
-    const id = req.params.id;
-    const result = await reportService.deleteVersion(projectId, id);
+    const studentId = req.student.id;
+    const reportId = req.params.id;
+
+    const result = await reportService.deleteReport(studentId, reportId);
     res.status(StatusCodes.OK).json(result);
   } catch (error) {
     next(error);
