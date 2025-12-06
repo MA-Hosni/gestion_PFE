@@ -1,7 +1,11 @@
 import mongoose from "mongoose";
 import Report from "../models/report.model.js";
-import Student from "../../Authentication/models/student.model.js"; // Ajustez le chemin
-import Project from "../../Team_A/models/project.model.js"; // Ajustez le chemin
+import Student from "../../Authentication/models/student.model.js"; 
+import Project from "../../Team_A/models/project.model.js"; 
+import CompSupervisor from "../../Authentication/models/compSupervisor.model.js";
+import UniSupervisor from "../../Authentication/models/uniSupervisor.model.js";
+
+
 import fs from "fs";
 import path from "path";
 
@@ -96,6 +100,15 @@ export const createReport = async (studentId, data, file) => {
 
     const savedReport = await newReport.save({ session });
 
+    /** --------------------------------------------
+     * 6. Add Report reference to project
+     * -------------------------------------------- */
+    await Project.findByIdAndUpdate(
+      projectId,
+      { $push: { reports: savedReport._id } },
+      { session }
+    );
+
     await session.commitTransaction();
 
     return {
@@ -127,6 +140,97 @@ export const createReport = async (studentId, data, file) => {
 };
 
 /** ========================================
+ * UPDATE REPORT (only notes can be updated)
+ * ======================================== */
+export const updateReport = async (studentId, reportId, data) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { notes } = data; // On peut seulement modifier les notes
+
+    /** ----------------------------------------------------
+     * 1. Validate student and get project
+     * ---------------------------------------------------- */
+    const student = await Student.findById(studentId).session(session);
+
+    if (!student) {
+      const error = new Error("Student not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    if (!student.project) {
+      const error = new Error("Student has no assigned project");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 2. Validate ObjectId format
+     * ---------------------------------------------------- */
+    if (!mongoose.Types.ObjectId.isValid(reportId)) {
+      const error = new Error("Invalid report ID format");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 3. Get the report
+     * ---------------------------------------------------- */
+    const report = await Report.findOne({
+      _id: reportId,
+      deletedAt: null
+    }).session(session);
+
+    if (!report) {
+      const error = new Error("Report not found or deleted");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 4. Verify report belongs to student's project
+     * ---------------------------------------------------- */
+    if (String(report.projectId) !== String(student.project)) {
+      const error = new Error("Report does not belong to your project");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 5. Update the report
+     * ---------------------------------------------------- */
+    if (notes) report.notes = notes;
+
+    const updatedReport = await report.save({ session });
+
+    await session.commitTransaction();
+
+    return {
+      success: true,
+      message: "Report updated successfully",
+      data: {
+        reportId: updatedReport._id,
+        versionLabel: updatedReport.versionLabel,
+        notes: updatedReport.notes,
+        filePath: updatedReport.filePath,
+        projectId: updatedReport.projectId,
+        updatedAt: updatedReport.updatedAt
+      }
+    };
+
+  } catch (error) {
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    session.endSession();
+  }
+};
+
+
+
+/** ========================================
  * GET ALL REPORTS (for student's project)
  * ======================================== */
 export const getAllReports = async (studentId) => {
@@ -138,13 +242,13 @@ export const getAllReports = async (studentId) => {
 
     if (!student) {
       const error = new Error("Student not found");
-      error.status = 404;
+      error.statusCode= 404;
       throw error;
     }
 
     if (!student.project) {
       const error = new Error("Student has no assigned project");
-      error.status = 400;
+      error.statusCode= 400;
       throw error;
     }
 
@@ -182,13 +286,13 @@ export const getReportById = async (studentId, reportId) => {
 
     if (!student) {
       const error = new Error("Student not found");
-      error.status = 404;
+      error.statusCode= 404;
       throw error;
     }
 
     if (!student.project) {
       const error = new Error("Student has no assigned project");
-      error.status = 400;
+      error.statusCode= 400;
       throw error;
     }
 
@@ -197,7 +301,7 @@ export const getReportById = async (studentId, reportId) => {
      * ---------------------------------------------------- */
     if (!mongoose.Types.ObjectId.isValid(reportId)) {
       const error = new Error("Invalid report ID format");
-      error.status = 400;
+      error.statusCode= 400;
       throw error;
     }
 
@@ -211,7 +315,7 @@ export const getReportById = async (studentId, reportId) => {
 
     if (!report) {
       const error = new Error("Report not found or deleted");
-      error.status = 404;
+      error.statusCode= 404;
       throw error;
     }
 
@@ -220,7 +324,7 @@ export const getReportById = async (studentId, reportId) => {
      * ---------------------------------------------------- */
     if (String(report.projectId) !== String(student.project)) {
       const error = new Error("Report does not belong to your project");
-      error.status = 403;
+      error.statusCode= 403;
       throw error;
     }
 
@@ -234,6 +338,173 @@ export const getReportById = async (studentId, reportId) => {
     throw error;
   }
 };
+
+
+/** ========================================
+ * GET ALL REPORTS FOR Company SUPERVISOR (by projectId)
+ * ======================================== */
+export const getAllReportsForCompanySupervisor = async (supervisorId, projectId) => {
+  try {
+
+    /** ----------------------------------------------------
+     * 1. Validate projectId format
+     * ---------------------------------------------------- */
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+      const error = new Error("Invalid project ID format");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 2. Get supervisor to check students
+     * ---------------------------------------------------- */
+    const supervisor = await CompSupervisor.findById(supervisorId);
+
+    if (!supervisor) {
+      const error = new Error("Supervisor not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 3. Get project and verify it exists
+     * ---------------------------------------------------- */
+    const project = await Project.findOne({
+      _id: projectId,
+      deletedAt: null
+    });
+
+    if (!project) {
+      const error = new Error("Project not found or deleted");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 4. Verify supervisor has access to this project
+     *    (at least one contributor must be supervised by this supervisor)
+     * ---------------------------------------------------- */
+  
+    
+    const students = await Student.find({
+      _id: { $in: project.contributors },
+      compSupervisorId: supervisor.userId  
+    });
+
+    if (students.length === 0) {
+      const error = new Error("You don't have access to this project");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 5. Get all reports for this project
+     * ---------------------------------------------------- */
+    const reports = await Report.find({
+      projectId,
+      deletedAt: null
+    })
+      .sort({ versionLabel: -1 }) // Most recent version first
+      .select("-__v");
+
+    return {
+      success: true,
+      message: "Reports retrieved successfully",
+      project: {
+        id: project._id,
+        title: project.title,
+        description: project.description
+      },
+      count: reports.length,
+      data: reports
+    };
+
+  } catch (error) {
+    throw error;
+  }
+};
+
+/** ========================================
+ * GET ALL REPORTS FOR UNI SUPERVISOR (by projectId)
+ * ======================================== */
+export const getAllReportsForUniSupervisor = async (supervisorId, projectId) => {
+  try {
+    /** ----------------------------------------------------
+     * 1. Validate projectId format
+     * ---------------------------------------------------- */
+    if (!mongoose.Types.ObjectId.isValid(projectId)) {
+      const error = new Error("Invalid project ID format");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 2. Get supervisor to check students
+     * ---------------------------------------------------- */
+    const supervisor = await UniSupervisor.findById(supervisorId);
+
+    if (!supervisor) {
+      const error = new Error("Supervisor not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 3. Get project and verify it exists
+     * ---------------------------------------------------- */
+    const project = await Project.findOne({
+      _id: projectId,
+      deletedAt: null
+    });
+
+    if (!project) {
+      const error = new Error("Project not found or deleted");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 4. Verify supervisor has access to this project
+     *    (at least one contributor must be supervised by this supervisor)
+     * ---------------------------------------------------- */
+    const students = await Student.find({
+      _id: { $in: project.contributors },
+      uniSupervisorId: supervisor.userId
+    });
+
+    if (students.length === 0) {
+      const error = new Error("You don't have access to this project");
+      error.statusCode = 403;
+      throw error;
+    }
+
+    /** ----------------------------------------------------
+     * 5. Get all reports for this project
+     * ---------------------------------------------------- */
+    const reports = await Report.find({
+      projectId,
+      deletedAt: null
+    })
+      .sort({ versionLabel: -1 })
+      .select("-__v");
+
+    return {
+      success: true,
+      message: "Reports retrieved successfully",
+      project: {
+        id: project._id,
+        title: project.title,
+        description: project.description
+      },
+      count: reports.length,
+      data: reports
+    };
+
+  } catch (error) {
+    throw error;
+  }
+};
+
 
 /** ========================================
  * DELETE REPORT (Soft Delete)
@@ -250,22 +521,23 @@ export const deleteReport = async (studentId, reportId) => {
 
     if (!student) {
       const error = new Error("Student not found");
-      error.status = 404;
+      error.statusCode= 404;
       throw error;
     }
 
     if (!student.project) {
       const error = new Error("Student has no assigned project");
-      error.status = 400;
+      error.statusCode= 400;
       throw error;
     }
+    const projectId = student.project;
 
     /** ----------------------------------------------------
      * 2. Validate ObjectId format
      * ---------------------------------------------------- */
     if (!mongoose.Types.ObjectId.isValid(reportId)) {
       const error = new Error("Invalid report ID format");
-      error.status = 400;
+      error.statusCode= 400;
       throw error;
     }
 
@@ -279,7 +551,7 @@ export const deleteReport = async (studentId, reportId) => {
 
     if (!report) {
       const error = new Error("Report not found or already deleted");
-      error.status = 404;
+      error.statusCode= 404;
       throw error;
     }
 
@@ -288,7 +560,7 @@ export const deleteReport = async (studentId, reportId) => {
      * ---------------------------------------------------- */
     if (String(report.projectId) !== String(student.project)) {
       const error = new Error("Report does not belong to your project");
-      error.status = 403;
+      error.statusCode= 403;
       throw error;
     }
 
@@ -297,6 +569,15 @@ export const deleteReport = async (studentId, reportId) => {
      * ---------------------------------------------------- */
     report.deletedAt = new Date();
     await report.save({ session });
+
+    /** ----------------------------------------------------
+     * 6. Remove report reference from project
+     * ---------------------------------------------------- */
+    await Project.findByIdAndUpdate(
+      projectId,
+      { $pull: { reports: report._id } },
+      { session }
+    );
 
     await session.commitTransaction();
 
@@ -307,95 +588,6 @@ export const deleteReport = async (studentId, reportId) => {
         reportId: report._id,
         versionLabel: report.versionLabel,
         deletedAt: report.deletedAt
-      }
-    };
-
-  } catch (error) {
-    await session.abortTransaction();
-    throw error;
-  } finally {
-    session.endSession();
-  }
-};
-
-/** ========================================
- * UPDATE REPORT (Optional - si vous voulez l'ajouter)
- * ======================================== */
-export const updateReport = async (studentId, reportId, data) => {
-  const session = await mongoose.startSession();
-  session.startTransaction();
-
-  try {
-    const { notes } = data; // On peut seulement modifier les notes
-
-    /** ----------------------------------------------------
-     * 1. Validate student and get project
-     * ---------------------------------------------------- */
-    const student = await Student.findById(studentId).session(session);
-
-    if (!student) {
-      const error = new Error("Student not found");
-      error.status = 404;
-      throw error;
-    }
-
-    if (!student.project) {
-      const error = new Error("Student has no assigned project");
-      error.status = 400;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 2. Validate ObjectId format
-     * ---------------------------------------------------- */
-    if (!mongoose.Types.ObjectId.isValid(reportId)) {
-      const error = new Error("Invalid report ID format");
-      error.status = 400;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 3. Get the report
-     * ---------------------------------------------------- */
-    const report = await Report.findOne({
-      _id: reportId,
-      deletedAt: null
-    }).session(session);
-
-    if (!report) {
-      const error = new Error("Report not found or deleted");
-      error.status = 404;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 4. Verify report belongs to student's project
-     * ---------------------------------------------------- */
-    if (String(report.projectId) !== String(student.project)) {
-      const error = new Error("Report does not belong to your project");
-      error.status = 403;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 5. Update the report
-     * ---------------------------------------------------- */
-    if (notes) report.notes = notes;
-
-    const updatedReport = await report.save({ session });
-
-    await session.commitTransaction();
-
-    return {
-      success: true,
-      message: "Report updated successfully",
-      data: {
-        reportId: updatedReport._id,
-        versionLabel: updatedReport.versionLabel,
-        notes: updatedReport.notes,
-        filePath: updatedReport.filePath,
-        projectId: updatedReport.projectId,
-        updatedAt: updatedReport.updatedAt
       }
     };
 

@@ -197,7 +197,7 @@ export const getUserStoriesRelatedToSprint = async (projectId, sprintId) => {
     /** 1️⃣ Vérifier que l'étudiant a un projet */
     if (!projectId) {
       const error = new Error("No project assigned to your account");
-      error.status = 404;
+      error.statusCode= 404;
       throw error;
     }
 
@@ -206,14 +206,14 @@ export const getUserStoriesRelatedToSprint = async (projectId, sprintId) => {
 
     if (!sprint || sprint.deletedAt) {
       const error = new Error("Sprint not found or deleted");
-      error.status = 404;
+      error.statusCode= 404;
       throw error;
     }
 
     /** 3️⃣ Vérifier que le sprint appartient bien au projet */
     if (String(sprint.projectId) !== String(projectId)) {
       const error = new Error("Sprint does not belong to your project");
-      error.status = 403;
+      error.statusCode= 403;
       throw error;
     }
 
@@ -255,35 +255,39 @@ export const getUserStoriesRelatedToSprint = async (projectId, sprintId) => {
 };
 
 // get US by ID
-export const getUserStoryByID = async (projectId, userStoryId) => {
+export const getUserStoryByID = async (userStoryId , projectId ) => {
   try {
     /** 1️⃣ Vérifier que l'étudiant a un projet */
     if (!projectId) {
       const error = new Error("1️⃣ No project assigned to your account");
-      error.status = 404;
+      error.statusCode= 404;
       throw error;
     }
 
     /** 2️⃣ Vérifier que la user story existe */
-    const userStory = await UserStory.findById(userStoryId).lean();
-    if (!userStory || userStory.deletedAt) {
-      const error = new Error(" 2️⃣  User Story not found or deleted");
-      error.status = 404;
+    const userStory = await UserStory.findOne({
+      _id: userStoryId,
+      deletedAt: null
+    }).lean();
+
+    if (!userStory) {
+      const error = new Error("User Story not found or deleted");
+      error.statusCode= 404;
       throw error;
-    }
+}
 
     /** 3️⃣ Vérifier que le sprint auquel elle appartient existe */
     const sprint = await Sprint.findById(userStory.sprintId ).lean();
     if (!sprint || sprint.deletedAt) {
       const error = new Error("3️⃣ Sprint not found or deleted");
-      error.status = 404;
+      error.statusCode= 404;
       throw error;
     }
 
     /** 4️⃣ Vérifier que le sprint appartient bien au projet de l'étudiant */
     if (String(sprint.projectId) !== String(projectId)) {
       const error = new Error(" 4️⃣ Sprint does not belong to your project");
-      error.status = 403;
+      error.statusCode= 403;
       throw error;
     }
 
@@ -300,7 +304,7 @@ export const getUserStoryByID = async (projectId, userStoryId) => {
 };
 
 
-// 🚀 UPDATE USER STORY 
+// UPDATE USER STORY 
 
 
 export const updateUserStory = async (userStoryId, updateData, studentId) => {
@@ -516,7 +520,7 @@ export const deleteUserStory = async (userStoryId, studentId) => {
 
     if (!userStory) {
       const error = new Error("User story not found or already deleted");
-      error.status = 404;
+      error.statusCode= 404;
       throw error;
     }
 
@@ -527,13 +531,13 @@ export const deleteUserStory = async (userStoryId, studentId) => {
 
     if (!student) {
       const error = new Error("Student not found");
-      error.status = 404;
+      error.statusCode= 404;
       throw error;
     }
 
     if (!student.project) {
       const error = new Error("Student has no assigned project");
-      error.status = 400;
+      error.statusCode= 400;
       throw error;
     }
 
@@ -547,29 +551,31 @@ export const deleteUserStory = async (userStoryId, studentId) => {
 
     if (!sprint) {
       const error = new Error("Sprint not found");
-      error.status = 404;
+      error.statusCode= 404;
       throw error;
     }
 
     if (String(sprint.projectId) !== String(student.project)) {
       const error = new Error("User story does not belong to your project");
-      error.status = 403;
+      error.statusCode= 403;
       throw error;
     }
+    /** 4️⃣ Get all task IDs */
+    const taskIds = userStory.tasks; 
 
-    /** ----------------------------------------------------
-     * 4. Soft delete all tasks associated with this user story
-     * ---------------------------------------------------- */
-    const deletedTasksResult = await Task.updateMany(
-      {
-        userStoryId: userStoryId,
-        deletedAt: null
-      },
-      {
-        $set: { deletedAt: new Date() }
-      },
+    /** 5️⃣ HARD DELETE tasks */
+    const deletedTasksResult = await Task.deleteMany(
+      { _id: { $in: taskIds } },
       { session }
     );
+
+    /** 6️⃣ Remove task references from user story */
+    await UserStory.findByIdAndUpdate(
+      userStoryId,
+      { $set: { tasks: [] } },   // ✅ nettoyage total
+      { session }
+    );
+
 
     /** ----------------------------------------------------
      * 5. Soft delete the user story

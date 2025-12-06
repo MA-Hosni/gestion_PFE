@@ -10,7 +10,7 @@ const router = express.Router();
 // create User Storie 
 /**
  * @swagger
- * /userstories:
+ * /user-story:
  *   post:
  *     summary: Create a new user story
  *     description: Creates a new user story within a sprint. The user story name must be unique within the sprint.
@@ -55,7 +55,7 @@ router.post("/",authenticateToken,authorizeStudent,validate(createUserStorySchem
 // Get all User Stories of student's project
 /**
  * @swagger
- * /userstories:
+ * /user-story:
  *   get:
  *     summary: Get all user stories of student's project
  *     description: Retrieves all user stories belonging to the authenticated student's project
@@ -92,7 +92,7 @@ router.get("/",authenticateToken,authorizeStudent,userStoryController.getUserSto
 //Get all User Stories related to sprint
 /**
  * @swagger
- * /userstories/sprint/{sprintId}:
+ * /user-story/sprint/{sprintId}:
  *   get:
  *     summary: Get all user stories related to a specific sprint
  *     description: Retrieves all user stories belonging to a specific sprint within the student's project
@@ -137,7 +137,7 @@ router.get("/sprint/:sprintId",authenticateToken,authorizeStudent,userStoryContr
 // get user storie by id 
 /**
  * @swagger
- * /userstories/{userStoryId}:
+ * /user-story/{userStoryId}:
  *   get:
  *     summary: Get a user story by ID
  *     description: Retrieves detailed information about a specific user story, including associated sprint and tasks
@@ -180,7 +180,7 @@ router.get("/:userStoryId",authenticateToken,authorizeStudent,userStoryControlle
 // Update user storie by id
 /**
  * @swagger
- * /userstories/{userStoryId}:
+ * /user-story/{userStoryId}:
  *   put:
  *     summary: Update a user story
  *     description: Updates an existing user story. Can change any field including moving it to another sprint.
@@ -233,7 +233,7 @@ router.put("/:userStoryId", authenticateToken, authorizeStudent, validate(update
 // Delete user storie by id
 /**
  * @swagger
- * /userstories/{userStoryId}:
+ * /user-story/{userStoryId}:
  *   delete:
  *     summary: Delete a user story
  *     description: Soft deletes a user story and all its associated tasks. The user story is marked as deleted but not removed from the database.

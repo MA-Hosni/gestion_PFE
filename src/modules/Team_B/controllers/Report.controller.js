@@ -25,7 +25,26 @@ export const createReport = async (req, res, next) => {
   }
 };
 
-// GET ALL
+// UPDATE REPORT
+export const updateReport = async (req, res, next) => {
+  try {
+    const studentId = req.student.id;
+    const reportId = req.params.id;
+    const data = req.validatedBody;
+    const result = await reportService.updateReport(
+      studentId,
+      reportId,
+      data
+    );
+
+    res.status(StatusCodes.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+// GET Reports of student project ALL for student
 export const getAllReports = async (req, res, next) => {
   try {
     const studentId = req.student.id;
@@ -36,7 +55,7 @@ export const getAllReports = async (req, res, next) => {
   }
 };
 
-// GET BY ID
+// GET BY ID for student 
 export const getReportById = async (req, res, next) => {
   try {
     const studentId = req.student.id;
@@ -49,7 +68,42 @@ export const getReportById = async (req, res, next) => {
   }
 };
 
-// DELETE
+// GET ALL REPORTS FOR SUPERVISOR BY PROJECT ID
+export const getAllReportCompanySupervisor = async (req, res, next) => {
+  try {
+    const supervisorId = req.supervisor.id;
+    const projectId = req.params.projectID;
+
+    const result = await reportService.getAllReportsForCompanySupervisor(
+      supervisorId,
+      projectId
+    );
+
+    res.status(StatusCodes.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+
+// GET ALL REPORTS FOR UNI SUPERVISOR BY PROJECT ID
+export const getAllReportsUniSupervisor = async (req, res, next) => {
+  try {
+    const supervisorId = req.supervisor.id;
+    const projectId = req.params.projectID;
+
+    const result = await reportService.getAllReportsForUniSupervisor(
+      supervisorId,
+      projectId
+    );
+
+    res.status(StatusCodes.OK).json(result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// DELETE report
 export const deleteReport = async (req, res, next) => {
   try {
     const studentId = req.student.id;

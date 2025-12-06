@@ -332,6 +332,99 @@ const swaggerDefinition = {
           }
         }
       },
+
+      // Report model
+      Report: {
+        type: 'object',
+        properties: {
+          _id: { 
+            type: 'string', 
+            example: '507f1f77bcf86cd799439011' 
+          },
+          versionLabel: { 
+            type: 'integer',
+            minimum: 1,
+            example: 1,
+            description: 'Version number of the report (unique per project)'
+          },
+          notes: { 
+            type: 'string',
+            minLength: 3,
+            maxLength: 5000,
+            example: 'This is the first version of the project report covering the analysis phase.',
+            description: 'Notes and description for this report version'
+          },
+          filePath: { 
+            type: 'string',
+            example: '/uploads/reports/report_v1_2025.pdf',
+            description: 'Path to the uploaded report file'
+          },
+          projectId: { 
+            type: 'string',
+            example: '507f1f77bcf86cd799439010',
+            description: 'Reference to the project this report belongs to'
+          },
+          deletedAt: { 
+            type: 'string',
+            format: 'date-time',
+            nullable: true,
+            example: null,
+            description: 'Timestamp when the report was soft deleted'
+          },
+          createdAt: { 
+            type: 'string', 
+            format: 'date-time',
+            description: 'Creation timestamp'
+          },
+          updatedAt: { 
+            type: 'string', 
+            format: 'date-time',
+            description: 'Last update timestamp'
+          }
+        }
+      },
+
+      // Create Report Request (multipart/form-data)
+      CreateReportRequest: {
+        type: 'object',
+        required: ['file', 'versionLabel', 'notes'],
+        properties: {
+          file: {
+            type: 'string',
+            format: 'binary',
+            description: 'Report file to upload (PDF, DOCX, etc.)'
+          },
+          versionLabel: {
+            type: 'integer',
+            minimum: 1,
+            example: 1,
+            description: 'Version number of the report (must be unique per project)'
+          },
+          notes: {
+            type: 'string',
+            minLength: 3,
+            maxLength: 5000,
+            example: 'This is the first version of the project report covering the analysis phase.',
+            description: 'Notes and description for this report version'
+          }
+        }
+      },
+
+      // Update Report Request
+      UpdateReportRequest: {
+        type: 'object',
+        required: ['notes'],
+        properties: {
+          notes: {
+            type: 'string',
+            minLength: 3,
+            maxLength: 5000,
+            example: 'Updated notes with additional information about the project progress.',
+            description: 'Updated notes and description for this report'
+          }
+        }
+      },
+      
       // ==== TEAM C - TASKS MODULE SCHEMAS ====
 
       // Task model

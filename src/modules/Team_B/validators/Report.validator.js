@@ -18,11 +18,7 @@ export const createReportSchema = Joi.object({
 
 // UPDATE REPORT
 export const updateReportSchema = Joi.object({
-  id: Joi.string().pattern(objectIdPattern).required().messages({
-    "string.pattern.base": "Invalid report ID format",
-    "any.required": "Report ID is required",
-  }),
-  
+
   notes: Joi.string().min(3).max(5000).required().messages({
     "string.min": "Notes must be at least 3 characters",
     "string.max": "Notes must not exceed 5000 characters",
