@@ -1,8 +1,7 @@
 // src/modules/Team_D/routes/validation.routes.js
 import express from "express";
-import { authenticateToken } from "../../../shared/middlewares/auth.middleware.js";
 import {
-  authorizeStudent,
+  authenticateToken,
   authorizeSupervisor
 } from "../../../shared/middlewares/auth.middleware.js";
 import * as validationController from "../controllers/validation.controller.js";

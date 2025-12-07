@@ -21,7 +21,7 @@ export const createMeeting = async (data, studentId) => {
       message: "scheduledDate and referenceType are required"
     };
   }
-
+ 
   let projectId = null;
 
   // USER STORY

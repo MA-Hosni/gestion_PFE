@@ -128,6 +128,7 @@ export const authorizeSupervisor = async (req, res, next) => {
     }
 
     let supervisor = null;
+    // if (req.user.role === "CompSupervisor") {
     if (req.user.role === "CompSupervisor") {
       supervisor = await CompSupervisor.findOne({ userId: req.user.id }).select('-__v');
       if (!supervisor) {
@@ -141,6 +142,7 @@ export const authorizeSupervisor = async (req, res, next) => {
         companyName: supervisor.companyName,
         studentsId: supervisor.studentsId,
       };
+    //} else if (req.user.role === "UniSupervisor") {
     } else if (req.user.role === "UniSupervisor") {
       supervisor = await UniSupervisor.findOne({ userId: req.user.id }).select('-__v');
       if (!supervisor) {
@@ -160,6 +162,45 @@ export const authorizeSupervisor = async (req, res, next) => {
     }
 
     next();
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const authorizeUniversitySupervisor = async (req, res, next) => {
+  try {
+    // Must be authenticated
+    if (!req.user) {
+      const error = new Error("Authentication required");
+      error.status = 401;
+      throw error;
+    }
+
+    // Role must be strictly 'uniSupervisor'
+    if (req.user.role !== "uniSupervisor") {
+      const error = new Error("Access denied. Only University Supervisors can access this resource");
+      error.status = 403;
+      throw error;
+    }
+
+    // Fetch university supervisor profile
+    const uniSupervisor = await UniSupervisor.findOne({ userId: req.user.id }).select("-__v");
+
+    if (!uniSupervisor) {
+      const error = new Error("University supervisor profile not found");
+      error.status = 404;
+      throw error;
+    }
+
+    // Attach supervisor data to request
+    req.universitySupervisor = {
+      id: uniSupervisor._id,
+      userId: uniSupervisor.userId,
+      studentsId: uniSupervisor.studentsId,
+    };
+
+    next();
+
   } catch (error) {
     next(error);
   }

@@ -20,7 +20,7 @@ export const createValidation = async (data, validatorId) => {
       message: "Missing required fields"
     };
   }
-
+ 
   if (!mongoose.Types.ObjectId.isValid(taskId)) {
     return {
       success: false,
@@ -66,12 +66,6 @@ export const createValidation = async (data, validatorId) => {
         message: "Meeting not found"
       };
     }
-    const task = await Task.findById(referenceId);
-    if (!task) return { 
-      success: false, 
-      code: 404,
-      message: "Task not found" 
-    };
   }
 
   // 5️⃣ Create validation entry

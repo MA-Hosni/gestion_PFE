@@ -1,10 +1,11 @@
 // Team_D/routes/meeting.routes.js
 
 import express from "express";
-import { authenticateToken } from "../../../shared/middlewares/auth.middleware.js";
 import {
+  authenticateToken,
   authorizeStudent,
-  authorizeSupervisor
+  authorizeSupervisor,
+  authorizeUniversitySupervisor
 } from "../../../shared/middlewares/auth.middleware.js";
 
 import { validate } from "../../../shared/middlewares/validate.js";
@@ -266,7 +267,7 @@ router.patch(
 router.patch(
   "/:id/validate",
   authenticateToken,
-  authorizeSupervisor,
+  authorizeUniversitySupervisor,
   validate(ValidateMeetingSchema),
   meetingController.validateMeeting 
 );
