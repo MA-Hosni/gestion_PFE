@@ -2,7 +2,7 @@
 import express from "express";
 import {
   authenticateToken,
-  authorizeSupervisor
+  authorizeSupervisor,
 } from "../../../shared/middlewares/auth.middleware.js";
 import * as validationController from "../controllers/validation.controller.js";
 import { validate } from "../../../shared/middlewares/validate.js";
@@ -14,32 +14,7 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Validations
- *   description: Validation management
- */
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     Validation:
- *       type: object
- *       required:
- *         - taskId
- *         - status
- *         - meetingType
- *       properties:
- *         taskId:
- *           type: string
- *         status:
- *           type: string
- *           enum: [valid, invalid]
- *         meetingType:
- *           type: string
- *           enum: [reunion, hors_reunion]
- *         meetingReference:
- *           type: string
- *         comment:
- *           type: string
+ *   description: Validation management for Tasks
  */
 
 // 2.1 Create validation
@@ -47,7 +22,7 @@ const router = express.Router();
  * @swagger
  * /validations:
  *   post:
- *     summary: Create a new validation
+ *     summary: Create a new validation for a task
  *     tags: [Validations]
  *     security:
  *       - BearerAuth: []
@@ -80,7 +55,7 @@ router.post(
  * @swagger
  * /validations/task/{taskId}:
  *   get:
- *     summary: List validations for a task
+ *     summary: Get all validations associated with a specific task
  *     tags: [Validations]
  *     security:
  *       - BearerAuth: []
@@ -90,9 +65,16 @@ router.post(
  *         required: true
  *         schema:
  *           type: string
+ *         description: The ID of the task
  *     responses:
  *       200:
  *         description: List of validations
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Validation'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
@@ -110,7 +92,7 @@ router.get(
  * @swagger
  * /validations/{id}:
  *   delete:
- *     summary: Delete a validation
+ *     summary: Delete a validation by ID
  *     tags: [Validations]
  *     security:
  *       - BearerAuth: []
@@ -120,6 +102,7 @@ router.get(
  *         required: true
  *         schema:
  *           type: string
+ *         description: The validation ID
  *     responses:
  *       200:
  *         description: Validation deleted successfully
