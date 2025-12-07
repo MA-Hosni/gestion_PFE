@@ -17,7 +17,7 @@ export const createMeeting = async (req, res, next) => {
     res.status(StatusCodes.CREATED).json({
       success: result.success,
       message: result.message,
-      data: result.data
+      data: result.data 
     });
   } catch (error) {
     next(error);
@@ -83,8 +83,11 @@ export const completeMeeting = async (req, res, next) => {
 // =========================================================
 export const validateMeeting = async (req, res, next) => {
   try {
+
+    console.log("Entering validateMeeting controller");
     const meetingId = req.params.id;
-    const validatorId = req.supervisor.id;
+    console.log("req.supervisor:", req.universitySupervisor);
+    const validatorId = req.universitySupervisor.id;
     const { validationStatus } = req.body;
 
     const result = await meetingService.validateMeeting(
