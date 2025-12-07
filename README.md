@@ -126,7 +126,42 @@ Implémentation du CRUD complet sur les User Stories :
 
 # Équipe C — Tasks & Workflow
 
-# Équipe D — Meetings, Validations & Journal Global
+# Équipe D — Meetings, Validations 
+
+### **Deadline 1 — 24/11/2025**
+- Implement meeting creation (planned date, agenda).
+
+- Add CRUD operations for meetings (create, update, view, delete) restricted to student permissions.
+
+- Implement validation model structure (status, author, date, linked meeting or “hors réunion”).
+
+- Establish linking between meetings and related items (User Stories, Tasks, Reports).
+
+### **Deadline 2 — 30/11/2025**
+- Implement task validation feature (validate/invalidate tasks marked as “Done”).
+
+- Add rules ensuring only enterprise/university supervisors can validate tasks.
+
+- Add meeting completion feature: adding real summary after the meeting.
+
+- Integrate validation logic with meeting references (“linked to meeting” or “hors réunion”).
+
+
+### **Deadline 3 — 3/12/2025**
+- Implement validation workflow for meeting content (university supervisor approval).
+
+- Add API documentation using Swagger for all meetings & validations endpoints.
+
+- Improve authorization middleware to enforce student/supervisor role permissions.
+
+- Add consistency checks between meetings, tasks, user stories and reports (e.g., cannot reference non-existing items).
+
+### **Deadline 4 — 07/12/2025**
+- Finalize all meeting & validation features.
+
+- Complete Postman collection with all endpoints and scenarios.
+
+- Fix remaining bugs and ensure all business rules are fully respected.
 
 ## 5. Livrables finaux
 
