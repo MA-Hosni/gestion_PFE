@@ -126,6 +126,34 @@ Implémentation du CRUD complet sur les User Stories :
 
 # Équipe C — Tasks & Workflow
 
+### **Deadline 1 — 23/11/2025**
+- Implement basic Task model.
+
+- Implement Task Model and CRUD operations.
+
+- Implement Task History model.
+
+### **Deadline 2 — 30/11/2025**
+- Create TaskValidator model (status requests from student).
+
+- Implement “status update request” logic (Student requests a change, Status stays pending until supervisor validation)
+
+- New specific GET routes for Task (For specific filter like all Tasks that can be visible for a specific supervisor)
+
+### **Deadline 3 — 03/12/2025**
+- Integrate Task History feature to the workflow (adding new status history when there is an update).
+
+- Implement Task History operational CRUD operations.
+
+- Implement Swagger documentation logic.
+
+- Add reporting generators.
+
+### **Deadline 4 — 07/12/2025**
+- Ensure all Team C functions are done (Fixing bugs if needed).
+
+- Prepare Postman collections.
+
 # Équipe D — Meetings, Validations 
 
 ### **Deadline 1 — 24/11/2025**
