@@ -1,0 +1,202 @@
+{
+	"info": {
+		"_postman_id": "9bd4300d-a97b-4191-acf9-96bc016a69a7",
+		"name": "USER STORIES",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "50317970",
+		"_collection_link": "https://pfe666-3775.postman.co/workspace/pfe-Workspace~884f7d8e-8e55-4cbd-8b17-bea13124f0f7/collection/32457936-9bd4300d-a97b-4191-acf9-96bc016a69a7?action=share&source=collection_link&creator=50317970"
+	},
+	"item": [
+		{
+			"name": "Create User-story",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "...........",
+							"type": "string"
+						}
+					]
+				},
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n  \"storyName\": \"LOGIN\",\r\n  \"description\": \"Create login functionality with email and password validation, and error handling.\",\r\n  \"priority\": \"high\",\r\n  \"storyPointEstimate\": 5,\r\n  \"startDate\": \"2025-12-01T00:00:00.000Z\",\r\n  \"dueDate\": \"2025-12-10T00:00:00.000Z\",\r\n  \"sprintId\": \"6926072c700dc5c4b7b72ea7\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/user-story",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"user-story"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All user-stories related to sprint",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "...........",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/user-story/sprint/**sprintID**",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"user-story",
+						"sprint",
+						"**sprintID**"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get User-storie By ID",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{accessToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/user-story/***userStoryID**",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"user-story",
+						"***userStoryID**"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update User-story",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "...........",
+							"type": "string"
+						}
+					]
+				},
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n                \"storyName\": \"signup\",\r\n                \"description\": \"Create signup functionality \",\r\n                \"priority\": \"high\",\r\n                \"storyPointEstimate\": 5,\r\n                \"startDate\": \"2025-12-01T00:00:00.000Z\",\r\n                \"dueDate\": \"2025-12-10T00:00:00.000Z\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseURL}}/api/user-story/***userStoryID**",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"user-story",
+						"***userStoryID**"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delet User Story",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "...........",
+							"type": "string"
+						}
+					]
+				},
+				"method": "DELETE",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/user-story/***userStoryID**",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"user-story",
+						"***userStoryID**"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All User Stories related to project",
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "...........",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseURL}}/api/user-story",
+					"host": [
+						"{{baseURL}}"
+					],
+					"path": [
+						"api",
+						"user-story"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
