@@ -116,7 +116,7 @@ export const deleteTask = async (id) => {
   await TaskValidator.deleteMany({ task_id: id });
 
   // Remove the task from its associated UserStory's tasks array
-  await UserStory.findByIdAndUpdate(task.user_story_id, {
+  await UserStory.findByIdAndUpdate(task.userStoryId, {
     $pull: { tasks: id }
   });
 
@@ -149,10 +149,11 @@ export const updateTaskStatus = async (id, data) => {
     throw error;
   }
   const taskValidator = await TaskValidator.create({
-    task_id: id,
-    task_status: data.status, // This is the proposed new status
-    validator_id: data.validator_id,
+    taskId: id,
+    taskStatus: data.status, // This is the proposed new status
+    validatorId: data.validatorId,
     comment: data.comment,
+    meetingType:data.meetingType
   });
 
   return { message: "Task status validation request created successfully", taskValidator };
@@ -166,30 +167,30 @@ export const validateTaskStatus = async (id, data) => {
     error.status = 404;
     throw error;
   }
-  const task = await Task.findById(taskValidator.task_id);
+  const task = await Task.findById(taskValidator.taskId);
   if (!task) {
     const error = new Error("Task not found.");
     error.status = 404;
     throw error;
   }
 
-  if (data.validator_status === "valid") {
+  if (data.validatorStatus === "valid") {
     const oldStatus = task.status;
-    task.status = taskValidator.task_status;
+    task.status = taskValidator.taskStatus;
     await task.save();
 
     await TaskHistory.create({
       taskId: task._id,
-      modifiedBy: taskValidator.validator_id,
+      modifiedBy: taskValidator.validatorId,
       oldValue: { status: oldStatus },
-      newValue: { status: taskValidator.task_status },
+      newValue: { status: taskValidator.taskStatus },
       fieldChanged: "status"
     });
 
     await TaskValidator.findByIdAndDelete(id);
     return { message: "Task status updated and validated successfully", task };
   } else {
-    taskValidator.status = data.validator_status;
+    taskValidator.status = data.validatorStatus;
     await taskValidator.save();
     return { message: "Task validation request updated", taskValidator };
   }

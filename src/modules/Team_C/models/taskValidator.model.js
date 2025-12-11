@@ -1,41 +1,32 @@
 import mongoose from "mongoose";
 
 const taskValidatorSchema = new mongoose.Schema({
-  task_id: {
+  taskId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Task",
     required: true,
   },
-  task_status: {
+  taskStatus: {
     type: String,
     enum: ["ToDo", "InProgress", "Standby", "Done"],
     required: true,
   },
-  validator_status: {
+  validatorStatus: {
     type: String,
     enum: ["valid", "invalid", "in progress"],
     default: "in progress",
     required: true,
   },
-  validator_id: {
+  validatorId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
   },
-  meeting_type: {
+  meetingType: {
     type: String,
     enum: ["reunion", "hors reunion"],
     required: true,
   },
-  meeting_reference: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "Meeting",
-  },
-  meeting_type: {
-    type: String,
-    enum: ["reunion", "hors reunion"],
-    required: true,
-  },
-  meeting_reference: {
+  meetingReference: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "Meeting",
   },
