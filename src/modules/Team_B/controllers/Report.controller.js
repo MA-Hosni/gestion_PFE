@@ -1,4 +1,4 @@
-import * as reportService from "../services/report.service.js";
+import * as reportService from "../services/Report.service.js";
 import { StatusCodes } from "http-status-codes";
 
 // CREATE REPORT
