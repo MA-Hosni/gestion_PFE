@@ -1,5 +1,5 @@
 import express from "express";
-import upload from "../middlewares/uploadReport.middleware.js";
+import upload from "../middlewares/UploadReport.middleware.js";
 import { authenticateToken, authorizeStudent, authorizeSupervisor } from "../../../shared/middlewares/auth.middleware.js"; 
 import { validate } from "../../../shared/middlewares/validate.js";
 import { createReportSchema, updateReportSchema } from "../validators/Report.validator.js";

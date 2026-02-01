@@ -177,7 +177,7 @@ export const authorizeUniversitySupervisor = async (req, res, next) => {
     }
 
     // Role must be strictly 'uniSupervisor'
-    if (req.user.role !== "uniSupervisor") {
+    if (req.user.role !== "UniSupervisor") {
       const error = new Error("Access denied. Only University Supervisors can access this resource");
       error.status = 403;
       throw error;
