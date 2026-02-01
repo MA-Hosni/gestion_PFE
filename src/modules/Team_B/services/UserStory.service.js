@@ -192,115 +192,104 @@ export const getUserStories = async (projectId) => {
 
 // get User Stories related to sprint
 export const getUserStoriesRelatedToSprint = async (projectId, sprintId) => {
-  try {
-
-    /** 1️⃣ Vérifier que l'étudiant a un projet */
-    if (!projectId) {
-      const error = new Error("No project assigned to your account");
-      error.statusCode= 404;
-      throw error;
-    }
-
-    /** 2️⃣ Vérifier que le sprint existe */
-    const sprint = await Sprint.findById(sprintId);
-
-    if (!sprint || sprint.deletedAt) {
-      const error = new Error("Sprint not found or deleted");
-      error.statusCode= 404;
-      throw error;
-    }
-
-    /** 3️⃣ Vérifier que le sprint appartient bien au projet */
-    if (String(sprint.projectId) !== String(projectId)) {
-      const error = new Error("Sprint does not belong to your project");
-      error.statusCode= 403;
-      throw error;
-    }
-
-    /** 4️⃣ Récupérer user stories avec deletedAt = null */
-    const userStories = await UserStory.find({
-      sprintId: sprintId,
-      deletedAt: null
-    })
-      .select([
-        "storyName",
-        "description",
-        "priority",
-        "storyPointEstimate",
-        "startDate",
-        "dueDate",
-        "tasks"
-      ])
-      .sort({ createdAt: 1 })
-      .lean();
-
-    return {
-      success: true,
-      message: "User stories retrieved successfully", 
-      data: {
-        sprint: {
-          _id: sprintId,
-          title: sprint.title,
-          goal: sprint.goal,
-          startDate: sprint.startDate,
-          endDate: sprint.endDate
-        },
-        userStories
-      }
-    };
-
-  } catch (error) {
+  /** 1️⃣ Vérifier que l'étudiant a un projet */
+  if (!projectId) {
+    const error = new Error("No project assigned to your account");
+    error.statusCode= 404;
     throw error;
   }
+
+  /** 2️⃣ Vérifier que le sprint existe */
+  const sprint = await Sprint.findById(sprintId);
+
+  if (!sprint || sprint.deletedAt) {
+    const error = new Error("Sprint not found or deleted");
+    error.statusCode= 404;
+    throw error;
+  }
+
+  /** 3️⃣ Vérifier que le sprint appartient bien au projet */
+  if (String(sprint.projectId) !== String(projectId)) {
+    const error = new Error("Sprint does not belong to your project");
+    error.statusCode= 403;
+    throw error;
+  }
+
+  /** 4️⃣ Récupérer user stories avec deletedAt = null */
+  const userStories = await UserStory.find({
+    sprintId: sprintId,
+    deletedAt: null
+  })
+    .select([
+      "storyName",
+      "description",
+      "priority",
+      "storyPointEstimate",
+      "startDate",
+      "dueDate",
+      "tasks"
+    ])
+    .sort({ createdAt: 1 })
+    .lean();
+
+  return {
+    success: true,
+    message: "User stories retrieved successfully", 
+    data: {
+      sprint: {
+        _id: sprintId,
+        title: sprint.title,
+        goal: sprint.goal,
+        startDate: sprint.startDate,
+        endDate: sprint.endDate
+      },
+      userStories
+    }
+  };
 };
 
 // get US by ID
 export const getUserStoryByID = async (userStoryId , projectId ) => {
-  try {
-    /** 1️⃣ Vérifier que l'étudiant a un projet */
-    if (!projectId) {
-      const error = new Error("1️⃣ No project assigned to your account");
-      error.statusCode= 404;
-      throw error;
-    }
-
-    /** 2️⃣ Vérifier que la user story existe */
-    const userStory = await UserStory.findOne({
-      _id: userStoryId,
-      deletedAt: null
-    }).lean();
-
-    if (!userStory) {
-      const error = new Error("User Story not found or deleted");
-      error.statusCode= 404;
-      throw error;
-}
-
-    /** 3️⃣ Vérifier que le sprint auquel elle appartient existe */
-    const sprint = await Sprint.findById(userStory.sprintId ).lean();
-    if (!sprint || sprint.deletedAt) {
-      const error = new Error("3️⃣ Sprint not found or deleted");
-      error.statusCode= 404;
-      throw error;
-    }
-
-    /** 4️⃣ Vérifier que le sprint appartient bien au projet de l'étudiant */
-    if (String(sprint.projectId) !== String(projectId)) {
-      const error = new Error(" 4️⃣ Sprint does not belong to your project");
-      error.statusCode= 403;
-      throw error;
-    }
-
-    /** 5️⃣ Tout est ok, retourner la user story avec les infos du sprint */
-    return {
-      success: true,
-      message: "User Story retrieved successfully",
-      data: userStory
-    };
-
-  } catch (error) {
-    throw error; // Le controller gérera l'erreur
+  /** 1️⃣ Vérifier que l'étudiant a un projet */
+  if (!projectId) {
+    const error = new Error("1️⃣ No project assigned to your account");
+    error.statusCode= 404;
+    throw error;
   }
+
+  /** 2️⃣ Vérifier que la user story existe */
+  const userStory = await UserStory.findOne({
+    _id: userStoryId,
+    deletedAt: null
+  }).lean();
+
+  if (!userStory) {
+    const error = new Error("User Story not found or deleted");
+    error.statusCode= 404;
+    throw error;
+  }
+
+  /** 3️⃣ Vérifier que le sprint auquel elle appartient existe */
+  const sprint = await Sprint.findById(userStory.sprintId ).lean();
+  if (!sprint || sprint.deletedAt) {
+    const error = new Error("3️⃣ Sprint not found or deleted");
+    error.statusCode= 404;
+    throw error;
+  }
+
+  /** 4️⃣ Vérifier que le sprint appartient bien au projet de l'étudiant */
+  if (String(sprint.projectId) !== String(projectId)) {
+    const error = new Error(" 4️⃣ Sprint does not belong to your project");
+    error.statusCode= 403;
+    throw error;
+  }
+
+  /** 5️⃣ Tout est ok, retourner la user story avec les infos du sprint */
+  return {
+    success: true,
+    message: "User Story retrieved successfully",
+    data: userStory
+  };
 };
 
 

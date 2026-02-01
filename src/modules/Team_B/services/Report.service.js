@@ -234,109 +234,99 @@ export const updateReport = async (studentId, reportId, data) => {
  * GET ALL REPORTS (for student's project)
  * ======================================== */
 export const getAllReports = async (studentId) => {
-  try {
-    /** ----------------------------------------------------
-     * 1. Validate student and get project
-     * ---------------------------------------------------- */
-    const student = await Student.findById(studentId);
+  /** ----------------------------------------------------
+   * 1. Validate student and get project
+   * ---------------------------------------------------- */
+  const student = await Student.findById(studentId);
 
-    if (!student) {
-      const error = new Error("Student not found");
-      error.statusCode= 404;
-      throw error;
-    }
-
-    if (!student.project) {
-      const error = new Error("Student has no assigned project");
-      error.statusCode= 400;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 2. Get all non-deleted reports for the project
-     * ---------------------------------------------------- */
-    const reports = await Report.find({
-      projectId: student.project,
-      deletedAt: null
-    })
-      .sort({ versionLabel: -1 }) // Most recent version first
-      .select("-__v");
-
-    return {
-      success: true,
-      message: "Reports retrieved successfully",
-      count: reports.length,
-      data: reports
-    };
-
-  } catch (error) {
+  if (!student) {
+    const error = new Error("Student not found");
+    error.statusCode= 404;
     throw error;
   }
+
+  if (!student.project) {
+    const error = new Error("Student has no assigned project");
+    error.statusCode= 400;
+    throw error;
+  }
+
+  /** ----------------------------------------------------
+   * 2. Get all non-deleted reports for the project
+   * ---------------------------------------------------- */
+  const reports = await Report.find({
+    projectId: student.project,
+    deletedAt: null
+  })
+    .sort({ versionLabel: -1 }) // Most recent version first
+    .select("-__v");
+
+  return {
+    success: true,
+    message: "Reports retrieved successfully",
+    count: reports.length,
+    data: reports
+  };
 };
 
 /** ========================================
  * GET REPORT BY ID
  * ======================================== */
 export const getReportById = async (studentId, reportId) => {
-  try {
-    /** ----------------------------------------------------
-     * 1. Validate student and get project
-     * ---------------------------------------------------- */
-    const student = await Student.findById(studentId);
+  /** ----------------------------------------------------
+   * 1. Validate student and get project
+   * ---------------------------------------------------- */
+  const student = await Student.findById(studentId);
 
-    if (!student) {
-      const error = new Error("Student not found");
-      error.statusCode= 404;
-      throw error;
-    }
-
-    if (!student.project) {
-      const error = new Error("Student has no assigned project");
-      error.statusCode= 400;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 2. Validate ObjectId format
-     * ---------------------------------------------------- */
-    if (!mongoose.Types.ObjectId.isValid(reportId)) {
-      const error = new Error("Invalid report ID format");
-      error.statusCode= 400;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 3. Get the report
-     * ---------------------------------------------------- */
-    const report = await Report.findOne({
-      _id: reportId,
-      deletedAt: null
-    }).select("-__v");
-
-    if (!report) {
-      const error = new Error("Report not found or deleted");
-      error.statusCode= 404;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 4. Verify report belongs to student's project
-     * ---------------------------------------------------- */
-    if (String(report.projectId) !== String(student.project)) {
-      const error = new Error("Report does not belong to your project");
-      error.statusCode= 403;
-      throw error;
-    }
-
-    return {
-      success: true,
-      message: "Report retrieved successfully",
-      data: report
-    };
-
-  } catch (error) {
+  if (!student) {
+    const error = new Error("Student not found");
+    error.statusCode= 404;
     throw error;
   }
+
+  if (!student.project) {
+    const error = new Error("Student has no assigned project");
+    error.statusCode= 400;
+    throw error;
+  }
+
+  /** ----------------------------------------------------
+   * 2. Validate ObjectId format
+   * ---------------------------------------------------- */
+  if (!mongoose.Types.ObjectId.isValid(reportId)) {
+    const error = new Error("Invalid report ID format");
+    error.statusCode= 400;
+    throw error;
+  }
+
+  /** ----------------------------------------------------
+   * 3. Get the report
+   * ---------------------------------------------------- */
+  const report = await Report.findOne({
+    _id: reportId,
+    deletedAt: null
+  }).select("-__v");
+
+  if (!report) {
+    const error = new Error("Report not found or deleted");
+    error.statusCode= 404;
+    throw error;
+  }
+
+  /** ----------------------------------------------------
+   * 4. Verify report belongs to student's project
+   * ---------------------------------------------------- */
+  if (String(report.projectId) !== String(student.project)) {
+    const error = new Error("Report does not belong to your project");
+    error.statusCode= 403;
+    throw error;
+  }
+
+  return {
+    success: true,
+    message: "Report retrieved successfully",
+    data: report
+  };
 };
 
 
@@ -344,165 +334,154 @@ export const getReportById = async (studentId, reportId) => {
  * GET ALL REPORTS FOR Company SUPERVISOR (by projectId)
  * ======================================== */
 export const getAllReportsForCompanySupervisor = async (supervisorId, projectId) => {
-  try {
-
-    /** ----------------------------------------------------
-     * 1. Validate projectId format
-     * ---------------------------------------------------- */
-    if (!mongoose.Types.ObjectId.isValid(projectId)) {
-      const error = new Error("Invalid project ID format");
-      error.statusCode = 400;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 2. Get supervisor to check students
-     * ---------------------------------------------------- */
-    const supervisor = await CompSupervisor.findById(supervisorId);
-
-    if (!supervisor) {
-      const error = new Error("Supervisor not found");
-      error.statusCode = 404;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 3. Get project and verify it exists
-     * ---------------------------------------------------- */
-    const project = await Project.findOne({
-      _id: projectId,
-      deletedAt: null
-    });
-
-    if (!project) {
-      const error = new Error("Project not found or deleted");
-      error.statusCode = 404;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 4. Verify supervisor has access to this project
-     *    (at least one contributor must be supervised by this supervisor)
-     * ---------------------------------------------------- */
-  
-    
-    const students = await Student.find({
-      _id: { $in: project.contributors },
-      compSupervisorId: supervisor.userId  
-    });
-
-    if (students.length === 0) {
-      const error = new Error("You don't have access to this project");
-      error.statusCode = 403;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 5. Get all reports for this project
-     * ---------------------------------------------------- */
-    const reports = await Report.find({
-      projectId,
-      deletedAt: null
-    })
-      .sort({ versionLabel: -1 }) // Most recent version first
-      .select("-__v");
-
-    return {
-      success: true,
-      message: "Reports retrieved successfully",
-      project: {
-        id: project._id,
-        title: project.title,
-        description: project.description
-      },
-      count: reports.length,
-      data: reports
-    };
-
-  } catch (error) {
+  /** ----------------------------------------------------
+   * 1. Validate projectId format
+   * ---------------------------------------------------- */
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    const error = new Error("Invalid project ID format");
+    error.statusCode = 400;
     throw error;
   }
+
+  /** ----------------------------------------------------
+   * 2. Get supervisor to check students
+   * ---------------------------------------------------- */
+  const supervisor = await CompSupervisor.findById(supervisorId);
+
+  if (!supervisor) {
+    const error = new Error("Supervisor not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  /** ----------------------------------------------------
+   * 3. Get project and verify it exists
+   * ---------------------------------------------------- */
+  const project = await Project.findOne({
+    _id: projectId,
+    deletedAt: null
+  });
+
+  if (!project) {
+    const error = new Error("Project not found or deleted");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  /** ----------------------------------------------------
+   * 4. Verify supervisor has access to this project
+   *    (at least one contributor must be supervised by this supervisor)
+   * ---------------------------------------------------- */
+
+  
+  const students = await Student.find({
+    _id: { $in: project.contributors },
+    compSupervisorId: supervisor.userId  
+  });
+
+  if (students.length === 0) {
+    const error = new Error("You don't have access to this project");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  /** ----------------------------------------------------
+   * 5. Get all reports for this project
+   * ---------------------------------------------------- */
+  const reports = await Report.find({
+    projectId,
+    deletedAt: null
+  })
+    .sort({ versionLabel: -1 }) // Most recent version first
+    .select("-__v");
+
+  return {
+    success: true,
+    message: "Reports retrieved successfully",
+    project: {
+      id: project._id,
+      title: project.title,
+      description: project.description
+    },
+    count: reports.length,
+    data: reports
+  };
 };
 
 /** ========================================
  * GET ALL REPORTS FOR UNI SUPERVISOR (by projectId)
  * ======================================== */
 export const getAllReportsForUniSupervisor = async (supervisorId, projectId) => {
-  try {
-    /** ----------------------------------------------------
-     * 1. Validate projectId format
-     * ---------------------------------------------------- */
-    if (!mongoose.Types.ObjectId.isValid(projectId)) {
-      const error = new Error("Invalid project ID format");
-      error.statusCode = 400;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 2. Get supervisor to check students
-     * ---------------------------------------------------- */
-    const supervisor = await UniSupervisor.findById(supervisorId);
-
-    if (!supervisor) {
-      const error = new Error("Supervisor not found");
-      error.statusCode = 404;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 3. Get project and verify it exists
-     * ---------------------------------------------------- */
-    const project = await Project.findOne({
-      _id: projectId,
-      deletedAt: null
-    });
-
-    if (!project) {
-      const error = new Error("Project not found or deleted");
-      error.statusCode = 404;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 4. Verify supervisor has access to this project
-     *    (at least one contributor must be supervised by this supervisor)
-     * ---------------------------------------------------- */
-    const students = await Student.find({
-      _id: { $in: project.contributors },
-      uniSupervisorId: supervisor.userId
-    });
-
-    if (students.length === 0) {
-      const error = new Error("You don't have access to this project");
-      error.statusCode = 403;
-      throw error;
-    }
-
-    /** ----------------------------------------------------
-     * 5. Get all reports for this project
-     * ---------------------------------------------------- */
-    const reports = await Report.find({
-      projectId,
-      deletedAt: null
-    })
-      .sort({ versionLabel: -1 })
-      .select("-__v");
-
-    return {
-      success: true,
-      message: "Reports retrieved successfully",
-      project: {
-        id: project._id,
-        title: project.title,
-        description: project.description
-      },
-      count: reports.length,
-      data: reports
-    };
-
-  } catch (error) {
+  /** ----------------------------------------------------
+   * 1. Validate projectId format
+   * ---------------------------------------------------- */
+  if (!mongoose.Types.ObjectId.isValid(projectId)) {
+    const error = new Error("Invalid project ID format");
+    error.statusCode = 400;
     throw error;
   }
+
+  /** ----------------------------------------------------
+   * 2. Get supervisor to check students
+   * ---------------------------------------------------- */
+  const supervisor = await UniSupervisor.findById(supervisorId);
+
+  if (!supervisor) {
+    const error = new Error("Supervisor not found");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  /** ----------------------------------------------------
+   * 3. Get project and verify it exists
+   * ---------------------------------------------------- */
+  const project = await Project.findOne({
+    _id: projectId,
+    deletedAt: null
+  });
+
+  if (!project) {
+    const error = new Error("Project not found or deleted");
+    error.statusCode = 404;
+    throw error;
+  }
+
+  /** ----------------------------------------------------
+   * 4. Verify supervisor has access to this project
+   *    (at least one contributor must be supervised by this supervisor)
+   * ---------------------------------------------------- */
+  const students = await Student.find({
+    _id: { $in: project.contributors },
+    uniSupervisorId: supervisor.userId
+  });
+
+  if (students.length === 0) {
+    const error = new Error("You don't have access to this project");
+    error.statusCode = 403;
+    throw error;
+  }
+
+  /** ----------------------------------------------------
+   * 5. Get all reports for this project
+   * ---------------------------------------------------- */
+  const reports = await Report.find({
+    projectId,
+    deletedAt: null
+  })
+    .sort({ versionLabel: -1 })
+    .select("-__v");
+
+  return {
+    success: true,
+    message: "Reports retrieved successfully",
+    project: {
+      id: project._id,
+      title: project.title,
+      description: project.description
+    },
+    count: reports.length,
+    data: reports
+  };
 };
 
 

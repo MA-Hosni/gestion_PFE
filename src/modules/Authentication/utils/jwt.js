@@ -18,7 +18,7 @@ export const verifyPasswordResetToken = (token) => {
       throw new Error("Invalid password reset token purpose");
     }
     return payload;
-  } catch (error) {
+  } catch {
     const err = new Error("Invalid or expired password reset token");
     err.status = 400;
     throw err;

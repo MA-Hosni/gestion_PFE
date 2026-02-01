@@ -1,7 +1,5 @@
 import Joi from "joi";
 
-const objectIdPattern = /^[0-9a-fA-F]{24}$/;
-
 // CREATE REPORT
 export const createReportSchema = Joi.object({
   versionLabel: Joi.number().integer().min(1).required().messages({
