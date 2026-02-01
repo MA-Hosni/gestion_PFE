@@ -5,14 +5,15 @@ import {
   authenticateToken,
   authorizeStudent,
   authorizeSupervisor,
-  authorizeUniversitySupervisor
+  authorizeUniversitySupervisor,
 } from "../../../shared/middlewares/auth.middleware.js";
 
 import { validate } from "../../../shared/middlewares/validate.js";
-import { MeetingSchema,
+import {
+  MeetingSchema,
   CompleteMeetingSchema,
   ValidateMeetingSchema,
-  ChangeReferenceSchema
+  ChangeReferenceSchema,
 } from "../validators/meeting.validator.js";
 
 import * as meetingController from "../controllers/meeting.controller.js";
@@ -23,61 +24,7 @@ const router = express.Router();
  * @swagger
  * tags:
  *   name: Meetings
- *   description: Meeting management
- */
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     Meeting:
- *       type: object
- *       required:
- *         - scheduledDate
- *         - referenceType
- *         - referenceId
- *       properties:
- *         scheduledDate:
- *           type: string
- *           format: date-time
- *         agenda:
- *           type: string
- *         actualMinutes:
- *           type: string
- *         referenceType:
- *           type: string
- *           enum: [user_story, task, report]
- *         referenceId:
- *           type: string
- *         validationStatus:
- *           type: string
- *           enum: [pending, valid, invalid]
- *     CompleteMeeting:
- *       type: object
- *       required:
- *         - actualMinutes
- *       properties:
- *         actualMinutes:
- *           type: string
- *     ValidateMeeting:
- *       type: object
- *       required:
- *         - validationStatus
- *       properties:
- *         validationStatus:
- *           type: string
- *           enum: [valid, invalid]
- *     ChangeReference:
- *       type: object
- *       required:
- *         - referenceType
- *         - referenceId
- *       properties:
- *         referenceType:
- *           type: string
- *           enum: [user_story, task, report]
- *         referenceId:
- *           type: string
+ *   description: Meeting management (Create, Update, Validate, Complete)
  */
 
 // =======================================================
@@ -96,10 +43,14 @@ const router = express.Router();
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Meeting'
+ *             $ref: '#/components/schemas/CreateMeetingRequest'
  *     responses:
  *       201:
  *         description: Meeting created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Meeting'
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
@@ -113,7 +64,6 @@ router.post(
   meetingController.createMeeting
 );
 
-
 // =======================================================
 // 2. UPDATE MEETING (PUT /meetings/:id)
 // =======================================================
@@ -121,7 +71,7 @@ router.post(
  * @swagger
  * /meetings/{id}:
  *   put:
- *     summary: Update a meeting
+ *     summary: Update a meeting details
  *     tags: [Meetings]
  *     security:
  *       - BearerAuth: []
@@ -136,10 +86,14 @@ router.post(
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Meeting'
+ *             $ref: '#/components/schemas/CreateMeetingRequest'
  *     responses:
  *       200:
  *         description: Meeting updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Meeting'
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
@@ -154,7 +108,6 @@ router.put(
   validate(MeetingSchema),
   meetingController.updateMeeting
 );
-
 
 // =======================================================
 // 3. DELETE MEETING (DELETE /meetings/:id)
@@ -188,7 +141,6 @@ router.delete(
   meetingController.deleteMeeting
 );
 
-
 // =======================================================
 // 4. COMPLETE MEETING MINUTES (PATCH /meetings/:id/complete)
 // =======================================================
@@ -196,7 +148,7 @@ router.delete(
  * @swagger
  * /meetings/{id}/complete:
  *   patch:
- *     summary: Complete meeting minutes
+ *     summary: Complete meeting minutes (Student)
  *     tags: [Meetings]
  *     security:
  *       - BearerAuth: []
@@ -211,10 +163,14 @@ router.delete(
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/CompleteMeeting'
+ *             $ref: '#/components/schemas/CompleteMeetingRequest'
  *     responses:
  *       200:
  *         description: Meeting completed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Meeting'
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
@@ -230,7 +186,6 @@ router.patch(
   meetingController.completeMeeting
 );
 
-
 // =======================================================
 // 5. VALIDATE MEETING (PATCH /meetings/:id/validate)
 // =======================================================
@@ -238,7 +193,7 @@ router.patch(
  * @swagger
  * /meetings/{id}/validate:
  *   patch:
- *     summary: Validate meeting
+ *     summary: Validate meeting (University Supervisor)
  *     tags: [Meetings]
  *     security:
  *       - BearerAuth: []
@@ -253,10 +208,14 @@ router.patch(
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ValidateMeeting'
+ *             $ref: '#/components/schemas/ValidateMeetingRequest'
  *     responses:
  *       200:
  *         description: Meeting validated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Meeting'
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
@@ -269,9 +228,8 @@ router.patch(
   authenticateToken,
   authorizeUniversitySupervisor,
   validate(ValidateMeetingSchema),
-  meetingController.validateMeeting 
+  meetingController.validateMeeting
 );
-
 
 // =======================================================
 // 6. LIST MEETINGS BY STUDENT (GET /meetings)
@@ -280,13 +238,19 @@ router.patch(
  * @swagger
  * /meetings:
  *   get:
- *     summary: List meetings by student
+ *     summary: List meetings for the current student
  *     tags: [Meetings]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: List of meetings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Meeting'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  */
@@ -298,13 +262,13 @@ router.get(
 );
 
 // =======================================================
-// 6. LIST MEETINGS (GET /meetings?projectId=xxx)
+// 7. LIST MEETINGS BY PROJECT (GET /meetings/project/:projectId)
 // =======================================================
 /**
  * @swagger
  * /meetings/project/{projectId}:
  *   get:
- *     summary: List meetings by project
+ *     summary: List meetings for a specific project
  *     tags: [Meetings]
  *     security:
  *       - BearerAuth: []
@@ -317,6 +281,12 @@ router.get(
  *     responses:
  *       200:
  *         description: List of meetings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Meeting'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  */
@@ -328,13 +298,13 @@ router.get(
 );
 
 // =======================================================
-// 7. LIST MEETINGS BY REFERENCE (GET /meetings/reference/:type/:id)
+// 8. LIST MEETINGS BY REFERENCE (GET /meetings/reference/:type/:id)
 // =======================================================
 /**
  * @swagger
  * /meetings/reference/{type}/{id}:
  *   get:
- *     summary: List meetings by reference
+ *     summary: List meetings by reference (e.g., all meetings for a specific User Story)
  *     tags: [Meetings]
  *     security:
  *       - BearerAuth: []
@@ -353,6 +323,12 @@ router.get(
  *     responses:
  *       200:
  *         description: List of meetings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Meeting'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  */
@@ -362,15 +338,14 @@ router.get(
   meetingController.listMeetingsByReference
 );
 
-
 // =======================================================
-// 8. CHANGE MEETING REFERENCE (PATCH /meetings/:id/reference)
+// 9. CHANGE MEETING REFERENCE (PATCH /meetings/:id/reference)
 // =======================================================
 /**
  * @swagger
  * /meetings/{id}/reference:
  *   patch:
- *     summary: Change meeting reference
+ *     summary: Change the object a meeting is referencing
  *     tags: [Meetings]
  *     security:
  *       - BearerAuth: []
@@ -385,10 +360,14 @@ router.get(
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/ChangeReference'
+ *             $ref: '#/components/schemas/ChangeReferenceRequest'
  *     responses:
  *       200:
  *         description: Meeting reference changed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Meeting'
  *       400:
  *         $ref: '#/components/responses/BadRequest'
  *       401:
@@ -404,22 +383,26 @@ router.patch(
   meetingController.changeMeetingReference
 );
 
-
 // =======================================================
-// 9. LIST PENDING VALIDATION (GET /meetings/pending-validation)
-// Encadrant universitaire ONLY
+// 10. LIST PENDING VALIDATION (GET /meetings/pending-validation)
 // =======================================================
 /**
  * @swagger
  * /meetings/pending-validation:
  *   get:
- *     summary: List pending validation meetings
+ *     summary: List meetings waiting for validation (University Supervisor only)
  *     tags: [Meetings]
  *     security:
  *       - BearerAuth: []
  *     responses:
  *       200:
  *         description: List of pending validation meetings
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Meeting'
  *       401:
  *         $ref: '#/components/responses/Unauthorized'
  *       403:
@@ -431,6 +414,5 @@ router.get(
   authorizeSupervisor,
   meetingController.listPendingValidation
 );
-
 
 export default router;

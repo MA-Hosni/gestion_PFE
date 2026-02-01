@@ -640,6 +640,128 @@ const swaggerDefinition = {
         }
       }
 
+      // ===========================================
+      // TEAM D - VALIDATION SCHEMAS
+      // ===========================================
+      ,Validation: {
+        type: 'object',
+        required: ['taskId', 'status', 'meetingType'],
+        properties: {
+          taskId: { type: 'string', example: '6771b93d5f1a2d001fa3c541' },
+          status: {
+            type: 'string',
+            enum: ['valid', 'invalid'],
+            example: 'valid'
+          },
+          meetingType: {
+            type: 'string',
+            enum: ['reunion', 'hors_reunion'],
+            example: 'reunion'
+          },
+          meetingReference: {
+            type: 'string',
+            description: 'ID of the meeting if meetingType is reunion',
+            example: '6771b93d5f1a2d00abc3f312'
+          },
+          comment: {
+            type: 'string',
+            example: 'Task logic verified and approved.'
+          }
+        }
+      },
+
+      // ===========================================
+      // TEAM D - MEETING SCHEMAS
+      // ===========================================
+      Meeting: {
+        type: 'object',
+        required: ['scheduledDate', 'referenceType', 'referenceId'],
+        properties: {
+          _id: { type: 'string', example: '6781b93d5f1a2d001fa3c999' },
+          scheduledDate: {
+            type: 'string',
+            format: 'date-time',
+            example: '2025-06-15T10:00:00.000Z'
+          },
+          agenda: {
+            type: 'string',
+            example: 'Discuss user story implementation details'
+          },
+          actualMinutes: {
+            type: 'string',
+            description: 'Notes taken during the meeting (filled after completion)',
+            example: 'Agreed on using JWT for auth.'
+          },
+          referenceType: {
+            type: 'string',
+            enum: ['user_story', 'task', 'report'],
+            example: 'task'
+          },
+          referenceId: {
+            type: 'string',
+            example: '6771b93d5f1a2d001fa3c541'
+          },
+          validationStatus: {
+            type: 'string',
+            enum: ['pending', 'valid', 'invalid'],
+            example: 'pending'
+          },
+          studentId: { type: 'string' },
+          projectId: { type: 'string' },
+          createdAt: { type: 'string', format: 'date-time' }
+        }
+      },
+
+      // Schema for creating/updating a meeting
+      CreateMeetingRequest: {
+        type: 'object',
+        required: ['scheduledDate', 'referenceType', 'referenceId'],
+        properties: {
+          scheduledDate: { type: 'string', format: 'date-time' },
+          agenda: { type: 'string' },
+          referenceType: { type: 'string', enum: ['user_story', 'task', 'report'] },
+          referenceId: { type: 'string' }
+        }
+      },
+
+      // Schema for completing a meeting (Student)
+      CompleteMeetingRequest: {
+        type: 'object',
+        required: ['actualMinutes'],
+        properties: {
+          actualMinutes: {
+            type: 'string',
+            example: 'Meeting minutes content...'
+          }
+        }
+      },
+
+      // Schema for validating a meeting (Supervisor)
+      ValidateMeetingRequest: {
+        type: 'object',
+        required: ['validationStatus'],
+        properties: {
+          validationStatus: {
+            type: 'string',
+            enum: ['valid', 'invalid'],
+            example: 'valid'
+          }
+        }
+      },
+
+      // Schema for changing reference
+      ChangeReferenceRequest: {
+        type: 'object',
+        required: ['referenceType', 'referenceId'],
+        properties: {
+          referenceType: {
+            type: 'string',
+            enum: ['user_story', 'task', 'report']
+          },
+          referenceId: { type: 'string' }
+        }
+      }
+
     },
     responses: {
       BadRequest: {
