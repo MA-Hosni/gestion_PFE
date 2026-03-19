@@ -6,6 +6,7 @@ import CalendarPage from './CalendarPage'
 import BoardPage from './BoardPage'
 import ContributorsPage from './ContributorsPage'
 import BacklogPage from './BacklogPage'
+import ReportsPage from './ReportsPage'
 
 // Placeholder components - replaced with actual components later
 const Summary = () => <div className="p-4 border rounded-lg bg-muted/20 h-96 flex items-center justify-center">Summary Component</div>
@@ -65,13 +66,15 @@ function ProjectDetailsPage() {
           <TabsTrigger value="Contributors">Contributors</TabsTrigger>
           <TabsTrigger value="Board">Board</TabsTrigger>
           <TabsTrigger value="Calendar">Calendar</TabsTrigger>
+          <TabsTrigger value="Reports">Reports</TabsTrigger>
         </TabsList>
-        <div className="h-[calc(100vh-16rem)]">
+        <div className="max-w-full overflow-x-auto">
           <TabsContent value="Summary"><Summary /></TabsContent>
           <TabsContent value="Backlog"><BacklogPage /></TabsContent>
           <TabsContent value="Contributors"><ContributorsPage /></TabsContent>
           <TabsContent value="Board"><BoardPage /></TabsContent>
           <TabsContent value="Calendar"><CalendarPage /></TabsContent>
+          <TabsContent value="Reports"><ReportsPage /></TabsContent>
         </div>
       </Tabs>
     </div>
