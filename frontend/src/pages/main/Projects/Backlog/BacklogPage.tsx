@@ -33,7 +33,7 @@ import {
   mockSprints as initialSprints,
   sprintColumns,
   NestedUserStories,
-  AddSprintDialog,
+  SprintDialog,
   type Sprint
 } from '@/components/project/backlog'
 
@@ -171,7 +171,7 @@ const BacklogPage = () => {
             <SearchIcon className="size-4" />
           </div>
         </div>
-        <AddSprintDialog />
+        <SprintDialog buttonText='Create Sprint' title='Create Sprint' description='Create a new sprint for the project.' />
       </div>
       
       <div className='w-full pb-1 overflow-y-auto max-h-[calc(100vh-320px)] min-h-[400px] pr-2 custom-scrollbar'>

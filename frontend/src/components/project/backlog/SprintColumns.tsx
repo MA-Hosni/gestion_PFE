@@ -1,7 +1,9 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { ChevronDownIcon, ChevronUpIcon, Edit2, Trash2, CalendarDays } from 'lucide-react'
+import { ChevronDownIcon, ChevronUpIcon, Edit2, CalendarDays } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Sprint } from './types'
+import { SprintDialog } from './sprint-dialog'
+import { DeleteDialog } from './delete-dialog'
 
 export const sprintColumns: ColumnDef<Sprint>[] = [
   {
@@ -52,15 +54,21 @@ export const sprintColumns: ColumnDef<Sprint>[] = [
   {
     id: 'actions',
     header: () => <div className="text-right px-4">Actions</div>,
-    cell: () => (
-      <div className="flex items-center justify-end gap-1 px-2">
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-muted/50">
-          <Edit2 className="h-4 w-4" />
-        </Button>
-        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10">
-          <Trash2 className="h-4 w-4" />
-        </Button>
-      </div>
-    )
+    cell: ({ row }) => {
+      const sprint = row.original
+      return (
+        <div className="flex items-center justify-end gap-1 px-2">
+          {/* <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-muted/50"> */}
+            <SprintDialog buttonText={<Edit2 className="size-4" />} title='Edit Sprint' description='Edit sprint details.' />
+          {/* </Button> */}
+          <DeleteDialog 
+            itemType="Sprint" 
+            itemName={sprint.name} 
+            variant="outline"
+            onConfirm={() => console.log('Delete sprint', sprint.id)} 
+          />
+        </div>
+      )
+    }
   }
 ]

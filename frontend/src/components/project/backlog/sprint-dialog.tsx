@@ -19,7 +19,7 @@ import { Calendar } from "@/components/ui/calendar"
 import { format } from "date-fns"
 
 
-export function AddSprintDialog() {
+export function SprintDialog({buttonText, title, description }: {buttonText: React.ReactNode, title: string, description: string }) {
 
   const [startDate, setStartDate] = useState<Date>()
   const [endDate, setEndDate] = useState<Date>()
@@ -28,13 +28,13 @@ export function AddSprintDialog() {
     <Dialog>
       <form>
         <DialogTrigger asChild>
-          <Button variant="outline">Create Sprint</Button>
+          <Button variant="outline">{buttonText}</Button>
         </DialogTrigger>
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Create Sprint</DialogTitle>
+            <DialogTitle>{title}</DialogTitle>
             <DialogDescription>
-              Create a new sprint for the project.
+              {description}
             </DialogDescription>
           </DialogHeader>
           <FieldGroup>
@@ -95,7 +95,7 @@ export function AddSprintDialog() {
             <DialogClose asChild>
               <Button variant="outline">Cancel</Button>
             </DialogClose>
-            <Button type="submit">Create</Button>
+            <Button type="submit">{title.split(' ')[0]}</Button>
           </DialogFooter>
         </DialogContent>
       </form>

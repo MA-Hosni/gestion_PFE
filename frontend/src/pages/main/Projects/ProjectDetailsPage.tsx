@@ -5,7 +5,7 @@ import { useState } from 'react'
 import CalendarPage from './CalendarPage'
 import BoardPage from './BoardPage'
 import ContributorsPage from './ContributorsPage'
-import BacklogPage from './BacklogPage'
+import BacklogPage from './Backlog/BacklogPage'
 import ReportsPage from './ReportsPage'
 
 // Placeholder components - replaced with actual components later
