@@ -13,7 +13,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import { ProjectsPage } from "./Projects/ProjectsPage"
 import ProjectDetailsPage from "./Projects/ProjectDetailsPage"
 
 export default function LayoutPage() {

@@ -59,7 +59,7 @@ function ProjectDetailsPage() {
         )}
       </div>
 
-      <Tabs defaultValue="Summary" className="w-full">
+      <Tabs defaultValue="Backlog" className="w-full">
         <TabsList variant="line" className="w-full border-b h-auto">
           <TabsTrigger value="Summary">Summary</TabsTrigger>
           <TabsTrigger value="Backlog">Backlog</TabsTrigger>
