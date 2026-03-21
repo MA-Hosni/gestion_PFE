@@ -5,12 +5,21 @@ import { TaskRow } from './task-row'
 import { AddTaskDialog } from './task-dialog'
 import { mockTasks } from './mock-tasks'
 import type { Task } from '../types'
+import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
 
 interface TaskTableProps {
   tasks?: Task[]
+  currentUserId: string
+  onCreateMeeting: (
+    meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
+  ) => void
 }
 
-function TaskTable({ tasks: propTasks }: TaskTableProps) {
+function TaskTable({
+  tasks: propTasks,
+  currentUserId,
+  onCreateMeeting,
+}: TaskTableProps) {
   const [tasks, setTasks] = useState<Task[]>(propTasks ?? mockTasks)
   const [search, setSearch] = useState('')
 
@@ -72,6 +81,8 @@ function TaskTable({ tasks: propTasks }: TaskTableProps) {
                   task={task}
                   onSave={handleSave}
                   onDelete={handleDelete}
+                  currentUserId={currentUserId}
+                  onCreateMeeting={onCreateMeeting}
                 />
               ))
             ) : (

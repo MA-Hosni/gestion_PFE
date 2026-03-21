@@ -10,12 +10,22 @@ import { DeleteDialog } from './delete-dialog'
 import { AddUserStoryDialog } from './create-user-story-dialog'
 import { useState } from 'react'
 import { BacklogDetailsDrawer } from '@/pages/main/Projects/Backlog/BacklogDetailsPage'
+import { CreateMeetingDialog } from './create-meeting-dialog'
+import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
 
 interface NestedUserStoriesProps {
   sprint: Sprint
+   currentUserId: string
+   onCreateMeeting: (
+      meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
+   ) => void
 }
 
-export function NestedUserStories({ sprint }: NestedUserStoriesProps) {
+export function NestedUserStories({
+   sprint,
+   currentUserId,
+   onCreateMeeting,
+}: NestedUserStoriesProps) {
   const [selectedStory, setSelectedStory] = useState<any>(null)
 
   if (!sprint.userStories || sprint.userStories.length === 0) {
@@ -108,7 +118,7 @@ export function NestedUserStories({ sprint }: NestedUserStoriesProps) {
             <div className="col-span-1 flex items-center justify-center">
                <Tooltip>
                   <TooltipTrigger asChild>
-                     <div className="flex items-center justify-center bg-muted/80 px-2 py-1 rounded-md text-sm shadow-sm min-w-[32px] border border-muted-foreground/10">
+                     <div className="flex items-center justify-center bg-muted/80 px-2 py-1 rounded-md text-sm shadow-sm min-w-8 border border-muted-foreground/10">
                         <span className="font-medium text-foreground">{story.storyPoints === 0 ? '-' : story.storyPoints}</span>
                      </div>
                   </TooltipTrigger>
@@ -120,6 +130,13 @@ export function NestedUserStories({ sprint }: NestedUserStoriesProps) {
 
             {/* Actions (Cols 11-12) */}
             <div className="col-span-2 flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
+                     <CreateMeetingDialog
+                        referenceType="user_story"
+                        referenceId={story.id}
+                        defaultAgenda={`Meeting: ${story.title}`}
+                        createdBy={currentUserId}
+                        onCreateMeeting={onCreateMeeting}
+                     />
               <DeleteDialog 
                 itemType="User Story" 
                 itemName={story.title} 
@@ -145,6 +162,8 @@ export function NestedUserStories({ sprint }: NestedUserStoriesProps) {
         userStoryEndDate={selectedStory?.endDate}
         userStoryStoryPoints={selectedStory?.storyPoints}
         userStorySprintName={sprint?.name}
+            currentUserId={currentUserId}
+            onCreateMeeting={onCreateMeeting}
       />
     </div>
   )

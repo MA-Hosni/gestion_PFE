@@ -2,13 +2,14 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useState } from 'react'
-import CalendarPage from './CalendarPage'
+import CalendarPage from './Calendar/CalendarPage'
 import BoardPage from './BoardPage'
 import ContributorsPage from './ContributorsPage'
 import BacklogPage from './Backlog/BacklogPage'
 import ReportsPage from './ReportsPage'
 import { Button } from '@/components/ui/button'
 import { ClipboardPenLine } from 'lucide-react'
+import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
 
 // Placeholder components - replaced with actual components later
 const Summary = () => <div className="p-4 border rounded-lg bg-muted/20 h-96 flex items-center justify-center">Summary Component</div>
@@ -21,6 +22,12 @@ function ProjectDetailsPage() {
     "This is a dee all the informatThis is a detailed view of the project. Here you can see all the informationion This is a detailed view of the project. Here you can see all the information related to the project, including tasks, team members, timelines, and more."
   )
   const [isEditingDescription, setIsEditingDescription] = useState(false)
+  const [meetings, setMeetings] = useState<CalendarMeeting[]>([])
+
+  const currentUserId =
+    typeof window !== 'undefined'
+      ? (window.localStorage.getItem('loggedInUserId') ?? 'student-001')
+      : 'student-001'
 
   return (
     <div className="space-y-6 w-full">
@@ -77,10 +84,26 @@ function ProjectDetailsPage() {
         </TabsList>
         <div className="max-w-full overflow-x-auto">
           <TabsContent value="Summary"><Summary /></TabsContent>
-          <TabsContent value="Backlog"><BacklogPage /></TabsContent>
+          <TabsContent value="Backlog">
+            <BacklogPage
+              currentUserId={currentUserId}
+              onCreateMeeting={(meeting) =>
+                setMeetings((prev) => [
+                  ...prev,
+                  {
+                    ...meeting,
+                    id: crypto.randomUUID(),
+                    color: meeting.color ?? 'blue',
+                  },
+                ])
+              }
+            />
+          </TabsContent>
           <TabsContent value="Contributors"><ContributorsPage /></TabsContent>
           <TabsContent value="Board"><BoardPage /></TabsContent>
-          <TabsContent value="Calendar"><CalendarPage /></TabsContent>
+          <TabsContent value="Calendar">
+            <CalendarPage meetings={meetings} setMeetings={setMeetings} />
+          </TabsContent>
           <TabsContent value="Reports"><ReportsPage /></TabsContent>
         </div>
       </Tabs>

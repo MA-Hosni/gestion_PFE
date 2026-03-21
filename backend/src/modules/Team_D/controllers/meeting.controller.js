@@ -9,7 +9,7 @@ import { StatusCodes } from "http-status-codes";
 // =========================================================
 export const createMeeting = async (req, res, next) => {
   try {
-    const meetingData = req.body;
+    const meetingData = req.validatedBody;
     const studentId = req.student.id;
 
     const result = await meetingService.createMeeting(meetingData, studentId);

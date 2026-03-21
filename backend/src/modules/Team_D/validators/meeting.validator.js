@@ -9,8 +9,10 @@ export const MeetingSchema = Joi.object({
     "any.required": "Scheduled date is required",
   }),
 
-  agenda: Joi.string().allow("").max(2000).messages({
-    "string.max": "Agenda cannot exceed 2000 characters",
+  agenda: Joi.string().trim().min(1).max(255).required().messages({
+    "string.empty": "Agenda (meeting title) is required",
+    "any.required": "Agenda (meeting title) is required",
+    "string.max": "Agenda cannot exceed 255 characters",
   }),
 
   actualMinutes: Joi.string().allow("").max(5000).messages({

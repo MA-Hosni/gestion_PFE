@@ -36,9 +36,20 @@ import {
   SprintDialog,
   type Sprint
 } from '@/components/project/backlog'
+import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
 
 // Draggable Table Row Component
-function DraggableRow({ row }: { row: Row<Sprint> }) {
+function DraggableRow({
+  row,
+  currentUserId,
+  onCreateMeeting,
+}: {
+  row: Row<Sprint>
+  currentUserId: string
+  onCreateMeeting: (
+    meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
+  ) => void
+}) {
   const {
     attributes,
     listeners,
@@ -70,8 +81,8 @@ function DraggableRow({ row }: { row: Row<Sprint> }) {
           <TableCell
             key={cell.id}
             className={cn(
-              cell.column.id === 'expander' ? 'w-[40px] px-2' : '',
-              cell.column.id === 'drag-handle' ? 'w-[40px] px-1' : ''
+              cell.column.id === 'expander' ? 'w-10 px-2' : '',
+              cell.column.id === 'drag-handle' ? 'w-10 px-1' : ''
             )}
           >
             {cell.column.id === 'drag-handle' ? (
@@ -92,7 +103,11 @@ function DraggableRow({ row }: { row: Row<Sprint> }) {
       {row.getIsExpanded() && !isDragging && (
         <TableRow className='hover:bg-transparent bg-muted/5 border-b'>
           <TableCell colSpan={row.getVisibleCells().length} className='p-0'>
-            <NestedUserStories sprint={row.original} />
+            <NestedUserStories
+              sprint={row.original}
+              currentUserId={currentUserId}
+              onCreateMeeting={onCreateMeeting}
+            />
           </TableCell>
         </TableRow>
       )}
@@ -100,7 +115,14 @@ function DraggableRow({ row }: { row: Row<Sprint> }) {
   )
 }
 
-const BacklogPage = () => {
+interface BacklogPageProps {
+  currentUserId: string
+  onCreateMeeting: (
+    meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
+  ) => void
+}
+
+const BacklogPage = ({ currentUserId, onCreateMeeting }: BacklogPageProps) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [sprints, setSprints] = useState<Sprint[]>(initialSprints)
   const [expanded, setExpanded] = useState<ExpandedState>(true)
@@ -174,7 +196,7 @@ const BacklogPage = () => {
         <SprintDialog buttonText='Create Sprint' title='Create Sprint' description='Create a new sprint for the project.' />
       </div>
       
-      <div className='w-full pb-1 overflow-y-auto max-h-[calc(100vh-320px)] min-h-[400px] pr-2 custom-scrollbar'>
+      <div className='w-full pb-1 overflow-y-auto max-h-[calc(100vh-320px)] min-h-100 pr-2 custom-scrollbar'>
         <div className='rounded-md border bg-card overflow-hidden shadow-sm'>
           <DndContext
             sensors={sensors}
@@ -198,7 +220,12 @@ const BacklogPage = () => {
                 <SortableContext items={sprintIds} strategy={verticalListSortingStrategy}>
                   {table.getRowModel().rows?.length ? (
                     table.getRowModel().rows.map(row => (
-                      <DraggableRow key={row.id} row={row} />
+                      <DraggableRow
+                        key={row.id}
+                        row={row}
+                        currentUserId={currentUserId}
+                        onCreateMeeting={onCreateMeeting}
+                      />
                     ))
                   ) : (
                     <TableRow>

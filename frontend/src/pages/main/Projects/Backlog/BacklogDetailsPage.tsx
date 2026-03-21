@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Edit2, Check } from "lucide-react";
 import TaskTable from "@/components/project/backlog/tasks/task-table";
+import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
 
 interface BacklogDetailsDrawerProps {
   open: boolean;
@@ -23,6 +24,10 @@ interface BacklogDetailsDrawerProps {
   userStoryEndDate?: string;
   userStoryStoryPoints?: number;
   userStorySprintName?: string;
+    currentUserId: string;
+    onCreateMeeting: (
+        meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
+    ) => void;
 }
 
 export function BacklogDetailsDrawer({ 
@@ -35,6 +40,8 @@ export function BacklogDetailsDrawer({
   userStoryEndDate,
   userStoryStoryPoints,
   userStorySprintName,
+    currentUserId,
+    onCreateMeeting,
 }: BacklogDetailsDrawerProps) {
   const [width, setWidth] = useState(800);
   const isResizing = useRef(false);
@@ -247,7 +254,10 @@ export function BacklogDetailsDrawer({
                     </div>
                 </div>
             </div>
-            <TaskTable />
+                        <TaskTable
+                            currentUserId={currentUserId}
+                            onCreateMeeting={onCreateMeeting}
+                        />
         </div>
       </DrawerContent>
     </Drawer>

@@ -4,7 +4,7 @@ const { Schema, model } = mongoose;
 
 const MeetingSchema = new Schema({
     scheduledDate: { type: Date, required: true },
-    agenda: { type: String, trim: true },
+    agenda: { type: String, trim: true, required: true },
     actualMinutes: { type: String, trim: true },
 
     referenceType: { 
