@@ -7,6 +7,8 @@ import BoardPage from './BoardPage'
 import ContributorsPage from './ContributorsPage'
 import BacklogPage from './Backlog/BacklogPage'
 import ReportsPage from './ReportsPage'
+import { Button } from '@/components/ui/button'
+import { ClipboardPenLine } from 'lucide-react'
 
 // Placeholder components - replaced with actual components later
 const Summary = () => <div className="p-4 border rounded-lg bg-muted/20 h-96 flex items-center justify-center">Summary Component</div>
@@ -23,23 +25,28 @@ function ProjectDetailsPage() {
   return (
     <div className="space-y-6 w-full">
       <div className="space-y-2 w-full">
-        {isEditingTitle ? (
-          <Input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onBlur={() => setIsEditingTitle(false)}
-            onKeyDown={(e) => e.key === "Enter" && setIsEditingTitle(false)}
-            autoFocus
-            className="text-2xl font-bold h-auto py-2 px-1 w-auto"
-          />
-        ) : (
-          <h1 
-            onClick={() => setIsEditingTitle(true)}
-            className="text-2xl font-bold hover:bg-muted/50 p-1 -ml-1 rounded cursor-pointer transition-colors"
-          >
-            {title}
-          </h1>
-        )}
+        <div className="flex items-center justify-between">
+          {isEditingTitle ? (
+            <Input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              onBlur={() => setIsEditingTitle(false)}
+              onKeyDown={(e) => e.key === "Enter" && setIsEditingTitle(false)}
+              autoFocus
+              className="text-2xl font-bold h-auto py-2 px-1 w-auto"
+            />
+          ) : (
+            <h1 
+              onClick={() => setIsEditingTitle(true)}
+              className="text-2xl font-bold hover:bg-muted/50 p-1 -ml-1 rounded cursor-pointer transition-colors"
+            >
+              {title}
+            </h1>
+          )}
+          <Button variant="outline">
+            <ClipboardPenLine /> Generate Report
+          </Button>
+        </div>
 
         {isEditingDescription ? (
           <Textarea

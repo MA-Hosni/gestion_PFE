@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import { ChevronDownIcon, ChevronUpIcon, Edit2, CalendarDays } from 'lucide-react'
+import { ChevronDownIcon, ChevronUpIcon, Edit2, CalendarDays, ClipboardPenLine } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import type { Sprint } from './types'
 import { SprintDialog } from './sprint-dialog'
@@ -58,15 +58,16 @@ export const sprintColumns: ColumnDef<Sprint>[] = [
       const sprint = row.original
       return (
         <div className="flex items-center justify-end gap-1 px-2">
-          {/* <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-muted/50"> */}
-            <SprintDialog buttonText={<Edit2 className="size-4" />} title='Edit Sprint' description='Edit sprint details.' />
-          {/* </Button> */}
+          <SprintDialog buttonText={<Edit2 />} title='Edit Sprint' description='Edit sprint details.' />
           <DeleteDialog 
             itemType="Sprint" 
-            itemName={sprint.name} 
+            itemName={sprint.name}
             variant="outline"
             onConfirm={() => console.log('Delete sprint', sprint.id)} 
           />
+          <Button variant="outline" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-muted/50">
+            <ClipboardPenLine />
+          </Button>
         </div>
       )
     }
