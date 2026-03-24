@@ -1,28 +1,64 @@
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
-import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-  FieldSeparator,
-} from "@/components/ui/field"
+import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel, FieldSeparator } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
 import {
   InputGroup,
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group"
-import { Input } from "@/components/ui/input"
 import { Eye, EyeOffIcon } from "lucide-react"
+import { Controller, useForm } from "react-hook-form"
 import { useState } from "react"
+import { Link, useNavigate } from "react-router-dom"
+import { toast } from "sonner"
+import { zodResolver } from "@hookform/resolvers/zod"
+
+import { useAuth } from "@/context/auth-context"
+import { loginSchema, type LoginValues } from "@/lib/validation/login-validation"
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"form">) {
   const [showPassword, setShowPassword] = useState(false)
+  const navigate = useNavigate()
+  const { login, status } = useAuth()
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: { email: "", password: "" },
+  })
+
+  const emailField = register("email")
+
+  const onSubmit = handleSubmit(async (values) => {
+    clearErrors("root")
+
+    try {
+      await login(values)
+      toast.success("Login successful")
+      navigate("/dashboard")
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Login failed"
+      setError("root", { type: "server", message })
+      toast.error(message)
+    }
+  })
+
   return (
-    <form className={cn("flex flex-col gap-6", className)} {...props}>
+    <form
+      className={cn("flex flex-col gap-6", className)}
+      onSubmit={onSubmit}
+      {...props}
+    >
       <FieldGroup>
         <div className="flex flex-col items-center gap-1 text-center">
           <h1 className="text-2xl font-bold">Login to your account</h1>
@@ -30,34 +66,70 @@ export function LoginForm({
             Enter your email below to login to your account
           </p>
         </div>
+        {/* {errors.root?.message ? <FieldError>{errors.root.message}</FieldError> : null} */}
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
-          <Input id="email" type="email" placeholder="m@example.com" required />
+          <Input
+            id="email"
+            type="email"
+            placeholder="m@example.com"
+            autoComplete="email"
+            aria-invalid={!!errors.email}
+            {...emailField}
+            onChange={(event) => {
+              emailField.onChange(event)
+              clearErrors("root")
+            }}
+          />
+          {errors.email?.message ? (
+            <FieldError>{errors.email.message}</FieldError>
+          ) : null}
         </Field>
         <Field>
-            <div className="flex items-center">
-                <FieldLabel htmlFor="password">Password</FieldLabel>
-                <a
-                href="#"
-                className="ml-auto text-sm underline-offset-4 hover:underline"
-                >
-                Forgot your password?
-                </a>
-            </div>
-            <InputGroup>
+          <div className="flex items-center">
+            <FieldLabel htmlFor="password">Password</FieldLabel>
+            <Link
+              to="/forget-password"
+              className="ml-auto text-sm underline-offset-4 hover:underline"
+            >
+              Forgot your password?
+            </Link>
+          </div>
+          <InputGroup>
+            <Controller
+              name="password"
+              control={control}
+              render={({ field }) => (
                 <InputGroupInput
-                    id="inline-end-input"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter password"
-                    required
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter password"
+                  autoComplete="current-password"
+                  aria-invalid={!!errors.password}
+                  {...field}
+                  onChange={(event) => {
+                    field.onChange(event)
+                    clearErrors("root")
+                  }}
                 />
-                <InputGroupAddon align="inline-end" onClick={() => setShowPassword((prev) => !prev)} className="cursor-pointer">
-                {showPassword ? <Eye /> : <EyeOffIcon />}
-                </InputGroupAddon>
-            </InputGroup>
+              )}
+            />
+            <InputGroupAddon
+              align="inline-end"
+              onClick={() => setShowPassword((prev) => !prev)}
+              className="cursor-pointer"
+            >
+              {showPassword ? <Eye /> : <EyeOffIcon />}
+            </InputGroupAddon>
+          </InputGroup>
+          {errors.password?.message ? (
+            <FieldError>{errors.password.message}</FieldError>
+          ) : null}
         </Field>
         <Field>
-          <Button type="submit">Login</Button>
+          <Button type="submit" disabled={isSubmitting || status === "loading"}>
+            {isSubmitting ? "Logging in..." : "Login"}
+          </Button>
         </Field>
         <FieldSeparator>Or continue with</FieldSeparator>
         <Field>
@@ -72,9 +144,9 @@ export function LoginForm({
           </Button>
           <FieldDescription className="text-center">
             Don&apos;t have an account?{" "}
-            <a href="#" className="underline underline-offset-4">
+            <Link to="/sign-up" className="underline underline-offset-4">
               Sign up
-            </a>
+            </Link>
           </FieldDescription>
         </Field>
       </FieldGroup>

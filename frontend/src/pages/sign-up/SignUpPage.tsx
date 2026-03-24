@@ -15,24 +15,12 @@ export default function SignupPage() {
           />
         </div>
         <div className="flex justify-center gap-2 md:justify-start pt-4">
-          <a href="#" className="flex items-center gap-2 font-bold text-2xl">
+          <div className="flex items-center gap-2 font-bold text-2xl">
             <div className="flex size-14 items-center justify-center rounded-md text-primary-foreground">
-              <div 
-                className="size-14 bg-blue-600 dark:bg-white transition-colors" 
-                style={{
-                  maskImage: "url(/favicon.svg)",
-                  maskSize: "contain",
-                  maskPosition: "center",
-                  maskRepeat: "no-repeat",
-                  WebkitMaskImage: "url(/favicon.svg)",
-                  WebkitMaskSize: "contain",
-                  WebkitMaskPosition: "center",
-                  WebkitMaskRepeat: "no-repeat"
-                }}
-              />
+              <img src="/favicon.svg" alt="Mentorlink logo" className="size-14 object-contain" />
             </div>
             MENTORLINK
-          </a>
+          </div>
         </div>
         <div className="flex flex-1 items-center justify-center">
           <div className="w-full max-w-sm">

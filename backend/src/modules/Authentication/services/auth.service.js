@@ -81,12 +81,12 @@ export const registerStudent = async (userData) => {
       throw error;
     }
 
-    const normalize = (s) => String(s || '').trim().toLowerCase();
-    if (normalize(existingCompSupervisor.companyName) !== normalize(companyName)) {
-      const error = new Error("Company supervisor and student must belong to the same company");
-      error.status = 400;
-      throw error;
-    }
+    // const normalize = (s) => String(s || '').trim().toLowerCase();
+    // if (normalize(existingCompSupervisor.companyName) !== normalize(companyName)) {
+    //   const error = new Error("Company supervisor and student must belong to the same company");
+    //   error.status = 400;
+    //   throw error;
+    // }
 
     const hashedPassword = await hashPassword(password);
 

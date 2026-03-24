@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button"
+import { Link } from "react-router-dom"
 
 function ErrorPage() {
 return (
@@ -10,7 +11,7 @@ return (
           The page you&apos;re looking for isn&apos;t found, we suggest you back to home.
         </p>
         <Button asChild size='lg' className='rounded-lg text-base'>
-          <a href='#'>Back to home page</a>
+          <Link to="/">Back to home page</Link>
         </Button>
       </div>
 

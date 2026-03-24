@@ -13,9 +13,15 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar"
-import ProjectDetailsPage from "./Projects/ProjectDetailsPage"
+import { Outlet, useLocation, Link } from "react-router-dom"
 
 export default function LayoutPage() {
+  const location = useLocation()
+  
+  // Create breadcrumb based on current path
+  const pathnames = location.pathname.split("/").filter((x) => x)
+  const currentPage = pathnames[pathnames.length - 1] || "dashboard"
+  const formattedPageName = currentPage.charAt(0).toUpperCase() + currentPage.slice(1)
   
   return (
     <SidebarProvider>
@@ -31,20 +37,20 @@ export default function LayoutPage() {
             <Breadcrumb>
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
-                  <BreadcrumbLink href="#">
-                    Pages
+                  <BreadcrumbLink asChild>
+                    <Link to="/">Pages</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>Projects</BreadcrumbPage>
+                  <BreadcrumbPage>{formattedPageName}</BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
         </header>
         <div className="min-h-11/12 flex m-4 mt-0 p-4 rounded-xl bg-muted/50">
-          <ProjectDetailsPage />
+          <Outlet />
         </div>
       </SidebarInset>
     </SidebarProvider>

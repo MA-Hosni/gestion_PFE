@@ -1,5 +1,6 @@
 import { CreateNewProject } from "@/components/project/create-project"
 import { useState } from "react"
+import { useNavigate } from "react-router-dom"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { format } from "date-fns"
 import {
@@ -42,8 +43,9 @@ const avatars = [
   },
 ]
 
-export function ProjectsPage() {
+export default function ProjectsPage() {
   const [projects, setProjects] = useState(true) // Replace with actual project type
+  const navigate = useNavigate()
   
   // Mock data for display
   const startDate = new Date(2026, 0, 20)
@@ -71,7 +73,7 @@ export function ProjectsPage() {
   ) : (
     <div className="grid grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-3 w-full h-80">
       {/* Sample Project Card */}
-      <Card className="flex flex-col transition-all hover:shadow-lg">
+      <Card className="flex flex-col transition-all hover:shadow-lg hover:cursor-pointer" onClick={() => navigate("/projects/1")}>
         <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
           <div className="space-y-1 pr-4">
             <CardTitle className="text-lg font-bold">Project Alpha</CardTitle>

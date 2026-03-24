@@ -7,6 +7,9 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 
 import { cn } from '@/lib/utils'
+import { useAuth } from '@/context/auth-context'
+import { changePassword } from '@/services/auth/auth-api'
+import { toast } from 'sonner'
 
 const requirements = [
   { regex: /.{12,}/, text: 'At least 12 characters' },
@@ -20,9 +23,11 @@ const requirements = [
 ]
 
 const EmailPassword = () => {
+  const { user } = useAuth()
   const [isVisible, setIsVisible] = useState(false)
-
+  const [currentPassword, setCurrentPassword] = useState('')
   const [password, setPassword] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
 
   const toggleVisibility = () => setIsVisible(prevState => !prevState)
 
@@ -54,6 +59,26 @@ const EmailPassword = () => {
     return 'Very strong password'
   }
 
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (strengthScore < 5) {
+      toast.error('Please fulfill all password requirements')
+      return
+    }
+
+    try {
+      setIsLoading(true)
+      const res = await changePassword({ currentPassword, newPassword: password })
+      toast.success(res.message || 'Password changed successfully')
+      setCurrentPassword('')
+      setPassword('')
+    } catch (error: any) {
+      toast.error(error.message || 'Failed to change password')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   return (
     <div className='grid grid-cols-1 gap-10 lg:grid-cols-3'>
       {/* Vertical Tabs List */}
@@ -64,13 +89,13 @@ const EmailPassword = () => {
 
       {/* Content */}
       <div className='lg:col-span-2'>
-        <form className='mx-auto space-y-6'>
+        <form className='mx-auto space-y-6' onSubmit={handleSubmit}>
           <div className='w-full space-y-2'>
             <Label htmlFor='email' className='gap-1'>
-              Email<span className='text-destructive'>*</span>
+              Email
             </Label>
             <div className='relative'>
-              <Input id='email' type='email' placeholder='Email address' className='peer pr-9' required />
+              <Input id='email' type='email' placeholder='Email address' value={user?.email || ''} readOnly disabled className='peer pr-9' />
               <div className='text-muted-foreground pointer-events-none absolute inset-y-0 right-0 flex items-center justify-center pr-3 peer-disabled:opacity-50'>
                 <MailIcon className='size-4' />
                 <span className='sr-only'>Email</span>
@@ -86,6 +111,8 @@ const EmailPassword = () => {
                 id='current-password'
                 type={isVisible ? 'text' : 'password'}
                 placeholder='Password'
+                value={currentPassword}
+                onChange={e => setCurrentPassword(e.target.value)}
                 className='pr-9'
                 required
               />
@@ -159,8 +186,8 @@ const EmailPassword = () => {
           </div>
 
           <div className='mt-6 flex justify-end'>
-            <Button type='submit' className='max-sm:w-full'>
-              Save Changes
+            <Button type='submit' className='max-sm:w-full' disabled={isLoading}>
+              {isLoading ? 'Saving...' : 'Save Changes'}
             </Button>
           </div>
         </form>

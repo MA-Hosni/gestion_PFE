@@ -5,26 +5,35 @@ import { UploadCloudIcon, TrashIcon, ImageIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue
-} from '@/components/ui/select'
-import { Field, FieldLabel } from '../ui/field'
-
-const fieldsByDegree: Record<string, string[]> = {
-  bc: ["AV", "CMM", "IMM", "BD", "MIME", "Coco_JV", "Coco_3D"],
-  ms: ["Pro_IM", "Pro_DCA", "Pro_PAR", "R_DISR", "R_TMAC"],
-  eng: ["INLOG", "INREV"],
-}
+import { useAuth } from '@/context/auth-context'
 
 const PersonalInfo = () => {
+  const { user } = useAuth()
   const inputRef = useRef<HTMLInputElement | null>(null)
   const [file, setFile] = useState<File | null>(null)
   const [preview, setPreview] = useState<string | null>(null)
-  const [selectedDegree, setSelectedDegree] = useState("bc")
+
+  const [formData, setFormData] = useState({
+    fullName: user?.fullName || '',
+    cin: user?.profile?.cin || '',
+    phoneNumber: user?.phoneNumber || '',
+    companyName: user?.profile?.companyName || '',
+    degree: user?.profile?.degree || '',
+    field: user?.profile?.degreeType || ''
+  })
+
+  useEffect(() => {
+    if (user) {
+      setFormData({
+        fullName: user.fullName || '',
+        cin: user.profile?.cin || '',
+        phoneNumber: user.phoneNumber || '',
+        companyName: user.profile?.companyName || '',
+        degree: user.profile?.degree || '',
+        field: user.profile?.degreeType || ''
+      })
+    }
+  }, [user])
 
   useEffect(() => {
     if (!file) {
@@ -122,55 +131,32 @@ const PersonalInfo = () => {
           <div className='grid grid-cols-1 gap-6 sm:grid-cols-2'>
             <div className='flex flex-col items-start gap-2'>
               <Label htmlFor='multi-step-personal-info-first-name'>Full Name</Label>
-              <Input id='multi-step-personal-info-first-name' required />
+              <Input id='multi-step-personal-info-first-name' value={formData.fullName} readOnly />
             </div>
-            <div className='flex flex-col items-start gap-2'>
-              <Label htmlFor='multi-step-personal-info-last-name'>Cin</Label>
-              <Input id='multi-step-personal-info-last-name' required />
-            </div>
+            {user?.role === 'Student' && (
+              <div className='flex flex-col items-start gap-2'>
+                <Label htmlFor='multi-step-personal-info-last-name'>Cin</Label>
+                <Input id='multi-step-personal-info-last-name' value={formData.cin} readOnly />
+              </div>
+            )}
             <div className='flex flex-col items-start gap-2'>
               <Label htmlFor='multi-step-personal-info-mobile'>Mobile</Label>
-              <Input id='multi-step-personal-info-mobile' type='tel' required />
+              <Input id='multi-step-personal-info-mobile' type='tel' value={formData.phoneNumber} readOnly />
             </div>
             <div className='flex flex-col items-start gap-2'>
-              <Label htmlFor='multi-step-personal-info-first-name'>Company Name</Label>
-              <Input id='multi-step-personal-info-first-name' required />
+              <Label htmlFor='multi-step-personal-info-company-name'>Company Name</Label>
+              <Input id='multi-step-personal-info-company-name' value={formData.companyName} readOnly />
             </div>
-            <Field>
-              <FieldLabel htmlFor="degree">Degree</FieldLabel>
-              <Select defaultValue="bc" required onValueChange={setSelectedDegree}>
-                <SelectTrigger id="degree">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="bc">Bachelor</SelectItem>
-                  <SelectItem value="ms">Master</SelectItem>
-                  <SelectItem value="eng">Engineering</SelectItem>
-                </SelectContent>
-              </Select>
-            </Field>
-            <Field>
-              <FieldLabel htmlFor="field">Field</FieldLabel>
-              <Select required>
-                <SelectTrigger id="field">
-                  <SelectValue placeholder="Select a field" />
-                </SelectTrigger>
-                <SelectContent>
-                  {fieldsByDegree[selectedDegree]?.map((field) => (
-                    <SelectItem key={field} value={field}>
-                      {field}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </Field>
+            <div className='flex flex-col items-start gap-2'>
+              <Label htmlFor='multi-step-personal-info-company-name'>Degree</Label>
+              <Input id='multi-step-personal-info-company-name' value={formData.degree} readOnly />
+            </div>
+            <div className='flex flex-col items-start gap-2'>
+              <Label htmlFor='multi-step-personal-info-company-name'>Field</Label>
+              <Input id='multi-step-personal-info-company-name' value={formData.field} readOnly />
+            </div>
           </div>
         </form>
-        <div className='flex justify-end'>
-          <Button type='submit' className='max-sm:w-full'>
-            Save Changes
-          </Button>
-        </div>
       </div>
     </div>
   )
