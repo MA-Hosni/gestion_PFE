@@ -21,7 +21,7 @@ import { useFormContext, useWatch } from "react-hook-form"
 import { toast } from "sonner"
 
 import * as authApi from "@/services/auth/auth-api"
-import type { SignupValues } from "@/lib/validation/signup-validation"
+import type { SignupValues } from "@/validation/signup-validation"
 import { fileToBase64 } from "@/lib/file-to-base64"
 
 interface SignupFormStep2Props {

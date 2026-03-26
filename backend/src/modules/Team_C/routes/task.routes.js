@@ -3,7 +3,7 @@ import { authenticateToken, authorizeStudent, authorizeSupervisor } from "../../
 import * as taskController from "../controllers/task.controller.js";
 import taskhistory from "./taskHistory.routes.js";
 import { validate } from "../../../shared/middlewares/validate.js";
-import { TaskSchema } from "../validators/task.validator.js";
+import { TaskSchema, UpdateTaskSchema } from "../validators/task.validator.js";
 
 const router = express.Router();
 // Create a new task
@@ -105,7 +105,7 @@ router.get("/:id", authenticateToken, taskController.getTaskById);
  *       404:
  *         description: Task not found
  */
-/*router.patch("/:id", authenticateToken, authorizeStudent, validate(UpdateTaskSchema), taskController.updateTask);*/
+router.patch("/:id", authenticateToken, authorizeStudent, validate(UpdateTaskSchema), taskController.updateTask);
 
 // Delete a task by ID
 /**

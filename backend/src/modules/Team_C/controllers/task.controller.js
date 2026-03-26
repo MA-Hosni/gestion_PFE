@@ -40,7 +40,7 @@ export const getTaskById = async (req, res) => {
     res.status(err.status || 500).json({ message: err.message });
   }
 };
-/*
+
 export const updateTask = async (req, res) => {
   try {
     const { id } = req.params;
@@ -49,13 +49,14 @@ export const updateTask = async (req, res) => {
       return res.status(400).json({ message: "Task ID is required." });
     }
 
-    const task = await taskService.updateTask(id, req.body);
+    const modifiedBy = req.user?.id || req.user?._id;
+    const task = await taskService.updateTask(id, req.body, modifiedBy);
     res.status(200).json({ message: "Task updated successfully", task });
   } catch (err) {
     res.status(err.status || 500).json({ message: err.message });
   }
 };
-*/
+
 export const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;

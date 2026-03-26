@@ -16,7 +16,7 @@ import {
 import { useMemo, useState } from "react"
 import { Controller, useFormContext, useWatch } from "react-hook-form"
 
-import type { SignupValues } from "@/lib/validation/signup-validation"
+import type { SignupValues } from "@/validation/signup-validation"
 
 interface SignupFormStep3Props {
   onPrev: () => void

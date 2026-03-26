@@ -19,7 +19,7 @@ import { Input } from "@/components/ui/input"
 import { ArrowRight } from "lucide-react"
 import { useFormContext } from "react-hook-form"
 
-import type { SignupValues } from "@/lib/validation/signup-validation"
+import type { SignupValues } from "@/validation/signup-validation"
 
 interface SignupFormStep1Props {
   onNext: () => void

@@ -10,27 +10,32 @@ import {
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Trash2 } from "lucide-react"
+import { Trash2, Loader2 } from "lucide-react"
 import { useState } from "react"
-import { toast } from "sonner" // Assuming you have toast, if not I will use alert or just simple logic
+import { toast } from "sonner"
 
 interface RemoveContributorDialogProps {
     contributor: { id: string; name: string };
-    onConfirm: (id: string) => void;
+    onConfirm: (id: string) => Promise<void>;
 }
 
 export function RemoveContributorDialog({ contributor, onConfirm }: RemoveContributorDialogProps) {
     const [name, setName] = useState("")
     const [open, setOpen] = useState(false)
+    const [loading, setLoading] = useState(false)
 
-    const handleConfirm = () => {
-        if (name === contributor.name) {
-            onConfirm(contributor.id)
+    const handleConfirm = async () => {
+        if (name !== contributor.name) {
+            toast.error("Name does not match")
+            return
+        }
+        setLoading(true)
+        try {
+            await onConfirm(contributor.id)
             setOpen(false)
             setName("")
-            toast.success("Contributor removed successfully")
-        } else {
-            toast.error("Name does not match")
+        } finally {
+            setLoading(false)
         }
     }
 
@@ -63,12 +68,13 @@ export function RemoveContributorDialog({ contributor, onConfirm }: RemoveContri
                     </div>
                 </div>
                 <DialogFooter>
-                    <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
+                    <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>Cancel</Button>
                     <Button 
                         variant="destructive" 
                         onClick={handleConfirm}
-                        disabled={name !== contributor.name}
+                        disabled={name !== contributor.name || loading}
                     >
+                        {loading && <Loader2 className="mr-2 size-4 animate-spin" />}
                         Remove
                     </Button>
                 </DialogFooter>

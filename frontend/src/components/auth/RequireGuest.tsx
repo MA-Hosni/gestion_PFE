@@ -1,8 +1,7 @@
 import { Navigate, Outlet } from "react-router-dom"
-
 import { useAuth } from "@/context/auth-context"
 
-export default function RequireAuth() {
+export default function RequireGuest() {
   const { status } = useAuth()
 
   if (status === "loading") {
@@ -13,8 +12,8 @@ export default function RequireAuth() {
     )
   }
 
-  if (status === "unauthenticated") {
-    return <Navigate to="/login" replace />
+  if (status === "authenticated") {
+    return <Navigate to="/projects" replace />
   }
 
   return <Outlet />

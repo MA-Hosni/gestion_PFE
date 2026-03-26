@@ -204,7 +204,7 @@ export const getProject = async (projectId) => {
     },
     {
       $project: {
-        _id: 0,
+        _id: 1,
         title: 1,
         description: { $ifNull: ["$description", ""] },
         startDate: 1,
@@ -228,6 +228,7 @@ export const getProject = async (projectId) => {
     success: true,
     message: "Project retrieved successfully",
     data: { 
+      projectId: result._id,
       title: result.title,
       description: result.description,
       startDate: result.startDate.toISOString(),

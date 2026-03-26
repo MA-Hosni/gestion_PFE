@@ -1,51 +1,65 @@
-import { useState, useMemo } from 'react'
-import { Search } from 'lucide-react'
+import { useState, useMemo, useEffect, useCallback } from 'react'
+import { Search, Loader2 } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { TaskRow } from './task-row'
 import { AddTaskDialog } from './task-dialog'
-import { mockTasks } from './mock-tasks'
 import type { Task } from '../types'
+import type { Contributor } from '@/services/project/api-project'
 import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
+import { getTasksByUserStory } from '@/services/project/api-task'
 
 interface TaskTableProps {
-  tasks?: Task[]
+  userStoryId: string
+  contributors: Contributor[]
   currentUserId: string
   onCreateMeeting: (
     meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
   ) => void
+  onTaskCountChange?: (count: number) => void
 }
 
 function TaskTable({
-  tasks: propTasks,
+  userStoryId,
+  contributors,
   currentUserId,
   onCreateMeeting,
+  onTaskCountChange,
 }: TaskTableProps) {
-  const [tasks, setTasks] = useState<Task[]>(propTasks ?? mockTasks)
+  const [tasks, setTasks] = useState<Task[]>([])
   const [search, setSearch] = useState('')
+  const [loading, setLoading] = useState(false)
+
+  const fetchTasks = useCallback(async () => {
+    if (!userStoryId) return
+    setLoading(true)
+    try {
+      const data = await getTasksByUserStory(userStoryId)
+      setTasks(data)
+      onTaskCountChange?.(data.length)
+    } catch {
+      setTasks([])
+      onTaskCountChange?.(0)
+    } finally {
+      setLoading(false)
+    }
+  }, [userStoryId, onTaskCountChange])
+
+  useEffect(() => {
+    fetchTasks()
+  }, [fetchTasks])
 
   const filtered = useMemo(() =>
     tasks.filter(t =>
-      t.title.toLowerCase().includes(search.toLowerCase()) ||
-      t.assignee.toLowerCase().includes(search.toLowerCase())
+      t.title.toLowerCase().includes(search.toLowerCase())
     ), [tasks, search])
-
-  const handleAdd = (draft: Omit<Task, 'id'>) => {
-    setTasks(prev => [...prev, { ...draft, id: `task-${Date.now()}` }])
-  }
-
-  const handleSave = (updated: Task) => {
-    setTasks(prev => prev.map(t => t.id === updated.id ? updated : t))
-  }
-
-  const handleDelete = (id: string) => {
-    setTasks(prev => prev.filter(t => t.id !== id))
-  }
 
   return (
     <div className="flex flex-col gap-3 mt-4 px-1">
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-foreground/80 tracking-wide uppercase">Tasks</h3>
+        <h3 className="text-sm font-semibold text-foreground/80 tracking-wide uppercase">
+          Tasks {!loading && `(${tasks.length})`}
+        </h3>
         <div className="flex items-center gap-2">
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
@@ -56,7 +70,7 @@ function TaskTable({
               className="pl-8 h-8 text-sm w-44"
             />
           </div>
-          <AddTaskDialog onAdd={handleAdd} />
+          <AddTaskDialog userStoryId={userStoryId} contributors={contributors} onSuccess={fetchTasks} />
         </div>
       </div>
 
@@ -74,13 +88,19 @@ function TaskTable({
             </tr>
           </thead>
           <tbody>
-            {filtered.length > 0 ? (
+            {loading ? (
+              <tr>
+                <td colSpan={6} className="text-center py-8">
+                  <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />
+                </td>
+              </tr>
+            ) : filtered.length > 0 ? (
               filtered.map(task => (
                 <TaskRow
                   key={task.id}
                   task={task}
-                  onSave={handleSave}
-                  onDelete={handleDelete}
+                  contributors={contributors}
+                  onRefresh={fetchTasks}
                   currentUserId={currentUserId}
                   onCreateMeeting={onCreateMeeting}
                 />

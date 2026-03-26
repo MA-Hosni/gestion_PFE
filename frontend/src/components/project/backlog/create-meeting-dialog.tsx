@@ -29,6 +29,7 @@ interface CreateMeetingDialogProps {
   referenceId: string
   defaultAgenda: string
   createdBy: string
+  varient?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
   onCreateMeeting: (
     meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
   ) => void
@@ -43,6 +44,7 @@ export function CreateMeetingDialog({
   referenceId,
   defaultAgenda,
   createdBy,
+  varient = "outline",
   onCreateMeeting,
 }: CreateMeetingDialogProps) {
   const [open, setOpen] = useState(false)
@@ -93,7 +95,7 @@ export function CreateMeetingDialog({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <Button
-          variant="outline"
+          variant={varient}
           size="icon"
           className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-muted/50"
           title="Create meeting"

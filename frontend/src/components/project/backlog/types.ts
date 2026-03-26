@@ -1,4 +1,4 @@
-export type Priority = 'Lowest' | 'Low' | 'Medium' | 'High' | 'Highest'
+export type Priority = 'lowest' | 'low' | 'medium' | 'high' | 'highest'
 export type Status = 'ToDo' | 'InProgress' | 'Standby' | 'Done'
 export type TaskPriority = 'Low' | 'Medium' | 'High'
 export type TaskStatus = 'ToDo' | 'InProgress' | 'Standby' | 'Done'
@@ -16,17 +16,18 @@ export interface Task {
   description: string
   status: TaskStatus
   priority: TaskPriority
-  assignee: string
+  userStoryId: string
+  assignedTo?: string
 }
 
 export interface UserStory {
   id: string
-  title: string
+  storyName: string
   description?: string
   startDate: string
-  endDate: string
+  dueDate: string
   taskCount: number
-  storyPoints: number
+  storyPointEstimate: number
   priority: Priority
   taskStatuses: TaskStatusCounts
   tasks?: Task[]
@@ -34,8 +35,9 @@ export interface UserStory {
 
 export interface Sprint {
   id: string
-  order: number
-  name: string
+  orderIndex: number
+  title: string
+  goal?: string
   startDate: string
   endDate: string
   userStories: UserStory[]

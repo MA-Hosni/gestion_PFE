@@ -12,30 +12,42 @@ import { useState } from 'react'
 import { BacklogDetailsDrawer } from '@/pages/main/Projects/Backlog/BacklogDetailsPage'
 import { CreateMeetingDialog } from './create-meeting-dialog'
 import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
+import type { Contributor } from '@/services/project/api-project'
+import { deleteUserStory } from '@/services/project/api-user-story'
+import { toast } from 'sonner'
+import { format } from 'date-fns'
 
 interface NestedUserStoriesProps {
   sprint: Sprint
-   currentUserId: string
-   onCreateMeeting: (
-      meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
-   ) => void
+  contributors: Contributor[]
+  currentUserId: string
+  onCreateMeeting: (
+    meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
+  ) => void
+  onRefresh: () => void
 }
 
 export function NestedUserStories({
-   sprint,
-   currentUserId,
-   onCreateMeeting,
+  sprint,
+  contributors,
+  currentUserId,
+  onCreateMeeting,
+  onRefresh,
 }: NestedUserStoriesProps) {
-  const [selectedStory, setSelectedStory] = useState<any>(null)
+   const [selectedStory, setSelectedStory] = useState<any>(null)
 
-  if (!sprint.userStories || sprint.userStories.length === 0) {
+   const formatDate = (iso: string) => {
+      try { return format(new Date(iso), 'dd/MM/yyyy') } catch { return iso }
+   }
+
+   if (!sprint.userStories || sprint.userStories.length === 0) {
     return (
       <div className="p-4 flex flex-col items-center justify-center border-t border-b bg-muted/10 h-32">
         <span className="text-sm text-muted-foreground mb-4">No user stories found for this sprint.</span>
-        <AddUserStoryDialog />
+        <AddUserStoryDialog sprintId={sprint.id} sprintStartDate={sprint.startDate} sprintEndDate={sprint.endDate} onSuccess={onRefresh} />
       </div>
     )
-  }
+   }
 
   return (
     <div className="bg-muted/10 border-y py-4 px-6 space-y-4 shadow-inner">
@@ -48,18 +60,18 @@ export function NestedUserStories({
           >
             {/* Story Details (Cols 1-4) */}
             <div className="col-span-4 flex flex-col">
-              <span className="font-semibold text-sm">{story.title}</span>
+              <span className="font-semibold text-sm">{story.storyName}</span>
               <span className="text-xs text-muted-foreground mt-0.5">
-                {story.startDate} - {story.endDate} <span className="font-medium">({story.taskCount} task{story.taskCount !== 1 && 's'})</span>
+                {formatDate(story.startDate)} - {formatDate(story.dueDate)} <span className="font-medium">({story.taskCount} task{story.taskCount !== 1 && 's'})</span>
               </span>
             </div>
 
             {/* Priority (Cols 6-7) */}
             <div className="col-span-2 flex items-center">
               <Badge variant="outline" className={
-                story.priority == 'Highest' ? 'bg-red-100/50 text-red-700 border-transparent shadow-sm' :
-                story.priority === 'High' ? 'bg-red-100/50 text-red-700 border-transparent shadow-sm' :
-                story.priority === 'Medium' ? 'bg-yellow-100/50 text-yellow-700 border-transparent shadow-sm' :
+                story.priority === 'highest' ? 'bg-red-100/50 text-red-700 border-transparent shadow-sm' :
+                story.priority === 'high' ? 'bg-red-100/50 text-red-700 border-transparent shadow-sm' :
+                story.priority === 'medium' ? 'bg-yellow-100/50 text-yellow-700 border-transparent shadow-sm' :
                 'bg-green-100/50 text-green-700 border-transparent shadow-sm'
               }>
                 {story.priority}
@@ -119,7 +131,7 @@ export function NestedUserStories({
                <Tooltip>
                   <TooltipTrigger asChild>
                      <div className="flex items-center justify-center bg-muted/80 px-2 py-1 rounded-md text-sm shadow-sm min-w-8 border border-muted-foreground/10">
-                        <span className="font-medium text-foreground">{story.storyPoints === 0 ? '-' : story.storyPoints}</span>
+                        <span className="font-medium text-foreground">{story.storyPointEstimate === 0 ? '-' : story.storyPointEstimate}</span>
                      </div>
                   </TooltipTrigger>
                   <TooltipContent side='bottom'>
@@ -133,14 +145,22 @@ export function NestedUserStories({
                      <CreateMeetingDialog
                         referenceType="user_story"
                         referenceId={story.id}
-                        defaultAgenda={`Meeting: ${story.title}`}
+                        defaultAgenda={`Meeting: ${story.storyName}`}
                         createdBy={currentUserId}
                         onCreateMeeting={onCreateMeeting}
                      />
               <DeleteDialog 
                 itemType="User Story" 
-                itemName={story.title} 
-                onConfirm={() => console.log('Delete user story', story.id)} 
+                itemName={story.storyName} 
+                onConfirm={async () => {
+                  try {
+                    await deleteUserStory(story.id)
+                    toast.success("User story deleted")
+                    onRefresh()
+                  } catch(e: any) {
+                    toast.error(e.response?.data?.message || "Failed to delete user story")
+                  }
+                }} 
               />
             </div>
           </div>
@@ -149,21 +169,26 @@ export function NestedUserStories({
       
       {/* Create Button */}
       <div className="pt-2 pl-1">
-        <AddUserStoryDialog />
+        <AddUserStoryDialog sprintId={sprint.id} sprintStartDate={sprint.startDate} sprintEndDate={sprint.endDate} onSuccess={onRefresh} />
       </div>
 
       <BacklogDetailsDrawer 
-        open={!!selectedStory} 
-        onOpenChange={(open) => !open && setSelectedStory(null)}
-        userStoryTitle={selectedStory?.title}
-        userStoryDescription={selectedStory?.description}
-        userStoryPriority={selectedStory?.priority}
-        userStoryStartDate={selectedStory?.startDate}
-        userStoryEndDate={selectedStory?.endDate}
-        userStoryStoryPoints={selectedStory?.storyPoints}
-        userStorySprintName={sprint?.name}
-            currentUserId={currentUserId}
-            onCreateMeeting={onCreateMeeting}
+         open={!!selectedStory} 
+         onOpenChange={(open) => !open && setSelectedStory(null)}
+         userStoryId={selectedStory?.id}
+         userStoryTitle={selectedStory?.storyName}
+         userStoryDescription={selectedStory?.description}
+         userStoryPriority={selectedStory?.priority}
+         userStoryStartDate={selectedStory?.startDate}
+         userStoryEndDate={selectedStory?.dueDate}
+         userStoryStoryPoints={selectedStory?.storyPointEstimate}
+         userStorySprintName={sprint?.title}
+         sprintStartDate={sprint.startDate}
+         sprintEndDate={sprint.endDate}
+         contributors={contributors}
+         currentUserId={currentUserId}
+         onCreateMeeting={onCreateMeeting}
+         onRefresh={onRefresh}
       />
     </div>
   )

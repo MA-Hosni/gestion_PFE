@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom"
 import { FieldError } from "@/components/ui/field"
 
 import * as authApi from "@/services/auth/auth-api"
-import { signupSchema, type SignupValues } from "@/lib/validation/signup-validation"
+import { signupSchema, type SignupValues } from "@/validation/signup-validation"
 
 interface SignupFormProps extends React.ComponentProps<"div"> {
   currentStep: number

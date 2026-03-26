@@ -1,3 +1,4 @@
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -7,23 +8,35 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-  DialogClose,
 } from "@/components/ui/dialog"
-import { Trash2 } from "lucide-react"
+import { Trash2, Loader2 } from "lucide-react"
 
 interface DeleteDialogProps {
     itemType: string;
     itemName: string;
-    onConfirm?: () => void;
-    variant?: "ghost" | "outline";
+    onConfirm?: () => void | Promise<void>;
+    varient?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
 }
 
-export function DeleteDialog({ itemType, itemName, onConfirm, variant = "ghost" }: DeleteDialogProps) {
+export function DeleteDialog({ varient = "outline", itemType, itemName, onConfirm }: DeleteDialogProps) {
+    const [open, setOpen] = useState(false)
+    const [loading, setLoading] = useState(false)
+
+    const handleConfirm = async () => {
+        setLoading(true)
+        try {
+            await onConfirm?.()
+            setOpen(false)
+        } finally {
+            setLoading(false)
+        }
+    }
+
     return (
-        <Dialog>
+        <Dialog open={open} onOpenChange={setOpen}>
             <DialogTrigger asChild>
-                <Button variant={variant} size="icon" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8">
-                    <Trash2 className="size-4" />
+                <Button variant={varient} size="icon" className="text-muted-foreground hover:text-destructive hover:bg-destructive/10 h-8 w-8">
+                    <Trash2 />
                 </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-sm">
@@ -34,17 +47,15 @@ export function DeleteDialog({ itemType, itemName, onConfirm, variant = "ghost" 
                     </DialogDescription>
                 </DialogHeader>
                 <DialogFooter className="mt-4">
-                    <DialogClose asChild>
-                        <Button variant="outline">Cancel</Button>
-                    </DialogClose>
-                    <DialogClose asChild>
-                        <Button 
-                            variant="destructive" 
-                            onClick={onConfirm}
-                        >
-                            Confirm
-                        </Button>
-                    </DialogClose>
+                    <Button variant="outline" onClick={() => setOpen(false)} disabled={loading}>Cancel</Button>
+                    <Button 
+                        variant="destructive" 
+                        onClick={handleConfirm}
+                        disabled={loading}
+                    >
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Confirm
+                    </Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

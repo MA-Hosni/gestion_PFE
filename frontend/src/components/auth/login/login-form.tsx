@@ -15,7 +15,7 @@ import { toast } from "sonner"
 import { zodResolver } from "@hookform/resolvers/zod"
 
 import { useAuth } from "@/context/auth-context"
-import { loginSchema, type LoginValues } from "@/lib/validation/login-validation"
+import { loginSchema, type LoginValues } from "@/validation/login-validation"
 
 export function LoginForm({
   className,
@@ -45,7 +45,7 @@ export function LoginForm({
     try {
       await login(values)
       toast.success("Login successful")
-      navigate("/dashboard")
+      navigate("/projects")
     } catch (err) {
       const message = err instanceof Error ? err.message : "Login failed"
       setError("root", { type: "server", message })

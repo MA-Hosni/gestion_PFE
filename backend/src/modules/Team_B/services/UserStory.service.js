@@ -174,6 +174,10 @@ export const getUserStories = async (projectId) => {
       path: 'sprintId',
       select: 'title'
     })
+    .populate({
+      path: 'tasks',
+      select: 'status'
+    })
     .sort({ startDate: 1 }); // optionnel : trier par date de début
 
     return {
@@ -229,6 +233,10 @@ export const getUserStoriesRelatedToSprint = async (projectId, sprintId) => {
       "dueDate",
       "tasks"
     ])
+    .populate({
+      path: 'tasks',
+      select: 'status'
+    })
     .sort({ createdAt: 1 })
     .lean();
 

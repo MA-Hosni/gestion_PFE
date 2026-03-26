@@ -95,16 +95,31 @@ export const getTaskById = async (id) => {
 };
 
 
-/*export const updateTask = async (id, data) => {
-  const task = await Task.findByIdAndUpdate(id, data, { new: true });
-  if (!task) {
+export const updateTask = async (id, data, modifiedBy) => {
+  const oldTask = await Task.findById(id);
+  if (!oldTask) {
     const error = new Error("Task not found.");
     error.status = 404;
     throw error;
   }
+
+  const oldStatus = oldTask.status;
+  const task = await Task.findByIdAndUpdate(id, data, { new: true });
+
+  // Record status change in history
+  if (data.status && data.status !== oldStatus && modifiedBy) {
+    await TaskHistory.create({
+      taskId: id,
+      modifiedBy,
+      oldValue: { status: oldStatus },
+      newValue: { status: data.status },
+      fieldChanged: "status",
+    });
+  }
+
   return { message: "Task updated successfully", task };
 };
-*/
+
 export const deleteTask = async (id) => {
   const task = await Task.findByIdAndDelete(id);
   if (!task) {

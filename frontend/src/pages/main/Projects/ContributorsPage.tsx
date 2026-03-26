@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { SearchIcon } from 'lucide-react'
-import { AddContributorsDialog, availableUsers } from '@/components/project/project details/add-contributors'
+import { AddContributorsDialog, type AvailableUser } from '@/components/project/project details/add-contributors'
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -12,78 +12,125 @@ import {
   useReactTable
 } from '@tanstack/react-table'
 
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { RemoveContributorDialog } from '@/components/project/project details/remove-contributor'
+import { getStudentsWithoutProject, addContributors, removeContributors, type Project, type Contributor } from '@/services/project/api-project'
+import { toast } from 'sonner'
+import { useAuth } from '@/context/auth-context'
 
-type Contributor = {
-  id: string
-  name: string
-  initials: string
-  email: string
-  avatar: string
+function getInitials(name: string) {
+  if (!name) return "UN"
+  const parts = name.split(" ")
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase()
+  return name.substring(0, 2).toUpperCase()
 }
 
-const ContributorsPage = () => {
-  const [contributors, setContributors] = useState<Contributor[]>([
-    { id: "1", name: "Olivia Sparks", initials: "OS", email: "olivia.sparks@example.com", avatar: "https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-3.png" },
-    { id: "2", name: "Howard Lloyd", initials: "HL", email: "howard.lloyd@example.com", avatar: "https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-6.png" },
-    { id: "3", name: "Hallie Richards", initials: "HR", email: "hallie.richards@example.com", avatar: "https://cdn.shadcnstudio.com/ss-assets/avatar/avatar-5.png" },
-  ])
+interface ContributorsPageProps {
+  project: Project
+  setProject: React.Dispatch<React.SetStateAction<Project | null>>
+}
 
+const ContributorsPage = ({ project, setProject }: ContributorsPageProps) => {
+  const { user } = useAuth()
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
+  const [availableUsers, setAvailableUsers] = useState<AvailableUser[]>([])
 
-  const handleAdd = (userIds: string[]) => {
-    const newContributors = availableUsers
-        .filter(u => userIds.includes(u.id))
-        // Check if user is already in the list
-        .filter(u => !contributors.some(c => c.id === u.id))
+  useEffect(() => {
+     async function loadAvailableUsers() {
+        try {
+           const users = await getStudentsWithoutProject()
+           setAvailableUsers(users)
+        } catch (err) {
+           console.error("Failed to load available students:", err)
+        }
+     }
+     loadAvailableUsers()
+  }, [])
+
+  const handleAdd = async (userIds: string[]) => {
+    if (!project || userIds.length === 0) return
+    try {
+      await addContributors(project.projectId, userIds)
+      
+      const newContributors = availableUsers
+        .filter(u => userIds.includes(u._id))
         .map(u => ({
-             id: u.id,
-             name: u.name, 
-             initials: u.initials,
-             email: `${u.name.toLowerCase().replace(' ', '.')}@example.com`,
-             avatar: u.avatar || "" 
+             _id: u._id,
+             fullName: u.fullName, 
+             email: "Pending...", // Could fetch full profile if needed
         }))
 
-    if (newContributors.length > 0) {
-        setContributors(prev => [...prev, ...newContributors])
+      setProject(prev => {
+         if (!prev) return null
+         return {
+            ...prev,
+            contributors: [...prev.contributors, ...newContributors]
+         }
+      })
+      
+      setAvailableUsers(prev => prev.filter(u => !userIds.includes(u._id)))
+    } catch (err) {
+       console.error("Failed to add contributors", err)
     }
   }
 
-  const handleRemove = (id: string) => {
-    setContributors(prev => prev.filter(c => c.id !== id))
+  const handleRemove = async (id: string) => {
+    if (!project) return
+    try {
+      await removeContributors(project.projectId, [id])
+      
+      const removedUser = project.contributors.find(c => c._id === id)
+      
+      setProject(prev => {
+         if (!prev) return null
+         return {
+            ...prev,
+            contributors: prev.contributors.filter(c => c._id !== id)
+         }
+      })
+      
+      if (removedUser) {
+         setAvailableUsers(prev => [...prev, { _id: removedUser._id, fullName: removedUser.fullName }])
+      }
+      
+      toast.success("Contributor removed successfully")
+    } catch (err: any) {
+       const message = err?.response?.data?.message || err?.message || "Failed to remove contributor"
+       toast.error(message)
+       throw err
+    }
   }
 
   const columns = useMemo<ColumnDef<Contributor>[]>(
     () => [
       {
-        accessorKey: 'name',
+        accessorKey: 'fullName',
         header: 'Full Name',
         cell: ({ row }) => (
           <div className='flex items-center gap-3'>
-            <Avatar className='rounded-full size-9 border'>
-              <AvatarImage src={row.original.avatar} alt={row.original.name} />
-              <AvatarFallback>{row.original.initials}</AvatarFallback>
+            <Avatar className='rounded-full size-9 border flex items-center justify-center font-medium'>
+              <AvatarFallback>{getInitials(row.original.fullName)}</AvatarFallback>
             </Avatar>
-            <div className='font-medium'>{row.getValue('name')}</div>
+            <div className='font-medium'>{row.original.fullName}</div>
           </div>
         )
       },
       {
         accessorKey: 'email',
         header: 'Email',
-        cell: ({ row }) => <div className="text-muted-foreground">{row.getValue('email')}</div>
+        cell: ({ row }) => <div className="text-muted-foreground">{row.original.email}</div>
       },
       {
         id: 'actions',
         cell: ({ row }) => {
+            if (row.original._id === user?.id) return null
             return (
                 <div className="flex justify-end pr-4">
                     <RemoveContributorDialog 
-                        contributor={row.original} 
+                        contributor={{ id: row.original._id, name: row.original.fullName }} 
                         onConfirm={handleRemove} 
                     />
                 </div>
@@ -92,11 +139,11 @@ const ContributorsPage = () => {
       }
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [] 
+    [project] 
   )
 
   const table = useReactTable({
-    data: contributors,
+    data: project.contributors,
     columns,
     state: {
       sorting,
@@ -115,9 +162,9 @@ const ContributorsPage = () => {
           <div className='relative w-full max-w-sm'>
              <Input
                 placeholder="Filter contributors..."
-                value={(table.getColumn("name")?.getFilterValue() as string) ?? ""}
+                value={(table.getColumn("fullName")?.getFilterValue() as string) ?? ""}
                 onChange={(event) =>
-                    table.getColumn("name")?.setFilterValue(event.target.value)
+                    table.getColumn("fullName")?.setFilterValue(event.target.value)
                 }
                 className="pl-9 h-9"
              />
@@ -125,7 +172,7 @@ const ContributorsPage = () => {
                 <SearchIcon className="size-4" />
              </div>
           </div>
-          <AddContributorsDialog onAdd={handleAdd} />
+          <AddContributorsDialog onAdd={handleAdd} availableUsers={availableUsers} />
       </div>
       
       <div className='rounded-md border bg-card'>

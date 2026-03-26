@@ -18,31 +18,34 @@ import {
   MultiSelectTrigger,
   MultiSelectValue,
 } from "@/components/ui/multi-select"
+import { Loader2 } from "lucide-react"
 
-// Mock data - in a real app this might come from an API
-export const availableUsers = [
-  { id: "1", name: "Olivia Sparks", initials: "OS", avatar: "" },
-  { id: "2", name: "Howard Lloyd", initials: "HL", avatar: "" },
-  { id: "3", name: "Hallie Richards", initials: "HR", avatar: "" },
-  { id: "4", name: "Jenny Wilson", initials: "JW", avatar: "" },
-  { id: "5", name: "Adam Smith", initials: "AS", avatar: "" },
-  { id: "6", name: "John Doe", initials: "JD", avatar: "" },
-  { id: "7", name: "Sarah Connor", initials: "SC", avatar: "" },
-  { id: "8", name: "Mike Ross", initials: "MR", avatar: "" },
-]
-
-interface AddContributorsDialogProps {
-  onAdd: (selectedUserIds: string[]) => void
+export interface AvailableUser {
+  _id: string
+  fullName: string
 }
 
-export function AddContributorsDialog({ onAdd }: AddContributorsDialogProps) {
+interface AddContributorsDialogProps {
+  onAdd: (selectedUserIds: string[]) => Promise<void>
+  availableUsers: AvailableUser[]
+}
+
+export function AddContributorsDialog({ onAdd, availableUsers }: AddContributorsDialogProps) {
   const [selectedUsers, setSelectedUsers] = useState<string[]>([])
   const [open, setOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleSave = () => {
-    onAdd(selectedUsers)
-    setOpen(false)
-    setSelectedUsers([])
+  const handleSave = async () => {
+    setIsSubmitting(true)
+    try {
+      await onAdd(selectedUsers)
+      setOpen(false)
+      setSelectedUsers([])
+    } catch (error) {
+      console.error(error)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -54,7 +57,7 @@ export function AddContributorsDialog({ onAdd }: AddContributorsDialogProps) {
           <DialogHeader>
             <DialogTitle>Add Contributors</DialogTitle>
             <DialogDescription>
-              Select team members to add to this project.
+              Select students to add to this project.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -62,13 +65,13 @@ export function AddContributorsDialog({ onAdd }: AddContributorsDialogProps) {
               <Label htmlFor="contributors">Contributors</Label>
               <MultiSelect values={selectedUsers} onValuesChange={setSelectedUsers}>
                 <MultiSelectTrigger id="contributors" className="w-full">
-                    <MultiSelectValue placeholder="Select contributors..." />
+                    <MultiSelectValue placeholder={availableUsers.length === 0 ? "No available students" : "Select contributors..."} />
                 </MultiSelectTrigger>
                 <MultiSelectContent>
                     <MultiSelectGroup>
                         {availableUsers.map((user) => (
-                            <MultiSelectItem key={user.id} value={user.id}>
-                                {user.name}
+                            <MultiSelectItem key={user._id} value={user._id}>
+                                {user.fullName}
                             </MultiSelectItem>
                         ))}
                     </MultiSelectGroup>
@@ -77,8 +80,11 @@ export function AddContributorsDialog({ onAdd }: AddContributorsDialogProps) {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
-            <Button onClick={handleSave}>Add</Button>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={isSubmitting}>Cancel</Button>
+            <Button onClick={handleSave} disabled={isSubmitting || selectedUsers.length === 0}>
+               {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+               Add
+            </Button>
           </DialogFooter>
         </DialogContent>
     </Dialog>

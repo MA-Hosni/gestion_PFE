@@ -14,14 +14,29 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar"
 import { Outlet, useLocation, Link } from "react-router-dom"
+import { useEffect, useState } from "react"
+import { getStudentProject } from "@/services/project/api-project"
 
 export default function LayoutPage() {
   const location = useLocation()
+  const [projectTitle, setProjectTitle] = useState("")
   
   // Create breadcrumb based on current path
   const pathnames = location.pathname.split("/").filter((x) => x)
-  const currentPage = pathnames[pathnames.length - 1] || "dashboard"
-  const formattedPageName = currentPage.charAt(0).toUpperCase() + currentPage.slice(1)
+  const isProjectDetails = pathnames[0] === 'projects' && pathnames.length === 2
+  const currentPage = pathnames[pathnames.length - 1] || "projects"
+
+  useEffect(() => {
+    if (isProjectDetails) {
+      getStudentProject().then(p => {
+        if (p) setProjectTitle(p.title)
+      }).catch(() => {})
+    }
+  }, [isProjectDetails, currentPage])
+  
+  const formattedPageName = isProjectDetails 
+    ? (projectTitle || "Loading...") 
+    : currentPage.charAt(0).toUpperCase() + currentPage.slice(1)
   
   return (
     <SidebarProvider>
@@ -38,7 +53,7 @@ export default function LayoutPage() {
               <BreadcrumbList>
                 <BreadcrumbItem className="hidden md:block">
                   <BreadcrumbLink asChild>
-                    <Link to="/">Pages</Link>
+                    <Link to="/projects">Pages</Link>
                   </BreadcrumbLink>
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />

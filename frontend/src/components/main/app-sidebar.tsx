@@ -1,8 +1,5 @@
 import * as React from "react"
-import {
-  LayoutDashboard,
-  Frame
-} from "lucide-react"
+import { Folders } from "lucide-react"
 import { useNavigate } from "react-router-dom"
 import { NavProjects } from "@/components/main/nav-projects"
 import { NavUser } from "@/components/main/nav-user"
@@ -18,14 +15,9 @@ import {
 const data = {
   projects: [
     {
-      name: "Dashboard",
-      url: "/dashboard",
-      icon: LayoutDashboard,
-    },
-    {
       name: "Projects",
       url: "/projects",
-      icon: Frame,
+      icon: Folders,
     },
   ],
 }

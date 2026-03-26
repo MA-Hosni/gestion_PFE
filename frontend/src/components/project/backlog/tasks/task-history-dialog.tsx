@@ -1,4 +1,5 @@
-import { History, ArrowRight } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react'
+import { History, ArrowRight, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -7,10 +8,10 @@ import {
   DialogTitle,
   DialogDescription,
   DialogClose,
+  DialogTrigger,
 } from '@/components/ui/dialog'
-import { DialogTrigger } from '@/components/ui/dialog'
 import { StatusBadge } from './task-badges'
-import { mockTaskHistory } from './task-history'
+import { getTaskHistory, type TaskHistoryEntry } from '@/services/project/api-task-history'
 import type { Task } from '../types'
 
 interface TaskHistoryDialogProps {
@@ -18,12 +19,30 @@ interface TaskHistoryDialogProps {
 }
 
 export function TaskHistoryDialog({ task }: TaskHistoryDialogProps) {
-  const history = mockTaskHistory[task.id] ?? []
+  const [open, setOpen] = useState(false)
+  const [history, setHistory] = useState<TaskHistoryEntry[]>([])
+  const [loading, setLoading] = useState(false)
+
+  const fetchHistory = useCallback(async () => {
+    setLoading(true)
+    try {
+      const data = await getTaskHistory(task.id)
+      setHistory(data)
+    } catch {
+      setHistory([])
+    } finally {
+      setLoading(false)
+    }
+  }, [task.id])
+
+  useEffect(() => {
+    if (open) fetchHistory()
+  }, [open, fetchHistory])
 
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
           <History className="h-3.5 w-3.5" />
         </Button>
       </DialogTrigger>
@@ -36,10 +55,14 @@ export function TaskHistoryDialog({ task }: TaskHistoryDialogProps) {
         </DialogHeader>
 
         <div className="mt-2 flex flex-col gap-0">
-          {history.length === 0 ? (
+          {loading ? (
+            <div className="flex justify-center py-6">
+              <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : history.length === 0 ? (
             <p className="text-sm text-muted-foreground text-center py-6">No status changes recorded yet.</p>
           ) : (
-            <div className="relative border rounded-xl overflow-hidden">
+            <div className="relative border rounded-xl overflow-hidden max-h-84 overflow-y-auto">
               {/* Timeline */}
               <div className="divide-y">
                 {history.map((entry, i) => (

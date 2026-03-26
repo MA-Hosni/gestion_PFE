@@ -1,4 +1,4 @@
-import { useState, Fragment, useMemo } from 'react'
+import { useState, useEffect, Fragment, useMemo, useCallback } from 'react'
 import { SearchIcon, GripVertical } from 'lucide-react'
 import {
   flexRender,
@@ -30,25 +30,51 @@ import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
 import {
-  mockSprints as initialSprints,
-  sprintColumns,
+  getSprintColumns,
   NestedUserStories,
   SprintDialog,
   type Sprint
 } from '@/components/project/backlog'
 import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
+import type { ProjectSprint, Contributor } from '@/services/project/api-project'
+import { reorderSprints, getAllUserStories } from '@/services/project/api-sprint'
+import { toast } from 'sonner'
 
-// Draggable Table Row Component
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function mapProjectSprintsToSprints(
+  projectSprints: ProjectSprint[],
+  userStoriesMap: Map<string, Sprint['userStories']>
+): Sprint[] {
+  return projectSprints
+    .sort((a, b) => a.orderIndex - b.orderIndex)
+    .map(s => ({
+      id: s._id,
+      title: s.title,
+      goal: s.goal,
+      orderIndex: s.orderIndex,
+      startDate: s.startDate,
+      endDate: s.endDate,
+      userStories: userStoriesMap.get(s._id) ?? [],
+    }))
+}
+
+// ── Draggable Row ────────────────────────────────────────────────────────────
+
 function DraggableRow({
   row,
+  contributors,
   currentUserId,
   onCreateMeeting,
+  onRefresh,
 }: {
   row: Row<Sprint>
+  contributors: Contributor[]
   currentUserId: string
   onCreateMeeting: (
     meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
   ) => void
+  onRefresh: () => void
 }) {
   const {
     attributes,
@@ -105,8 +131,10 @@ function DraggableRow({
           <TableCell colSpan={row.getVisibleCells().length} className='p-0'>
             <NestedUserStories
               sprint={row.original}
+              contributors={contributors}
               currentUserId={currentUserId}
               onCreateMeeting={onCreateMeeting}
+              onRefresh={onRefresh}
             />
           </TableCell>
         </TableRow>
@@ -115,22 +143,53 @@ function DraggableRow({
   )
 }
 
+// ── Main Component ───────────────────────────────────────────────────────────
+
 interface BacklogPageProps {
   currentUserId: string
+  contributors: Contributor[]
   onCreateMeeting: (
     meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
   ) => void
+  projectSprints: ProjectSprint[]
+  projectId: string
+  onRefresh: () => void
 }
 
-const BacklogPage = ({ currentUserId, onCreateMeeting }: BacklogPageProps) => {
+const BacklogPage = ({ currentUserId, contributors, onCreateMeeting, projectSprints, projectId, onRefresh }: BacklogPageProps) => {
   const [searchQuery, setSearchQuery] = useState('')
-  const [sprints, setSprints] = useState<Sprint[]>(initialSprints)
+  const [sprints, setSprints] = useState<Sprint[]>([])
   const [expanded, setExpanded] = useState<ExpandedState>(true)
+
+  // Load user stories and merge with project sprint metadata
+  const loadSprints = useCallback(async () => {
+    try {
+      const userStoriesMap = await getAllUserStories()
+      setSprints(mapProjectSprintsToSprints(projectSprints, userStoriesMap))
+    } catch {
+      // If fetching user stories fails, show sprints without them
+      setSprints(mapProjectSprintsToSprints(projectSprints, new Map()))
+    }
+  }, [projectSprints])
+
+  useEffect(() => {
+    loadSprints()
+  }, [loadSprints])
+
+  const handleRefresh = useCallback(() => {
+    onRefresh()
+    loadSprints()
+  }, [onRefresh, loadSprints])
+
+  const columns = useMemo(
+    () => getSprintColumns({ projectId, onRefresh: handleRefresh }),
+    [projectId, handleRefresh]
+  )
 
   const filteredSprints = useMemo(() => {
     if (!searchQuery.trim()) return sprints
-    return sprints.filter(sprint => 
-      sprint.name.toLowerCase().includes(searchQuery.toLowerCase())
+    return sprints.filter(sprint =>
+      sprint.title.toLowerCase().includes(searchQuery.toLowerCase())
     )
   }, [sprints, searchQuery])
 
@@ -138,7 +197,7 @@ const BacklogPage = ({ currentUserId, onCreateMeeting }: BacklogPageProps) => {
 
   const table = useReactTable({
     data: filteredSprints,
-    columns: sprintColumns,
+    columns,
     state: {
       expanded,
     },
@@ -153,29 +212,37 @@ const BacklogPage = ({ currentUserId, onCreateMeeting }: BacklogPageProps) => {
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
-        distance: 2, // Helps prevent firing drag when just clicking
+        distance: 2,
       },
     }),
     useSensor(KeyboardSensor)
   )
 
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
 
     if (over && active.id !== over.id) {
-      setSprints((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id)
-        const newIndex = items.findIndex((item) => item.id === over.id)
+      const oldIndex = sprints.findIndex((item) => item.id === active.id)
+      const newIndex = sprints.findIndex((item) => item.id === over.id)
+      const reordered = arrayMove(sprints, oldIndex, newIndex).map((s, i) => ({
+        ...s,
+        orderIndex: i + 1,
+      }))
 
-        // Move the item
-        const reorderedSprints = arrayMove(items, oldIndex, newIndex)
-        
-        // Re-assign sprint orders according to the new visual order
-        return reorderedSprints.map((sprint, index) => ({
-          ...sprint,
-          order: index + 1
-        }))
-      })
+      // Optimistic update
+      setSprints(reordered)
+
+      try {
+        await reorderSprints(
+          reordered.map((s) => ({
+            sprintId: s.id,
+            orderIndex: s.orderIndex,
+          }))
+        )
+      } catch (err: any) {
+        toast.error(err?.response?.data?.message || "Failed to persist sprint order")
+        handleRefresh()
+      }
     }
   }
 
@@ -193,9 +260,13 @@ const BacklogPage = ({ currentUserId, onCreateMeeting }: BacklogPageProps) => {
             <SearchIcon className="size-4" />
           </div>
         </div>
-        <SprintDialog buttonText='Create Sprint' title='Create Sprint' description='Create a new sprint for the project.' />
+        <SprintDialog
+          buttonText='Create Sprint'
+          projectId={projectId}
+          onSuccess={handleRefresh}
+        />
       </div>
-      
+
       <div className='w-full pb-1 overflow-y-auto max-h-[calc(100vh-320px)] min-h-100 pr-2 custom-scrollbar'>
         <div className='rounded-md border bg-card overflow-hidden shadow-sm'>
           <DndContext
@@ -223,13 +294,15 @@ const BacklogPage = ({ currentUserId, onCreateMeeting }: BacklogPageProps) => {
                       <DraggableRow
                         key={row.id}
                         row={row}
+                        contributors={contributors}
                         currentUserId={currentUserId}
                         onCreateMeeting={onCreateMeeting}
+                        onRefresh={handleRefresh}
                       />
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={sprintColumns.length} className='h-24 text-center text-muted-foreground'>
+                      <TableCell colSpan={columns.length} className='h-24 text-center text-muted-foreground'>
                         No sprints found. Click "Create Sprint" to add one.
                       </TableCell>
                     </TableRow>

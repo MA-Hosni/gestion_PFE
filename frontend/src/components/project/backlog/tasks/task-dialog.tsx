@@ -1,5 +1,4 @@
-import { useState } from 'react'
-import { Edit2, Check, X } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import {
   Dialog,
@@ -21,8 +20,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
-import { Eye, Plus } from 'lucide-react'
-import type { Task, TaskStatus, TaskPriority } from '../types'
+import { Eye, Plus, Loader2, Edit2 } from 'lucide-react'
+import { Field, FieldError } from '@/components/ui/field'
+import { useForm, Controller } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { taskSchema, type TaskFormValues } from '@/validation/task-validation'
+import { createTask, updateTask } from '@/services/project/api-task'
+import { toast } from 'sonner'
+import type { Task } from '../types'
+import type { Contributor } from '@/services/project/api-project'
 
 // ── Shared field layout ──────────────────────────────────────────────────────
 
@@ -40,44 +46,151 @@ function FieldRow({ label, children }: FieldRowProps) {
   )
 }
 
+// ── Helper: resolve contributor name from id ─────────────────────────────────
+function getContributorName(id: string | undefined, contributors: Contributor[]) {
+  if (!id) return "Unassigned"
+  const c = contributors.find(c => c._id === id)
+  return c?.fullName ?? id
+}
+
 // ── Add Task Dialog (trigger = "+ Add Task" button) ──────────────────────────
 
-export function AddTaskDialog({ onAdd }: { onAdd?: (task: Omit<Task, 'id'>) => void }) {
+interface AddTaskDialogProps {
+  userStoryId: string
+  contributors: Contributor[]
+  onSuccess?: () => void
+}
+
+export function AddTaskDialog({ userStoryId, contributors, onSuccess }: AddTaskDialogProps) {
   const [open, setOpen] = useState(false)
-  const [form, setForm] = useState({
-    title: '',
-    description: '',
-    status: 'ToDo' as TaskStatus,
-    priority: 'Medium' as TaskPriority,
-    assignee: '',
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const { register, handleSubmit, control, formState: { errors }, reset } = useForm<TaskFormValues>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: '',
+      description: '',
+      status: 'ToDo',
+      priority: 'Medium',
+      assignedTo: '',
+    }
   })
 
-  const reset = () => setForm({ title: '', description: '', status: 'ToDo', priority: 'Medium', assignee: '' })
-
-  const handleAdd = () => {
-    if (!form.title.trim()) return
-    onAdd?.(form)
-    reset()
-    setOpen(false)
+  const onSubmit = async (data: TaskFormValues) => {
+    setIsSubmitting(true)
+    try {
+      await createTask({
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        priority: data.priority,
+        assignedTo: data.assignedTo,
+        userStoryId,
+      })
+      toast.success("Task created successfully")
+      setOpen(false)
+      reset()
+      onSuccess?.()
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.response?.data?.message || "Failed to create task")
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) reset() }}>
       <DialogTrigger asChild>
         <Button size="sm" variant="outline" className="h-8 gap-1.5 text-xs">
           <Plus className="h-3.5 w-3.5" /> Add Task
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Add Task</DialogTitle>
-          <DialogDescription>Fill in the details to create a new task.</DialogDescription>
-        </DialogHeader>
-        <TaskFormFields form={form} onChange={setForm} disabled={false} />
-        <DialogFooter className="mt-2">
-          <DialogClose asChild><Button variant="outline">Cancel</Button></DialogClose>
-          <Button onClick={handleAdd}>Create</Button>
-        </DialogFooter>
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogHeader>
+            <DialogTitle>Add Task</DialogTitle>
+            <DialogDescription>Fill in the details to create a new task.</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 py-4">
+            <FieldRow label="Title">
+              <Field data-invalid={!!errors.title}>
+                <Input
+                  {...register("title")}
+                  className="h-8 text-sm"
+                  placeholder="Task title"
+                />
+                {errors.title && <FieldError>{errors.title.message}</FieldError>}
+              </Field>
+            </FieldRow>
+            <FieldRow label="Description">
+              <Textarea
+                {...register("description")}
+                className="text-sm min-h-18 resize-none"
+                placeholder="Task description"
+              />
+            </FieldRow>
+            <FieldRow label="Assignee">
+              <Field data-invalid={!!errors.assignedTo}>
+                <Controller
+                  control={control}
+                  name="assignedTo"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select assignee" /></SelectTrigger>
+                      <SelectContent>
+                        {contributors.map(c => (
+                          <SelectItem key={c._id} value={c._id}>{c.fullName}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {errors.assignedTo && <FieldError>{errors.assignedTo.message}</FieldError>}
+              </Field>
+            </FieldRow>
+            <FieldRow label="Status">
+              <Controller
+                control={control}
+                name="status"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="ToDo">To Do</SelectItem>
+                      <SelectItem value="InProgress">In Progress</SelectItem>
+                      <SelectItem value="Standby">Standby</SelectItem>
+                      <SelectItem value="Done">Done</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </FieldRow>
+            <FieldRow label="Priority">
+              <Controller
+                control={control}
+                name="priority"
+                render={({ field }) => (
+                  <Select value={field.value} onValueChange={field.onChange}>
+                    <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Low">Low</SelectItem>
+                      <SelectItem value="Medium">Medium</SelectItem>
+                      <SelectItem value="High">High</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
+              />
+            </FieldRow>
+          </div>
+          <DialogFooter className="mt-2">
+            <DialogClose asChild><Button type="button" variant="outline" disabled={isSubmitting}>Cancel</Button></DialogClose>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              Create
+            </Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   )
@@ -85,132 +198,194 @@ export function AddTaskDialog({ onAdd }: { onAdd?: (task: Omit<Task, 'id'>) => v
 
 // ── View / Edit Task Dialog (trigger = Eye icon in row) ──────────────────────
 
-interface ViewTaskDialogProps {
+interface ViewEditTaskDialogProps {
   task: Task
-  onSave?: (updated: Task) => void
+  contributors: Contributor[]
+  onRefresh: () => void
 }
 
-export function ViewTaskDialog({ task, onSave }: ViewTaskDialogProps) {
+export function ViewEditTaskDialog({ task, contributors, onRefresh }: ViewEditTaskDialogProps) {
   const [open, setOpen] = useState(false)
-  const [editing, setEditing] = useState(false)
-  const [form, setForm] = useState({ ...task })
+  const [isEditing, setIsEditing] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
-  const handleOpen = (o: boolean) => {
-    if (!o) { setEditing(false); setForm({ ...task }) }
-    setOpen(o)
+  const { register, handleSubmit, control, formState: { errors }, reset } = useForm<TaskFormValues>({
+    resolver: zodResolver(taskSchema),
+    defaultValues: {
+      title: task.title,
+      description: task.description ?? '',
+      status: task.status as TaskFormValues['status'],
+      priority: task.priority as TaskFormValues['priority'],
+      assignedTo: task.assignedTo ?? '',
+    }
+  })
+
+  // Sync form when task data changes (e.g. after external refresh)
+  useEffect(() => {
+    reset({
+      title: task.title,
+      description: task.description ?? '',
+      status: task.status as TaskFormValues['status'],
+      priority: task.priority as TaskFormValues['priority'],
+      assignedTo: task.assignedTo ?? '',
+    })
+  }, [task, reset])
+
+  const handleCancel = () => {
+    setIsEditing(false)
+    reset({
+      title: task.title,
+      description: task.description ?? '',
+      status: task.status as TaskFormValues['status'],
+      priority: task.priority as TaskFormValues['priority'],
+      assignedTo: task.assignedTo ?? '',
+    })
   }
 
-  const handleCancel = () => { setForm({ ...task }); setEditing(false) }
-  const handleSave = () => { onSave?.(form); setEditing(false); setOpen(false) }
+  const onSubmit = async (data: TaskFormValues) => {
+    setIsSubmitting(true)
+    try {
+      await updateTask(task.id, {
+        title: data.title,
+        description: data.description,
+        status: data.status,
+        priority: data.priority,
+        assignedTo: data.assignedTo,
+      })
+      toast.success("Task updated successfully")
+      setIsEditing(false)
+      onRefresh()
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.response?.data?.message || "Failed to update task")
+    } finally {
+      setIsSubmitting(false)
+    }
+  }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpen}>
+    <Dialog open={open} onOpenChange={(o) => { setOpen(o); if (!o) { setIsEditing(false); handleCancel() } }}>
       <DialogTrigger asChild>
-        <Button variant="ghost" size="icon" className="h-7 w-7 text-muted-foreground hover:text-primary">
+        <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-primary">
           <Eye className="h-3.5 w-3.5" />
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <div className="flex items-center justify-between pr-6">
-            <DialogTitle className="text-base">{editing ? 'Edit Task' : 'Task Details'}</DialogTitle>
-            {!editing && (
-              <Button variant="ghost" size="sm" className="gap-1.5 h-7 text-xs" onClick={() => setEditing(true)}>
-                <Edit2 className="h-3.5 w-3.5" /> Edit
-              </Button>
-            )}
+        <form onSubmit={handleSubmit(onSubmit)}>
+          <DialogHeader>
+            <DialogTitle className="text-base flex items-center justify-between pr-6">
+              Task Details
+              {!isEditing && (
+                <Button type="button" variant="ghost" size="sm" className="gap-1.5 h-7 text-xs" onClick={() => setIsEditing(true)}>
+                  <Edit2 className="h-3.5 w-3.5" /> Edit
+                </Button>
+              )}
+            </DialogTitle>
+            <DialogDescription className="sr-only">View and edit task details</DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-3 py-2">
+            {/* Title */}
+            <FieldRow label="Title">
+              {isEditing ? (
+                <Field data-invalid={!!errors.title}>
+                  <Input {...register("title")} className="h-8 text-sm" />
+                  {errors.title && <FieldError>{errors.title.message}</FieldError>}
+                </Field>
+              ) : (
+                <Input value={task.title} disabled className="h-8 text-sm" />
+              )}
+            </FieldRow>
+            {/* Description */}
+            <FieldRow label="Description">
+              {isEditing ? (
+                <Textarea {...register("description")} className="text-sm min-h-18 resize-none" />
+              ) : (
+                <Textarea value={task.description || "No description"} disabled className="text-sm min-h-18 resize-none" />
+              )}
+            </FieldRow>
+            {/* Assignee */}
+            <FieldRow label="Assignee">
+              {isEditing ? (
+                <Field data-invalid={!!errors.assignedTo}>
+                  <Controller
+                    control={control}
+                    name="assignedTo"
+                    render={({ field }) => (
+                      <Select value={field.value} onValueChange={field.onChange}>
+                        <SelectTrigger className="h-8 text-sm"><SelectValue placeholder="Select assignee" /></SelectTrigger>
+                        <SelectContent>
+                          {contributors.map(c => (
+                            <SelectItem key={c._id} value={c._id}>{c.fullName}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                  />
+                  {errors.assignedTo && <FieldError>{errors.assignedTo.message}</FieldError>}
+                </Field>
+              ) : (
+                <Input value={getContributorName(task.assignedTo, contributors)} disabled className="h-8 text-sm" />
+              )}
+            </FieldRow>
+            {/* Status */}
+            <FieldRow label="Status">
+              {isEditing ? (
+                <Controller
+                  control={control}
+                  name="status"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ToDo">To Do</SelectItem>
+                        <SelectItem value="InProgress">In Progress</SelectItem>
+                        <SelectItem value="Standby">Standby</SelectItem>
+                        <SelectItem value="Done">Done</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              ) : (
+                <Input value={task.status} disabled />
+              )}
+            </FieldRow>
+            {/* Priority */}
+            <FieldRow label="Priority">
+              {isEditing ? (
+                <Controller
+                  control={control}
+                  name="priority"
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Low">Low</SelectItem>
+                        <SelectItem value="Medium">Medium</SelectItem>
+                        <SelectItem value="High">High</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              ) : (
+                <Input value={task.priority} disabled />
+              )}
+            </FieldRow>
           </div>
-          <DialogDescription className="sr-only">View or edit task details</DialogDescription>
-        </DialogHeader>
-        <TaskFormFields form={form} onChange={setForm} disabled={!editing} />
-        <DialogFooter className="mt-2">
-          {editing ? (
-            <>
-              <Button variant="outline" onClick={handleCancel}>
-                <X className="h-3.5 w-3.5 mr-1" /> Cancel
-              </Button>
-              <Button onClick={handleSave}>
-                <Check className="h-3.5 w-3.5 mr-1" /> Save
-              </Button>
-            </>
-          ) : (
-            <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
-          )}
-        </DialogFooter>
+          <DialogFooter className="mt-2">
+            {isEditing ? (
+              <>
+                <Button type="button" variant="outline" onClick={handleCancel} disabled={isSubmitting}>Cancel</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+                  Save
+                </Button>
+              </>
+            ) : (
+              <DialogClose asChild><Button variant="outline">Close</Button></DialogClose>
+            )}
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
-  )
-}
-
-// ── Shared form fields ───────────────────────────────────────────────────────
-
-interface FormState {
-  title: string
-  description: string
-  status: TaskStatus
-  priority: TaskPriority
-  assignee: string
-}
-
-interface TaskFormFieldsProps {
-  form: FormState
-  onChange: (f: FormState) => void
-  disabled: boolean
-}
-
-function TaskFormFields({ form, onChange, disabled }: TaskFormFieldsProps) {
-  const set = <K extends keyof FormState>(k: K, v: FormState[K]) => onChange({ ...form, [k]: v })
-
-  return (
-    <div className="grid gap-3 py-2">
-      <FieldRow label="Title">
-        <Input
-          value={form.title}
-          onChange={e => set('title', e.target.value)}
-          disabled={disabled}
-          className="h-8 text-sm"
-          placeholder="Task title"
-        />
-      </FieldRow>
-      <FieldRow label="Description">
-        <Textarea
-          value={form.description}
-          onChange={e => set('description', e.target.value)}
-          disabled={disabled}
-          className="text-sm min-h-[72px] resize-none"
-          placeholder="Task description"
-        />
-      </FieldRow>
-      <FieldRow label="Status">
-        <Select value={form.status} onValueChange={v => set('status', v as TaskStatus)} disabled={disabled}>
-          <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ToDo">To Do</SelectItem>
-            <SelectItem value="InProgress">In Progress</SelectItem>
-            <SelectItem value="Standby">Standby</SelectItem>
-            <SelectItem value="Done">Done</SelectItem>
-          </SelectContent>
-        </Select>
-      </FieldRow>
-      <FieldRow label="Priority">
-        <Select value={form.priority} onValueChange={v => set('priority', v as TaskPriority)} disabled={disabled}>
-          <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="Low">Low</SelectItem>
-            <SelectItem value="Medium">Medium</SelectItem>
-            <SelectItem value="High">High</SelectItem>
-          </SelectContent>
-        </Select>
-      </FieldRow>
-      <FieldRow label="Assignee">
-        <Input
-          value={form.assignee}
-          onChange={e => set('assignee', e.target.value)}
-          disabled={disabled}
-          className="h-8 text-sm"
-          placeholder="Assigned to"
-        />
-      </FieldRow>
-    </div>
   )
 }
