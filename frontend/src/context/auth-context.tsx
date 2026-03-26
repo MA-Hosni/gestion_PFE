@@ -64,20 +64,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true
 
+    const handleUnauthorized = () => {
+      setAccessToken(null)
+      setAccessTokenState(null)
+      setUser(null)
+      setStatus("unauthenticated")
+    }
+
+    window.addEventListener("auth:unauthorized", handleUnauthorized)
+
     ;(async () => {
       try {
         await refresh()
       } catch {
         if (!active) return
-        setAccessToken(null)
-        setAccessTokenState(null)
-        setUser(null)
-        setStatus("unauthenticated")
+        handleUnauthorized()
       }
     })()
 
     return () => {
       active = false
+      window.removeEventListener("auth:unauthorized", handleUnauthorized)
     }
   }, [refresh])
 

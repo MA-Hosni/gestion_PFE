@@ -1,17 +1,27 @@
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import type { Task } from './types'
-import { users } from './mockData'
+import type { BoardTask } from './types'
+import type { Contributor } from '@/services/project/api-project'
+
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
 
 interface TaskCardProps {
-  task: Task
+  task: BoardTask
+  contributors: Contributor[]
   isOverlay?: boolean
 }
 
-export function TaskCard({ task, isOverlay }: TaskCardProps) {
+export function TaskCard({ task, contributors, isOverlay }: TaskCardProps) {
     const {
         attributes,
         listeners,
@@ -38,7 +48,7 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
         High: 'bg-red-100 text-red-700 hover:bg-red-100/80',
     }[task.priority]
 
-    const assignee = users.find(u => u.id === task.assigneeId)
+    const assignee = contributors.find(c => c._id === task.assignedTo)
 
     if (isDragging) {
         return (
@@ -75,8 +85,7 @@ export function TaskCard({ task, isOverlay }: TaskCardProps) {
                     <div className="flex justify-between items-center w-full">
                         {assignee && (
                             <Avatar className="h-7 w-7 border border-background">
-                                <AvatarImage src={assignee.avatar} />
-                                <AvatarFallback className="text-[9px]">{assignee.initials}</AvatarFallback>
+                                <AvatarFallback className="text-[9px]">{getInitials(assignee.fullName)}</AvatarFallback>
                             </Avatar>
                         )}
                         <Badge variant="outline" className={`px-1.5 py-0 text-[10px] font-semibold border-0 ${priorityColor}`}>

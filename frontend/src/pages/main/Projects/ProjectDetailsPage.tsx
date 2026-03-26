@@ -15,6 +15,8 @@ import { getStudentProject, updateProjectDetails, type Project } from '@/service
 import { useAuth } from '@/context/auth-context'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
+import { generateProjectReport } from '@/services/project/api-report'
+import { generateHTMLReport } from '@/lib/report-generator'
 
 // Placeholder components - replaced with actual components later
 const Summary = () => <div className="p-4 border rounded-lg bg-muted/20 h-96 flex items-center justify-center">Summary Component</div>
@@ -165,7 +167,20 @@ function ProjectDetailsPage() {
               {title}
             </h1>
           )}
-          <Button variant="outline">
+          <Button 
+            variant="outline"
+            onClick={async () => {
+              if (!project) return;
+              try {
+                const toastId = toast.loading("Generating report...");
+                const report = await generateProjectReport(project.projectId);
+                generateHTMLReport(report as any, 'Project');
+                toast.success("Report generated successfully", { id: toastId });
+              } catch (error: any) {
+                toast.error(error?.response?.data?.message || "Failed to generate report");
+              }
+            }}
+          >
             <ClipboardPenLine className="mr-2 h-4 w-4" /> Generate Report
           </Button>
         </div>
@@ -269,7 +284,13 @@ function ProjectDetailsPage() {
           <TabsContent value="Contributors">
              <ContributorsPage project={project} setProject={setProject} />
           </TabsContent>
-          <TabsContent value="Board"><BoardPage /></TabsContent>
+          <TabsContent value="Board">
+              <BoardPage
+                projectSprints={project.sprints}
+                contributors={project.contributors}
+                onRefresh={loadProject}
+              />
+          </TabsContent>
           <TabsContent value="Calendar">
             <CalendarPage meetings={meetings} setMeetings={setMeetings} />
           </TabsContent>

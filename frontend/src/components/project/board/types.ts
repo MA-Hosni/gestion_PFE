@@ -1,35 +1,26 @@
 export type Priority = 'Low' | 'Medium' | 'High'
 export type Status = 'ToDo' | 'InProgress' | 'Standby' | 'Done'
 
-export interface Task {
+export interface BoardTask {
   id: string
   title: string
   description: string
   status: Status
   priority: Priority
-  sprintId: string
   userStoryId: string
-  assigneeId: string
-  dueDate?: Date
-  commentsCount: number
-  attachmentsCount: number
+  userStoryName: string
+  sprintId: string
+  assignedTo?: string
 }
 
-export interface User {
-  id: string
-  name: string
-  avatar: string
-  initials: string
-}
-
-export interface Sprint {
-  id: string
-  name: string
-}
-
-export interface UserStory {
+export interface BoardSprint {
   id: string
   title: string
+}
+
+export interface BoardUserStory {
+  id: string
+  name: string
   sprintId: string
 }
 

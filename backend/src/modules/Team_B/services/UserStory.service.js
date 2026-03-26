@@ -176,7 +176,7 @@ export const getUserStories = async (projectId) => {
     })
     .populate({
       path: 'tasks',
-      select: 'status'
+      select: 'title description status priority assignedTo'
     })
     .sort({ startDate: 1 }); // optionnel : trier par date de début
 
@@ -235,7 +235,7 @@ export const getUserStoriesRelatedToSprint = async (projectId, sprintId) => {
     ])
     .populate({
       path: 'tasks',
-      select: 'status'
+      select: 'title description status priority assignedTo'
     })
     .sort({ createdAt: 1 })
     .lean();

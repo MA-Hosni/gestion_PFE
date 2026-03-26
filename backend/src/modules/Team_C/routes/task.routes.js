@@ -310,7 +310,7 @@ router.use("/history", taskhistory)
  *       404:
  *         description: Project not found
  */
-router.get("/report/:projectId", authenticateToken, authorizeSupervisor, taskController.makeFullReport)
+router.get("/report/:projectId", authenticateToken, taskController.makeFullReport)
 
 
 // get sprint report
@@ -332,5 +332,5 @@ router.get("/report/:projectId", authenticateToken, authorizeSupervisor, taskCon
  *       404:
  *         description: Sprint not found
  */
-router.get("/sprintreport/:sprintId", authenticateToken, authorizeSupervisor, taskController.getSprintReport)
+router.get("/sprintreport/:sprintId", authenticateToken, taskController.getSprintReport)
 export default router;

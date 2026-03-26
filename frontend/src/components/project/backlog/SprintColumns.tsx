@@ -81,7 +81,24 @@ export function getSprintColumns({ onRefresh }: SprintColumnsOptions): ColumnDef
               }}
               onSuccess={onRefresh}
             />
-            <Button variant="outline" size="icon" className='h-8 w-8 text-muted-foreground hover:text-primary hover:bg-muted/50'>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className='h-8 w-8 text-muted-foreground hover:text-primary hover:bg-muted/50'
+              onClick={async () => {
+                try {
+                  const toastId = toast.loading("Generating report...");
+                  const { generateSprintReport } = await import('@/services/project/api-report');
+                  const { generateHTMLReport } = await import('@/lib/report-generator');
+                  const report = await generateSprintReport(sprint.id);
+                  generateHTMLReport(report as any, 'Sprint');
+                  toast.success("Report generated successfully", { id: toastId });
+                } catch (error: any) {
+                  toast.error(error?.response?.data?.message || "Failed to generate report");
+                }
+              }}
+              title="Generate sprint report"
+            >
               <ClipboardPenLine />
             </Button>
             <DeleteDialog

@@ -1,6 +1,6 @@
-import { useState, useMemo } from 'react'
-import { Search, Filter } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useState, useMemo, useRef, useCallback } from 'react'
+import { Search, Filter, Loader2 } from 'lucide-react'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogTrigger } from '@/components/ui/dialog'
@@ -20,21 +20,40 @@ import {
 } from '@dnd-kit/core'
 import { arrayMove } from '@dnd-kit/sortable'
 
-import { 
-  type Task, 
-  type FilterState, 
-  type Status, 
-  initialTasks, 
-  users, 
-  FilterDialog, 
-  BoardColumn, 
-  TaskCard 
-} from '@/components/project/board'
+import type { BoardTask, FilterState, Status } from '@/components/project/board/types'
+import { FilterDialog, BoardColumn, TaskCard } from '@/components/project/board'
+import type { ProjectSprint, Contributor } from '@/services/project/api-project'
+import { useBoardTasks } from '@/hooks/use-board-tasks'
 
-export default function BoardPage() {
-    const [tasks, setTasks] = useState<Task[]>(initialTasks)
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
+
+interface BoardPageProps {
+  projectSprints: ProjectSprint[]
+  contributors: Contributor[]
+  onRefresh: () => void
+}
+
+export default function BoardPage({ projectSprints, contributors }: BoardPageProps) {
+    const {
+      tasks,
+      setTasks,
+      sprints,
+      userStories,
+      loading,
+      error,
+      refresh,
+      moveTask,
+    } = useBoardTasks({ projectSprints })
+
     const [searchQuery, setSearchQuery] = useState('')
-    const [activeTask, setActiveTask] = useState<Task | null>(null);
+    const [activeTask, setActiveTask] = useState<BoardTask | null>(null)
     const [filters, setFilters] = useState<FilterState>({
         sprints: [],
         userStories: [],
@@ -44,29 +63,29 @@ export default function BoardPage() {
     })
     const [isFilterOpen, setIsFilterOpen] = useState(false)
 
-    // Dnd Sensors
+    const dragOriginStatusRef = useRef<Status | null>(null)
+    const dragCurrentStatusRef = useRef<Status | null>(null)
+    const activeTaskRef = useRef<BoardTask | null>(null)
+
     const sensors = useSensors(
         useSensor(PointerSensor, {
             activationConstraint: {
-                distance: 3, // Prevent accidental drags
+                distance: 3,
             },
         })
-    );
+    )
 
-    // Derived filtered tasks
     const filteredTasks = useMemo(() => {
         return tasks.filter(task => {
-            // 1. Text Search (Title)
             if (searchQuery && !task.title.toLowerCase().includes(searchQuery.toLowerCase())) {
                 return false
             }
 
-            // 2. Filters
             if (filters.sprints.length > 0 && !filters.sprints.includes(task.sprintId)) return false
             if (filters.userStories.length > 0 && !filters.userStories.includes(task.userStoryId)) return false
             if (filters.priorities.length > 0 && !filters.priorities.includes(task.priority)) return false
             if (filters.statuses.length > 0 && !filters.statuses.includes(task.status)) return false
-            if (filters.assignees.length > 0 && !filters.assignees.includes(task.assigneeId)) return false
+            if (filters.assignees.length > 0 && (!task.assignedTo || !filters.assignees.includes(task.assignedTo))) return false
 
             return true
         })
@@ -79,13 +98,17 @@ export default function BoardPage() {
         filters.priorities.length + 
         filters.statuses.length;
 
-    function onDragStart(event: DragStartEvent) {
-        if (event.active.data.current?.type === 'Task') {
-            setActiveTask(event.active.data.current.task);
+    const onDragStart = useCallback((event: DragStartEvent) => {
+        const task = event.active.data.current?.task as BoardTask | undefined
+        if (task) {
+            activeTaskRef.current = task
+            setActiveTask(task)
+            dragOriginStatusRef.current = task.status
+            dragCurrentStatusRef.current = task.status
         }
-    }    
+    }, [])
 
-    function onDragOver(event: DragOverEvent) {
+    const onDragOver = useCallback((event: DragOverEvent) => {
         const { active, over } = event;
         if (!over) return;
     
@@ -100,18 +123,18 @@ export default function BoardPage() {
     
         if (!isActiveTask) return;
     
-        // Dragging over another Task
         if (isActiveTask && isOverTask) {
             setTasks((prev) => {
                 const activeIndex = prev.findIndex((t) => t.id === activeId);
                 const overIndex = prev.findIndex((t) => t.id === overId);
                 
+                if (activeIndex === -1 || overIndex === -1) return prev;
+
                 const activeTaskObj = prev[activeIndex];
                 const overTaskObj = prev[overIndex];
-                
-                if (!activeTaskObj || !overTaskObj) return prev;
     
                 if (activeTaskObj.status !== overTaskObj.status) {
+                     dragCurrentStatusRef.current = overTaskObj.status;
                      const updatedTasks = [...prev];
                      updatedTasks[activeIndex] = { 
                          ...activeTaskObj, 
@@ -124,13 +147,15 @@ export default function BoardPage() {
             });
         }
         
-        // Dragging over an empty Column area
         if (isActiveTask && isOverColumn) {
             setTasks((prev) => {
                 const activeIndex = prev.findIndex((t) => t.id === activeId);
+                if (activeIndex === -1) return prev;
+
                 const overStatus = overId as Status;
     
                 if (prev[activeIndex].status !== overStatus) {
+                     dragCurrentStatusRef.current = overStatus;
                      const updatedTasks = [...prev];
                      updatedTasks[activeIndex] = { 
                          ...updatedTasks[activeIndex], 
@@ -141,11 +166,22 @@ export default function BoardPage() {
                 return prev;
             });
         }
-    }    
+    }, [setTasks])
 
-    function onDragEnd(event: DragEndEvent) {
-        setActiveTask(null);
-    }
+    const onDragEnd = useCallback((_event: DragEndEvent) => {
+        const task = activeTaskRef.current
+        const originalStatus = dragOriginStatusRef.current
+        const newStatus = dragCurrentStatusRef.current
+
+        activeTaskRef.current = null
+        setActiveTask(null)
+        dragOriginStatusRef.current = null
+        dragCurrentStatusRef.current = null
+
+        if (task && originalStatus && newStatus && originalStatus !== newStatus) {
+            moveTask(task.id, newStatus, originalStatus)
+        }
+    }, [moveTask])
 
     const dropAnimation: DropAnimation = {
         sideEffects: defaultDropAnimationSideEffects({
@@ -156,6 +192,23 @@ export default function BoardPage() {
             },
         }),
     };
+
+    if (loading) {
+        return (
+            <div className="flex items-center justify-center h-96">
+                <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+        )
+    }
+
+    if (error) {
+        return (
+            <div className="flex flex-col items-center justify-center h-96 gap-4">
+                <p className="text-muted-foreground">{error}</p>
+                <Button variant="outline" onClick={refresh}>Retry</Button>
+            </div>
+        )
+    }
 
   return (
     <div className="flex flex-col max-h-150">
@@ -185,15 +238,21 @@ export default function BoardPage() {
                         </Button>
                     </DialogTrigger>
                     {isFilterOpen && (
-                        <FilterDialog filters={filters} setFilters={setFilters} onOpenChange={setIsFilterOpen} />
+                        <FilterDialog
+                          filters={filters}
+                          setFilters={setFilters}
+                          onOpenChange={setIsFilterOpen}
+                          sprints={sprints}
+                          userStories={userStories}
+                          contributors={contributors}
+                        />
                     )}
                 </Dialog>
 
                 <div className="hidden md:flex -space-x-2 pl-4 border-l border-border ml-2">
-                    {users.map((u, i) => (
-                        <Avatar key={i} className="h-8 w-8 border-2 border-background ring-muted ring-1">
-                            <AvatarImage src={u.avatar} />
-                            <AvatarFallback>{u.initials}</AvatarFallback>
+                    {contributors.map((c) => (
+                        <Avatar key={c._id} className="h-8 w-8 border-2 border-background ring-muted ring-1">
+                            <AvatarFallback className="text-[10px]">{getInitials(c.fullName)}</AvatarFallback>
                         </Avatar>
                     ))}
                 </div>
@@ -210,15 +269,15 @@ export default function BoardPage() {
         >
             <div className="flex-1 overflow-x-auto p-4 h-[calc(100vh-140px)]">
                 <div className="flex h-full gap-2 justify-between w-full">
-                    <BoardColumn status="ToDo" title="To Do" tasks={filteredTasks.filter(t => t.status === 'ToDo')} />
-                    <BoardColumn status="InProgress" title="In Progress" tasks={filteredTasks.filter(t => t.status === 'InProgress')} />
-                    <BoardColumn status="Standby" title="Standby/Blocked" tasks={filteredTasks.filter(t => t.status === 'Standby')} />
-                    <BoardColumn status="Done" title="Done" tasks={filteredTasks.filter(t => t.status === 'Done')} />
+                    <BoardColumn status="ToDo" title="To Do" tasks={filteredTasks.filter(t => t.status === 'ToDo')} contributors={contributors} />
+                    <BoardColumn status="InProgress" title="In Progress" tasks={filteredTasks.filter(t => t.status === 'InProgress')} contributors={contributors} />
+                    <BoardColumn status="Standby" title="Standby/Blocked" tasks={filteredTasks.filter(t => t.status === 'Standby')} contributors={contributors} />
+                    <BoardColumn status="Done" title="Done" tasks={filteredTasks.filter(t => t.status === 'Done')} contributors={contributors} />
                 </div>
             </div>
             
             <DragOverlay dropAnimation={dropAnimation}>
-                {activeTask ? <TaskCard task={activeTask} isOverlay /> : null}
+                {activeTask ? <TaskCard task={activeTask} contributors={contributors} isOverlay /> : null}
             </DragOverlay>
         </DndContext>
     </div>

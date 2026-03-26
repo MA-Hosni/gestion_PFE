@@ -1,21 +1,33 @@
 import { useState, useMemo } from 'react'
 import { Search } from 'lucide-react'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
 import { DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import type { FilterState, Priority, Status } from './types'
-import { sprints, userStories, users } from './mockData'
+import type { FilterState, Priority, Status, BoardSprint, BoardUserStory } from './types'
+import type { Contributor } from '@/services/project/api-project'
+
+function getInitials(name: string): string {
+  return name
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2)
+}
 
 interface FilterDialogProps {
   filters: FilterState
   setFilters: React.Dispatch<React.SetStateAction<FilterState>>
   onOpenChange: (open: boolean) => void
+  sprints: BoardSprint[]
+  userStories: BoardUserStory[]
+  contributors: Contributor[]
 }
 
-export function FilterDialog({ filters, setFilters, onOpenChange }: FilterDialogProps) {
+export function FilterDialog({ filters, setFilters, onOpenChange, sprints, userStories, contributors }: FilterDialogProps) {
   const [activeCategory, setActiveCategory] = useState<'Sprint' | 'UserStory' | 'Assignee' | 'Priority' | 'Status'>('Sprint')
   const [searchFilter, setSearchFilter] = useState('')
 
@@ -30,19 +42,20 @@ export function FilterDialog({ filters, setFilters, onOpenChange }: FilterDialog
     })
   }
   
-  const filteredList = useMemo(() => {
-      const search = searchFilter.toLowerCase()
-      switch (activeCategory) {
-          case 'Sprint':
-              return sprints.filter(s => s.name.toLowerCase().includes(search))
-          case 'UserStory':
-              return userStories.filter(us => us.title.toLowerCase().includes(search))
-          case 'Assignee':
-              return users.filter(u => u.name.toLowerCase().includes(search))
-          default:
-              return []
-      }
-  }, [activeCategory, searchFilter])
+  const filteredSprints = useMemo(() => {
+    const search = searchFilter.toLowerCase()
+    return sprints.filter(s => s.title.toLowerCase().includes(search))
+  }, [searchFilter, sprints])
+
+  const filteredUserStories = useMemo(() => {
+    const search = searchFilter.toLowerCase()
+    return userStories.filter(us => us.name.toLowerCase().includes(search))
+  }, [searchFilter, userStories])
+
+  const filteredContributors = useMemo(() => {
+    const search = searchFilter.toLowerCase()
+    return contributors.filter(c => c.fullName.toLowerCase().includes(search))
+  }, [searchFilter, contributors])
 
   const renderContent = () => {
     if (activeCategory === 'Priority') {
@@ -94,38 +107,37 @@ export function FilterDialog({ filters, setFilters, onOpenChange }: FilterDialog
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             </div>
             <div className="flex-1 overflow-y-auto space-y-3">
-                {activeCategory === 'Sprint' && filteredList.map((item: any) => (
+                {activeCategory === 'Sprint' && filteredSprints.map(item => (
                     <div key={item.id} className="flex items-center space-x-2">
                          <Checkbox 
                             id={item.id}
                             checked={filters.sprints.includes(item.id)}
                             onCheckedChange={() => handleCheckboxChange('sprints', item.id)}
                         />
-                        <Label htmlFor={item.id} className="text-sm font-normal cursor-pointer flex-1 line-clamp-1">{item.name}</Label>
+                        <Label htmlFor={item.id} className="text-sm font-normal cursor-pointer flex-1 line-clamp-1">{item.title}</Label>
                     </div>
                 ))}
-                {activeCategory === 'UserStory' && filteredList.map((item: any) => (
+                {activeCategory === 'UserStory' && filteredUserStories.map(item => (
                      <div key={item.id} className="flex items-center space-x-2">
                         <Checkbox 
                            id={item.id}
                            checked={filters.userStories.includes(item.id)}
                            onCheckedChange={() => handleCheckboxChange('userStories', item.id)}
                        />
-                       <Label htmlFor={item.id} className="text-sm font-normal cursor-pointer flex-1 line-clamp-1">{item.title}</Label>
+                       <Label htmlFor={item.id} className="text-sm font-normal cursor-pointer flex-1 line-clamp-1">{item.name}</Label>
                    </div>
                 ))}
-                {activeCategory === 'Assignee' && filteredList.map((item: any) => (
-                     <div key={item.id} className="flex items-center space-x-2">
+                {activeCategory === 'Assignee' && filteredContributors.map(item => (
+                     <div key={item._id} className="flex items-center space-x-2">
                         <Checkbox 
-                           id={item.id}
-                           checked={filters.assignees.includes(item.id)}
-                           onCheckedChange={() => handleCheckboxChange('assignees', item.id)}
+                           id={item._id}
+                           checked={filters.assignees.includes(item._id)}
+                           onCheckedChange={() => handleCheckboxChange('assignees', item._id)}
                        />
                        <Avatar className="h-6 w-6">
-                            <AvatarImage src={item.avatar} />
-                            <AvatarFallback>{item.initials}</AvatarFallback>
+                            <AvatarFallback className="text-[9px]">{getInitials(item.fullName)}</AvatarFallback>
                        </Avatar>
-                       <Label htmlFor={item.id} className="text-sm font-normal cursor-pointer flex-1">{item.name}</Label>
+                       <Label htmlFor={item._id} className="text-sm font-normal cursor-pointer flex-1">{item.fullName}</Label>
                    </div>
                 ))}
             </div>
@@ -134,7 +146,7 @@ export function FilterDialog({ filters, setFilters, onOpenChange }: FilterDialog
   }
 
   return (
-    <DialogContent className="max-w-3xl h-[600px] flex flex-col p-0 gap-0 overflow-hidden">
+    <DialogContent className="max-w-3xl h-150 flex flex-col p-0 gap-0 overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b">
             <DialogTitle>Filter Tasks</DialogTitle>
         </DialogHeader>

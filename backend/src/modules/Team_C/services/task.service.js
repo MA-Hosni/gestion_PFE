@@ -212,21 +212,20 @@ export const validateTaskStatus = async (id, data) => {
 };
 
 //Function that makes a full report about the project in a json file as follow -> Project -> Userstories -> Sprints -> Tasks
-//Function that makes a full report about the project in a json file as follow -> Project -> Userstories -> Sprints -> Tasks
 export const makeFullReport = async (projectId) => {
-  const project = await Project.findById(projectId).populate('sprints');
+  const project = await Project.findById(projectId);
   if (!project) {
     const error = new Error("Project not found.");
     error.status = 404;
     throw error;
   }
 
-  // Fetch sprints associated with the project
-  const sprints = await Sprint.find({ projectId: projectId });
+  // Fetch non-deleted sprints associated with the project
+  const sprints = await Sprint.find({ projectId: projectId, deletedAt: null });
   const sprintIds = sprints.map(sprint => sprint._id);
 
-  // Fetch user stories associated with these sprints
-  const userStories = await UserStory.find({ sprintId: { $in: sprintIds } });
+  // Fetch non-deleted user stories associated with these sprints
+  const userStories = await UserStory.find({ sprintId: { $in: sprintIds }, deletedAt: null });
   const userStoryIds = userStories.map(us => us._id);
 
   // Fetch tasks associated with these user stories
@@ -239,40 +238,46 @@ export const makeFullReport = async (projectId) => {
       startDate: project.startDate,
       endDate: project.endDate,
     },
-    sprints: sprints.map(sprint => ({
-      name: sprint.title, // Assuming sprintName based on typical naming, verify Sprint model if needed
-      startDate: sprint.startDate,
-      endDate: sprint.endDate,
-    })),
-    userStories: userStories.map(userStory => ({
-      name: userStory.storyName,
-      description: userStory.description,
-      priority: userStory.priority,
-      storyPointEstimate: userStory.storyPointEstimate,
-      startDate: userStory.startDate,
-      dueDate: userStory.dueDate,
-    })),
-    tasks: tasks.map(task => ({
-      title: task.title,
-      description: task.description,
-      status: task.status,
-      priority: task.priority,
-    })),
+    sprints: sprints.map(sprint => {
+      const sprintStories = userStories.filter(us => String(us.sprintId) === String(sprint._id));
+      return {
+        name: sprint.title,
+        startDate: sprint.startDate,
+        endDate: sprint.endDate,
+        userStories: sprintStories.map(userStory => {
+          const storyTasks = tasks.filter(task => String(task.userStoryId) === String(userStory._id));
+          return {
+            name: userStory.storyName,
+            description: userStory.description,
+            priority: userStory.priority,
+            storyPointEstimate: userStory.storyPointEstimate,
+            startDate: userStory.startDate,
+            dueDate: userStory.dueDate,
+            tasks: storyTasks.map(task => ({
+              title: task.title,
+              description: task.description,
+              status: task.status,
+              priority: task.priority,
+            }))
+          };
+        })
+      };
+    })
   };
   return report;
 };
 
 //function that make get a global report for a sprint , same thing as the project report but for a sprint
 export const makeSprintReport = async (sprintId) => {
-  const sprint = await Sprint.findById(sprintId).populate('userStories');
+  const sprint = await Sprint.findOne({ _id: sprintId, deletedAt: null });
   if (!sprint) {
-    const error = new Error("Sprint not found.");
+    const error = new Error("Sprint not found or deleted.");
     error.status = 404;
     throw error;
   }
 
   // Fetch user stories associated with the sprint
-  const userStories = await UserStory.find({ sprintId: sprintId });
+  const userStories = await UserStory.find({ sprintId: sprintId, deletedAt: null });
   const userStoryIds = userStories.map(us => us._id);
 
   // Fetch tasks associated with these user stories
@@ -284,20 +289,23 @@ export const makeSprintReport = async (sprintId) => {
       startDate: sprint.startDate,
       endDate: sprint.endDate,
     },
-    userStories: userStories.map(userStory => ({
-      name: userStory.storyName,
-      description: userStory.description,
-      priority: userStory.priority,
-      storyPointEstimate: userStory.storyPointEstimate,
-      startDate: userStory.startDate,
-      dueDate: userStory.dueDate,
-    })),
-    tasks: tasks.map(task => ({
-      title: task.title,
-      description: task.description,
-      status: task.status,
-      priority: task.priority,
-    })),
+    userStories: userStories.map(userStory => {
+      const storyTasks = tasks.filter(task => String(task.userStoryId) === String(userStory._id));
+      return {
+        name: userStory.storyName,
+        description: userStory.description,
+        priority: userStory.priority,
+        storyPointEstimate: userStory.storyPointEstimate,
+        startDate: userStory.startDate,
+        dueDate: userStory.dueDate,
+        tasks: storyTasks.map(task => ({
+          title: task.title,
+          description: task.description,
+          status: task.status,
+          priority: task.priority,
+        }))
+      };
+    })
   };
   return report;
 };
