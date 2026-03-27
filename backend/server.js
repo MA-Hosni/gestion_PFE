@@ -12,6 +12,11 @@ import teamCRouter from './src/modules/Team_C/index.js';
 import teamDRouter from './src/modules/Team_D/index.js';
 import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from './src/shared/config/swagger.js';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
 
@@ -41,6 +46,9 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(logger('combined'));
+
+// Serve uploaded local files statically
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 await connectDB();
 
