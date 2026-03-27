@@ -11,8 +11,8 @@ import { AddUserStoryDialog } from './create-user-story-dialog'
 import { useState } from 'react'
 import { BacklogDetailsDrawer } from '@/pages/main/Projects/Backlog/BacklogDetailsPage'
 import { CreateMeetingDialog } from './create-meeting-dialog'
-import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
 import type { Contributor } from '@/services/project/api-project'
+import type { CreateMeetingInput } from '@/hooks/use-meetings'
 import { deleteUserStory } from '@/services/project/api-user-story'
 import { toast } from 'sonner'
 import { format } from 'date-fns'
@@ -20,17 +20,13 @@ import { format } from 'date-fns'
 interface NestedUserStoriesProps {
   sprint: Sprint
   contributors: Contributor[]
-  currentUserId: string
-  onCreateMeeting: (
-    meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
-  ) => void
+  onCreateMeeting: (meeting: CreateMeetingInput) => Promise<unknown> | unknown
   onRefresh: () => void
 }
 
 export function NestedUserStories({
   sprint,
   contributors,
-  currentUserId,
   onCreateMeeting,
   onRefresh,
 }: NestedUserStoriesProps) {
@@ -142,13 +138,12 @@ export function NestedUserStories({
 
             {/* Actions (Cols 11-12) */}
             <div className="col-span-2 flex items-center justify-end gap-1" onClick={(e) => e.stopPropagation()}>
-                     <CreateMeetingDialog
-                        referenceType="user_story"
-                        referenceId={story.id}
-                        defaultAgenda={`Meeting: ${story.storyName}`}
-                        createdBy={currentUserId}
-                        onCreateMeeting={onCreateMeeting}
-                     />
+               <CreateMeetingDialog
+                  referenceType="user_story"
+                  referenceId={story.id}
+                  defaultAgenda={`Meeting: ${story.storyName}`}
+                  onCreateMeeting={onCreateMeeting}
+               />
               <DeleteDialog 
                 itemType="User Story" 
                 itemName={story.storyName} 
@@ -186,7 +181,6 @@ export function NestedUserStories({
          sprintStartDate={sprint.startDate}
          sprintEndDate={sprint.endDate}
          contributors={contributors}
-         currentUserId={currentUserId}
          onCreateMeeting={onCreateMeeting}
          onRefresh={onRefresh}
       />

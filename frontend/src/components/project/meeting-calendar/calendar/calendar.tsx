@@ -9,6 +9,8 @@ import CalendarProvider from './calendar-provider'
 export default function Calendar({
   meetings,
   setMeetings,
+  onUpdateMeeting,
+  onDeleteMeeting,
   mode,
   setMode,
   date,
@@ -19,6 +21,8 @@ export default function Calendar({
     <CalendarProvider
       meetings={meetings}
       setMeetings={setMeetings}
+      onUpdateMeeting={onUpdateMeeting}
+      onDeleteMeeting={onDeleteMeeting}
       mode={mode}
       setMode={setMode}
       date={date}

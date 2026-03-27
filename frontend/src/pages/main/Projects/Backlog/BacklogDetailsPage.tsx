@@ -17,8 +17,8 @@ import { format } from "date-fns"
 import TaskTable from "@/components/project/backlog/tasks/task-table"
 import { updateUserStory } from "@/services/project/api-user-story"
 import { toast } from "sonner"
-import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
 import type { Contributor } from '@/services/project/api-project'
+import type { CreateMeetingInput } from '@/hooks/use-meetings'
 
 interface BacklogDetailsDrawerProps {
   open: boolean
@@ -34,10 +34,7 @@ interface BacklogDetailsDrawerProps {
   sprintStartDate?: string
   sprintEndDate?: string
   contributors: Contributor[]
-  currentUserId: string
-  onCreateMeeting: (
-    meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
-  ) => void
+  onCreateMeeting: (meeting: CreateMeetingInput) => Promise<unknown> | unknown
   onRefresh?: () => void
 }
 
@@ -55,7 +52,6 @@ export function BacklogDetailsDrawer({
   sprintStartDate,
   sprintEndDate,
   contributors,
-  currentUserId,
   onCreateMeeting,
   onRefresh,
 }: BacklogDetailsDrawerProps) {
@@ -378,7 +374,6 @@ export function BacklogDetailsDrawer({
             <TaskTable
               userStoryId={userStoryId}
               contributors={contributors}
-              currentUserId={currentUserId}
               onCreateMeeting={onCreateMeeting}
             />
           )}

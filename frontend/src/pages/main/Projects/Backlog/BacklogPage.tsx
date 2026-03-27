@@ -33,10 +33,10 @@ import { getSprintColumns } from '@/components/project/backlog/SprintColumns'
 import { NestedUserStories } from '@/components/project/backlog/NestedUserStories'
 import { SprintDialog } from '@/components/project/backlog/sprint-dialog'
 import type { Sprint } from '@/components/project/backlog/types'
-import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
 import type { ProjectSprint, Contributor } from '@/services/project/api-project'
 import { reorderSprints, getAllUserStories } from '@/services/project/api-sprint'
 import { toast } from 'sonner'
+import type { CreateMeetingInput } from '@/hooks/use-meetings'
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -62,16 +62,12 @@ function mapProjectSprintsToSprints(
 function DraggableRow({
   row,
   contributors,
-  currentUserId,
   onCreateMeeting,
   onRefresh,
 }: {
   row: Row<Sprint>
   contributors: Contributor[]
-  currentUserId: string
-  onCreateMeeting: (
-    meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
-  ) => void
+  onCreateMeeting: (meeting: CreateMeetingInput) => Promise<unknown> | unknown
   onRefresh: () => void
 }) {
   const {
@@ -130,7 +126,6 @@ function DraggableRow({
             <NestedUserStories
               sprint={row.original}
               contributors={contributors}
-              currentUserId={currentUserId}
               onCreateMeeting={onCreateMeeting}
               onRefresh={onRefresh}
             />
@@ -144,17 +139,14 @@ function DraggableRow({
 // ── Main Component ───────────────────────────────────────────────────────────
 
 interface BacklogPageProps {
-  currentUserId: string
   contributors: Contributor[]
-  onCreateMeeting: (
-    meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
-  ) => void
+  onCreateMeeting: (meeting: CreateMeetingInput) => Promise<unknown> | unknown
   projectSprints: ProjectSprint[]
   projectId: string
   onRefresh: () => void
 }
 
-const BacklogPage = ({ currentUserId, contributors, onCreateMeeting, projectSprints, projectId, onRefresh }: BacklogPageProps) => {
+const BacklogPage = ({ contributors, onCreateMeeting, projectSprints, projectId, onRefresh }: BacklogPageProps) => {
   const [searchQuery, setSearchQuery] = useState('')
   const [sprints, setSprints] = useState<Sprint[]>([])
   const [expanded, setExpanded] = useState<ExpandedState>(true)
@@ -293,7 +285,6 @@ const BacklogPage = ({ currentUserId, contributors, onCreateMeeting, projectSpri
                         key={row.id}
                         row={row}
                         contributors={contributors}
-                        currentUserId={currentUserId}
                         onCreateMeeting={onCreateMeeting}
                         onRefresh={handleRefresh}
                       />

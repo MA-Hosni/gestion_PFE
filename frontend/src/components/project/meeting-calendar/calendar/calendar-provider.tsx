@@ -3,9 +3,13 @@ import type { CalendarMeeting, Mode } from './calendar-types'
 import { useState } from 'react'
 import CalendarManageEventDialog from './dialog/calendar-manage-event-dialog'
 
+import type { UpdateMeetingInput } from '@/hooks/use-meetings'
+
 export default function CalendarProvider({
   meetings,
   setMeetings,
+  onUpdateMeeting,
+  onDeleteMeeting,
   mode,
   setMode,
   date,
@@ -15,6 +19,8 @@ export default function CalendarProvider({
 }: {
   meetings: CalendarMeeting[]
   setMeetings: (meetings: CalendarMeeting[]) => void
+  onUpdateMeeting?: (meetingId: string, input: UpdateMeetingInput) => Promise<CalendarMeeting | null> | CalendarMeeting | null
+  onDeleteMeeting?: (meetingId: string) => Promise<void> | void
   mode: Mode
   setMode: (mode: Mode) => void
   date: Date
@@ -33,6 +39,8 @@ export default function CalendarProvider({
       value={{
         meetings,
         setMeetings,
+        onUpdateMeeting,
+        onDeleteMeeting,
         mode,
         setMode,
         date,

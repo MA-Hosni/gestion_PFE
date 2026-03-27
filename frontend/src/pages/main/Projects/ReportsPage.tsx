@@ -18,8 +18,13 @@ import { ReportList } from '@/components/project/reports/report-list'
 import { CreateReportDialog } from '@/components/project/reports/create-report-dialog'
 import { EditReportDialog } from '@/components/project/reports/edit-report-dialog'
 import { DeleteReportDialog } from '@/components/project/reports/delete-report-dialog'
+import type { CreateMeetingInput } from '@/hooks/use-meetings'
 
-function ReportsPage() {
+interface ReportsPageProps {
+  onCreateMeeting: (meeting: CreateMeetingInput) => Promise<unknown> | unknown
+}
+
+function ReportsPage({ onCreateMeeting }: ReportsPageProps) {
   const [reports, setReports] = useState<Report[]>([])
   const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
@@ -116,6 +121,7 @@ function ReportsPage() {
             onOpenReport={openReport}
             onEditClick={(report) => { setActiveReport(report); setIsEditOpen(true); }}
             onDeleteClick={(report) => { setActiveReport(report); setIsDeleteOpen(true); }}
+            onCreateMeeting={onCreateMeeting}
           />
         ) : (
           <ReportList 
@@ -123,6 +129,7 @@ function ReportsPage() {
             onOpenReport={openReport}
             onEditClick={(report) => { setActiveReport(report); setIsEditOpen(true); }}
             onDeleteClick={(report) => { setActiveReport(report); setIsDeleteOpen(true); }}
+            onCreateMeeting={onCreateMeeting}
           />
         )}
       </div>

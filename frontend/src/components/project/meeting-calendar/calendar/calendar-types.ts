@@ -1,3 +1,6 @@
+import type { MeetingReferenceType, MeetingValidationStatus } from '@/lib/meeting'
+import type { UpdateMeetingInput } from '@/hooks/use-meetings'
+
 export type CalendarProps = {
   meetings: CalendarMeeting[]
   setMeetings: (meetings: CalendarMeeting[]) => void
@@ -6,6 +9,8 @@ export type CalendarProps = {
   date: Date
   setDate: (date: Date) => void
   calendarIconIsToday?: boolean
+  onUpdateMeeting?: (meetingId: string, input: UpdateMeetingInput) => Promise<CalendarMeeting | null> | CalendarMeeting | null
+  onDeleteMeeting?: (meetingId: string) => Promise<void> | void
 }
 
 export type CalendarContextType = CalendarProps & {
@@ -21,9 +26,17 @@ export type CalendarMeeting = {
   agenda: string
   color: string
   scheduledDate: Date
-  referenceType: 'user_story' | 'task'
+  referenceType: MeetingReferenceType
   referenceId: string
+  referenceTitle?: string
   createdBy: string
+  createdByName?: string
+  actualMinutes: string | null
+  validationStatus: MeetingValidationStatus
+  validatorId: string | null
+  projectId: string
+  createdAt: Date | null
+  updatedAt: Date | null
 }
 
 export const calendarModes = ['day', 'week', 'month'] as const

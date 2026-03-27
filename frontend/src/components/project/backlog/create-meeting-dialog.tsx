@@ -15,7 +15,9 @@ import {
 import { Field, FieldError, FieldLabel } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { DateTimePicker } from '@/components/project/meeting-calendar/form/date-time-picker'
-import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
+import type { MeetingReferenceType } from '@/lib/meeting'
+import type { CreateMeetingInput } from '@/hooks/use-meetings'
+import { toast } from 'sonner'
 
 const formSchema = z.object({
   agenda: z.string().min(1, 'Meeting title is required'),
@@ -25,29 +27,24 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>
 
 interface CreateMeetingDialogProps {
-  referenceType: 'user_story' | 'task'
+  referenceType: MeetingReferenceType
   referenceId: string
   defaultAgenda: string
-  createdBy: string
-  varient?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link";
-  onCreateMeeting: (
-    meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
-  ) => void
-}
-
-function getMeetingColor(referenceType: 'user_story' | 'task') {
-  return referenceType === 'user_story' ? 'indigo' : 'emerald'
+  variant?: "default" | "destructive" | "outline" | "secondary" | "ghost" | "link"
+  trigger?: React.ReactNode
+  onCreateMeeting: (meeting: CreateMeetingInput) => Promise<unknown> | unknown
 }
 
 export function CreateMeetingDialog({
   referenceType,
   referenceId,
   defaultAgenda,
-  createdBy,
-  varient = "outline",
+  variant = "outline",
+  trigger,
   onCreateMeeting,
 }: CreateMeetingDialogProps) {
   const [open, setOpen] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const todayIso = useMemo(() => format(new Date(), "yyyy-MM-dd'T'HH:mm"), [])
 
   const {
@@ -75,34 +72,44 @@ export function CreateMeetingDialog({
     }
   }
 
-  function onSubmit(values: FormValues) {
-    onCreateMeeting({
-      agenda: values.agenda,
-      scheduledDate: new Date(values.scheduledDate),
-      referenceType,
-      referenceId,
-      createdBy,
-      color: getMeetingColor(referenceType),
-    })
-    reset({
-      agenda: defaultAgenda,
-      scheduledDate: todayIso,
-    })
-    setOpen(false)
+  async function onSubmit(values: FormValues) {
+    try {
+      setIsSubmitting(true)
+      await onCreateMeeting({
+        agenda: values.agenda,
+        scheduledDate: new Date(values.scheduledDate),
+        referenceType,
+        referenceId,
+        actualMinutes: undefined,
+      })
+      toast.success('Meeting created')
+      reset({
+        agenda: defaultAgenda,
+        scheduledDate: todayIso,
+      })
+      setOpen(false)
+    } catch (error: any) {
+      const message = error?.response?.data?.message || 'Failed to create meeting'
+      toast.error(message)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
-        <Button
-          variant={varient}
-          size="icon"
-          className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-muted/50"
-          title="Create meeting"
-          onClick={(e) => e.stopPropagation()}
-        >
-          <Presentation className="h-4 w-4" />
-        </Button>
+        {trigger ?? (
+          <Button
+            variant={variant}
+            size="icon"
+            className="h-8 w-8 text-muted-foreground hover:text-primary hover:bg-muted/50"
+            title="Create meeting"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <Presentation className="h-4 w-4" />
+          </Button>
+        )}
       </DialogTrigger>
       <DialogContent onClick={(e) => e.stopPropagation()}>
         <DialogHeader>
@@ -130,7 +137,9 @@ export function CreateMeetingDialog({
           </Field>
 
           <div className="flex justify-end">
-            <Button type="submit">Create meeting</Button>
+            <Button type="submit" disabled={isSubmitting}>
+              {isSubmitting ? 'Creating...' : 'Create meeting'}
+            </Button>
           </div>
         </form>
       </DialogContent>

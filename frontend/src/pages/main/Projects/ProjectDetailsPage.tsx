@@ -1,25 +1,33 @@
-import { Input } from '@/components/ui/input'
-import { Textarea } from '@/components/ui/textarea'
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
-import CalendarPage from './CalendarPage'
-import BoardPage from './BoardPage'
-import ContributorsPage from './ContributorsPage'
-import BacklogPage from './Backlog/BacklogPage'
-import ReportsPage from './ReportsPage'
-import { Button } from '@/components/ui/button'
-import { CalendarDays, ClipboardPenLine, Loader2 } from 'lucide-react'
-import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
-import { getStudentProject, updateProjectDetails, type Project } from '@/services/project/api-project'
-import { useAuth } from '@/context/auth-context'
-import { toast } from 'sonner'
-import { format } from 'date-fns'
-import { generateProjectReport } from '@/services/project/api-report'
-import { generateHTMLReport } from '@/lib/report-generator'
+import { useState, useEffect, useMemo } from "react"
+import { useParams } from "react-router-dom"
+import CalendarPage from "./CalendarPage"
+import BoardPage from "./BoardPage"
+import ContributorsPage from "./ContributorsPage"
+import BacklogPage from "./Backlog/BacklogPage"
+import ReportsPage from "./ReportsPage"
+import { Button } from "@/components/ui/button"
+import { CalendarDays, ClipboardPenLine, Loader2 } from "lucide-react"
+import {
+  getStudentProject,
+  updateProjectDetails,
+  type Project,
+} from "@/services/project/api-project"
+import { useAuth } from "@/context/auth-context"
+import { toast } from "sonner"
+import { format } from "date-fns"
+import { generateProjectReport } from "@/services/project/api-report"
+import { generateHTMLReport } from "@/lib/report-generator"
+import { useMeetings } from "@/hooks/use-meetings"
 
 // Placeholder components - replaced with actual components later
-const Summary = () => <div className="p-4 border rounded-lg bg-muted/20 h-96 flex items-center justify-center">Summary Component</div>
+const Summary = () => (
+  <div className="flex h-96 items-center justify-center rounded-lg border bg-muted/20 p-4">
+    Summary Component
+  </div>
+)
 
 function ProjectDetailsPage() {
   const { projectId } = useParams()
@@ -28,18 +36,48 @@ function ProjectDetailsPage() {
 
   const [title, setTitle] = useState("")
   const [isEditingTitle, setIsEditingTitle] = useState(false)
-  
+
   const [description, setDescription] = useState("")
   const [isEditingDescription, setIsEditingDescription] = useState(false)
 
   const [startDate, setStartDate] = useState("")
   const [endDate, setEndDate] = useState("")
   const [isEditingDates, setIsEditingDates] = useState(false)
-  
-  const [meetings, setMeetings] = useState<CalendarMeeting[]>([])
 
   const { user } = useAuth()
-  const currentUserId = user?.id ?? ''
+  const currentUserId = user?.id ?? ""
+
+  const { meetings, setMeetings, createMeeting, updateMeeting, deleteMeeting } =
+    useMeetings({ currentUserId, projectId: project?.projectId })
+
+  const enrichedMeetings = useMemo(() => {
+    return meetings.map((meeting) => {
+      let referenceTitle = meeting.referenceId
+      let createdByName = meeting.createdBy
+
+      const userId = user?.id || (user as any)?._id
+      const profileId = user?.profile?.id || user?.profile?._id;
+
+      if (meeting.createdBy === userId || meeting.createdBy === profileId) {
+        createdByName = user?.fullName || meeting.createdBy
+      } else {
+        const contributor = project?.contributors?.find(
+          (c) =>
+            c._id === meeting.createdBy || (c as any).id === meeting.createdBy
+        )
+        if (contributor) {
+          createdByName = contributor.fullName
+        }
+      }
+
+      if (meeting.agenda && meeting.agenda.startsWith("Meeting: ")) {
+        const extracted = meeting.agenda.replace(/^Meeting: /, "")
+        referenceTitle = extracted || referenceTitle
+      }
+
+      return { ...meeting, referenceTitle, createdByName }
+    })
+  }, [meetings, project, user])
 
   const loadProject = async () => {
     try {
@@ -63,16 +101,31 @@ function ProjectDetailsPage() {
     loadProject()
   }, [projectId])
 
-  const handleUpdate = async (fields?: { title?: string; description?: string; startDate?: string; endDate?: string }) => {
+  const handleUpdate = async (fields?: {
+    title?: string
+    description?: string
+    startDate?: string
+    endDate?: string
+  }) => {
     if (!project) return
     const payload = fields ?? { title, description, startDate, endDate }
 
     // Build only changed fields
     const changes: Record<string, string> = {}
-    if (payload.title !== undefined && payload.title !== project.title) changes.title = payload.title
-    if (payload.description !== undefined && payload.description !== project.description) changes.description = payload.description
-    if (payload.startDate !== undefined && payload.startDate !== project.startDate) changes.startDate = payload.startDate
-    if (payload.endDate !== undefined && payload.endDate !== project.endDate) changes.endDate = payload.endDate
+    if (payload.title !== undefined && payload.title !== project.title)
+      changes.title = payload.title
+    if (
+      payload.description !== undefined &&
+      payload.description !== project.description
+    )
+      changes.description = payload.description
+    if (
+      payload.startDate !== undefined &&
+      payload.startDate !== project.startDate
+    )
+      changes.startDate = payload.startDate
+    if (payload.endDate !== undefined && payload.endDate !== project.endDate)
+      changes.endDate = payload.endDate
 
     if (Object.keys(changes).length === 0) return
 
@@ -81,7 +134,11 @@ function ProjectDetailsPage() {
       setProject({ ...project, ...changes })
     } catch (error: any) {
       console.error("Update failed", error)
-      toast.error(error?.response?.data?.error || error?.response?.data?.message || "Failed to update project")
+      toast.error(
+        error?.response?.data?.error ||
+          error?.response?.data?.message ||
+          "Failed to update project"
+      )
       // Revert to last known good state
       setTitle(project.title)
       setDescription(project.description)
@@ -126,24 +183,32 @@ function ProjectDetailsPage() {
   }
 
   const formatDisplayDate = (iso: string) => {
-    try { return format(new Date(iso), 'MMM dd, yyyy') } catch { return iso }
+    try {
+      return format(new Date(iso), "MMM dd, yyyy")
+    } catch {
+      return iso
+    }
   }
 
   if (loading) {
-     return (
-        <div className="flex w-full items-center justify-center p-12">
-            <Loader2 className="animate-spin text-muted-foreground mr-2 h-6 w-6"/>
-        </div>
-     )
+    return (
+      <div className="flex w-full items-center justify-center p-12">
+        <Loader2 className="mr-2 h-6 w-6 animate-spin text-muted-foreground" />
+      </div>
+    )
   }
 
   if (!project) {
-     return <div className="p-12 text-center text-muted-foreground">Project not found or access denied.</div>
+    return (
+      <div className="p-12 text-center text-muted-foreground">
+        Project not found or access denied.
+      </div>
+    )
   }
 
   return (
-    <div className="space-y-6 w-full">
-      <div className="space-y-2 w-full">
+    <div className="w-full space-y-6">
+      <div className="w-full space-y-2">
         <div className="flex items-center justify-between">
           {isEditingTitle ? (
             <Input
@@ -151,33 +216,35 @@ function ProjectDetailsPage() {
               onChange={(e) => setTitle(e.target.value)}
               onBlur={onBlurTitle}
               onKeyDown={(e) => {
-                 if (e.key === "Enter") {
-                    (e.target as HTMLInputElement).blur()
-                 }
+                if (e.key === "Enter") {
+                  ;(e.target as HTMLInputElement).blur()
+                }
               }}
               autoFocus
-              className="text-2xl font-bold h-auto py-2 px-1 w-auto"
+              className="h-auto w-auto px-1 py-2 text-2xl font-bold"
             />
           ) : (
-            <h1 
+            <h1
               onClick={() => setIsEditingTitle(true)}
-              className="text-2xl font-bold hover:bg-muted/50 p-1 -ml-1 rounded cursor-pointer transition-colors"
+              className="-ml-1 cursor-pointer rounded p-1 text-2xl font-bold transition-colors hover:bg-muted/50"
               title="Click to edit project title"
             >
               {title}
             </h1>
           )}
-          <Button 
+          <Button
             variant="outline"
             onClick={async () => {
-              if (!project) return;
+              if (!project) return
               try {
-                const toastId = toast.loading("Generating report...");
-                const report = await generateProjectReport(project.projectId);
-                generateHTMLReport(report as any, 'Project');
-                toast.success("Report generated successfully", { id: toastId });
+                const toastId = toast.loading("Generating report...")
+                const report = await generateProjectReport(project.projectId)
+                generateHTMLReport(report as any, "Project")
+                toast.success("Report generated successfully", { id: toastId })
               } catch (error: any) {
-                toast.error(error?.response?.data?.message || "Failed to generate report");
+                toast.error(
+                  error?.response?.data?.message || "Failed to generate report"
+                )
               }
             }}
           >
@@ -188,22 +255,35 @@ function ProjectDetailsPage() {
         {/* Date Range */}
         {isEditingDates ? (
           <div className="flex items-center gap-3 px-1">
-            <CalendarDays className="h-4 w-4 text-muted-foreground shrink-0" />
+            <CalendarDays className="h-4 w-4 shrink-0 text-muted-foreground" />
             <Input
               type="date"
-              value={startDate ? startDate.slice(0, 10) : ''}
-              onChange={(e) => setStartDate(e.target.value ? new Date(e.target.value).toISOString() : '')}
+              value={startDate ? startDate.slice(0, 10) : ""}
+              onChange={(e) =>
+                setStartDate(
+                  e.target.value ? new Date(e.target.value).toISOString() : ""
+                )
+              }
               autoFocus
-              className="h-8 text-sm w-40"
+              className="h-8 w-40 text-sm"
             />
-            <span className="text-muted-foreground text-sm">—</span>
+            <span className="text-sm text-muted-foreground">—</span>
             <Input
               type="date"
-              value={endDate ? endDate.slice(0, 10) : ''}
-              onChange={(e) => setEndDate(e.target.value ? new Date(e.target.value).toISOString() : '')}
-              className="h-8 text-sm w-40"
+              value={endDate ? endDate.slice(0, 10) : ""}
+              onChange={(e) =>
+                setEndDate(
+                  e.target.value ? new Date(e.target.value).toISOString() : ""
+                )
+              }
+              className="h-8 w-40 text-sm"
             />
-            <Button size="sm" variant="outline" className="h-8 text-xs" onClick={saveDates}>
+            <Button
+              size="sm"
+              variant="outline"
+              className="h-8 text-xs"
+              onClick={saveDates}
+            >
               Save
             </Button>
             <Button
@@ -211,8 +291,8 @@ function ProjectDetailsPage() {
               variant="ghost"
               className="h-8 text-xs text-muted-foreground"
               onClick={() => {
-                setStartDate(project?.startDate ?? '')
-                setEndDate(project?.endDate ?? '')
+                setStartDate(project?.startDate ?? "")
+                setEndDate(project?.endDate ?? "")
                 setIsEditingDates(false)
               }}
             >
@@ -222,7 +302,7 @@ function ProjectDetailsPage() {
         ) : (
           <div
             onClick={() => setIsEditingDates(true)}
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:bg-muted/50 px-1 py-1.5 -ml-1 rounded cursor-pointer transition-colors w-fit"
+            className="-ml-1 flex w-fit cursor-pointer items-center gap-2 rounded px-1 py-1.5 text-sm text-muted-foreground transition-colors hover:bg-muted/50"
             title="Click to edit project dates"
           >
             <CalendarDays className="h-4 w-4" />
@@ -241,9 +321,9 @@ function ProjectDetailsPage() {
             className="min-h-25 w-full"
           />
         ) : (
-          <p 
+          <p
             onClick={() => setIsEditingDescription(true)}
-            className="text-muted-foreground hover:bg-muted/50 p-2 -ml-2 rounded cursor-pointer transition-colors whitespace-pre-wrap"
+            className="-ml-2 cursor-pointer rounded p-2 whitespace-pre-wrap text-muted-foreground transition-colors hover:bg-muted/50"
             title="Click to edit project description"
           >
             {description || "Add a description..."}
@@ -252,7 +332,7 @@ function ProjectDetailsPage() {
       </div>
 
       <Tabs defaultValue="Backlog" className="w-full">
-        <TabsList variant="line" className="w-full border-b h-auto">
+        <TabsList variant="line" className="h-auto w-full border-b">
           <TabsTrigger value="Summary">Summary</TabsTrigger>
           <TabsTrigger value="Backlog">Backlog</TabsTrigger>
           <TabsTrigger value="Contributors">Contributors</TabsTrigger>
@@ -260,41 +340,41 @@ function ProjectDetailsPage() {
           <TabsTrigger value="Calendar">Calendar</TabsTrigger>
           <TabsTrigger value="Reports">Reports</TabsTrigger>
         </TabsList>
-        <div className="max-w-full overflow-x-auto mt-4">
-          <TabsContent value="Summary"><Summary /></TabsContent>
+        <div className="mt-4 max-w-full overflow-x-auto">
+          <TabsContent value="Summary">
+            <Summary />
+          </TabsContent>
           <TabsContent value="Backlog">
             <BacklogPage
-              currentUserId={currentUserId}
               contributors={project.contributors}
               projectSprints={project.sprints}
               projectId={project.projectId}
               onRefresh={loadProject}
-              onCreateMeeting={(meeting) =>
-                setMeetings((prev) => [
-                  ...prev,
-                  {
-                    ...meeting,
-                    id: crypto.randomUUID(),
-                    color: meeting.color ?? 'blue',
-                  },
-                ])
-              }
+              onCreateMeeting={createMeeting}
             />
           </TabsContent>
+
           <TabsContent value="Contributors">
-             <ContributorsPage project={project} setProject={setProject} />
+            <ContributorsPage project={project} setProject={setProject} />
           </TabsContent>
           <TabsContent value="Board">
-              <BoardPage
-                projectSprints={project.sprints}
-                contributors={project.contributors}
-                onRefresh={loadProject}
-              />
+            <BoardPage
+              projectSprints={project.sprints}
+              contributors={project.contributors}
+              onRefresh={loadProject}
+            />
           </TabsContent>
           <TabsContent value="Calendar">
-            <CalendarPage meetings={meetings} setMeetings={setMeetings} />
+            <CalendarPage
+              meetings={enrichedMeetings}
+              setMeetings={setMeetings}
+              onUpdateMeeting={updateMeeting}
+              onDeleteMeeting={deleteMeeting}
+            />
           </TabsContent>
-          <TabsContent value="Reports"><ReportsPage /></TabsContent>
+          <TabsContent value="Reports">
+            <ReportsPage onCreateMeeting={createMeeting} />
+          </TabsContent>
         </div>
       </Tabs>
     </div>

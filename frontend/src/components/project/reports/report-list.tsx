@@ -2,15 +2,18 @@ import { FileText, Trash2, Edit } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { format } from 'date-fns'
 import type { Report } from '@/services/project/api-student-report'
+import { CreateMeetingDialog } from '../backlog/create-meeting-dialog'
+import type { CreateMeetingInput } from '@/hooks/use-meetings'
 
 interface ReportListProps {
   reports: Report[]
   onOpenReport: (filePath: string) => void
   onEditClick: (report: Report) => void
   onDeleteClick: (report: Report) => void
+  onCreateMeeting: (meeting: CreateMeetingInput) => Promise<unknown> | unknown
 }
 
-export function ReportList({ reports, onOpenReport, onEditClick, onDeleteClick }: ReportListProps) {
+export function ReportList({ reports, onOpenReport, onEditClick, onDeleteClick, onCreateMeeting }: ReportListProps) {
   const formatDate = (iso: string) => {
     try { return format(new Date(iso), 'MMM dd, yyyy') } catch { return iso }
   }
@@ -55,6 +58,13 @@ export function ReportList({ reports, onOpenReport, onEditClick, onDeleteClick }
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
+                  <CreateMeetingDialog
+                    referenceType="report"
+                    referenceId={report._id}
+                    defaultAgenda={`Meeting: ${report.versionLabel}`}
+                    variant="ghost"
+                    onCreateMeeting={onCreateMeeting}
+                  />
                   <Button 
                     variant="ghost" 
                     size="icon" 

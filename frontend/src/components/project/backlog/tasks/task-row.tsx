@@ -5,7 +5,7 @@ import { User } from 'lucide-react'
 import type { Task } from '../types'
 import type { Contributor } from '@/services/project/api-project'
 import { CreateMeetingDialog } from '../create-meeting-dialog'
-import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
+import type { CreateMeetingInput } from '@/hooks/use-meetings'
 import { deleteTask } from '@/services/project/api-task'
 import { toast } from 'sonner'
 import { TaskHistoryDialog } from './task-history-dialog'
@@ -14,17 +14,13 @@ interface TaskRowProps {
   task: Task
   contributors: Contributor[]
   onRefresh: () => void
-  currentUserId: string
-  onCreateMeeting: (
-    meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
-  ) => void
+  onCreateMeeting: (meeting: CreateMeetingInput) => Promise<unknown> | unknown
 }
 
 export function TaskRow({
   task,
   contributors,
   onRefresh,
-  currentUserId,
   onCreateMeeting,
 }: TaskRowProps) {
   const assigneeName = task.assignedTo
@@ -68,9 +64,8 @@ export function TaskRow({
             referenceType="task"
             referenceId={task.id}
             defaultAgenda={`Meeting: ${task.title}`}
-            createdBy={currentUserId}
             onCreateMeeting={onCreateMeeting}
-            varient="ghost"
+            variant="ghost"
           />
           <ViewEditTaskDialog task={task} contributors={contributors} onRefresh={onRefresh} />
           <TaskHistoryDialog task={task} />

@@ -16,9 +16,10 @@ interface DateTimePickerProps {
     value: string
     onChange: (value: string) => void
   }
+  disabled?: boolean
 }
 
-export function DateTimePicker({ field }: DateTimePickerProps) {
+export function DateTimePicker({ field, disabled }: DateTimePickerProps) {
   const [date, setDate] = React.useState<Date>(
     field.value ? new Date(field.value) : new Date()
   )
@@ -66,6 +67,7 @@ export function DateTimePicker({ field }: DateTimePickerProps) {
       <PopoverTrigger asChild>
         <Button
           variant="outline"
+          disabled={disabled}
           className={cn(
             'w-full justify-start text-left font-normal',
             !date && 'text-muted-foreground'

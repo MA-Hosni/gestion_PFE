@@ -1,20 +1,22 @@
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useForm } from 'react-hook-form'
-import { z } from 'zod'
-import { useEffect, useState } from 'react'
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import { z } from "zod"
+import { useEffect, useState } from "react"
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogFooter,
-} from '@/components/ui/dialog'
-import { Field, FieldLabel, FieldError } from '@/components/ui/field'
-import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
-import { useCalendarContext } from '../calendar-context'
-import { format } from 'date-fns'
-import { DateTimePicker } from '@/components/project/meeting-calendar/form/date-time-picker'
+} from "@/components/ui/dialog"
+import { Field, FieldLabel, FieldError } from "@/components/ui/field"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { useCalendarContext } from "../calendar-context"
+import { format } from "date-fns"
+import { DateTimePicker } from "@/components/project/meeting-calendar/form/date-time-picker"
+import { useAuth } from "@/context/auth-context"
+import { toast } from "sonner"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,13 +27,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
   AlertDialogTrigger,
-} from '@/components/ui/alert-dialog'
+} from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
 
-const formSchema = z
-  .object({
-    agenda: z.string().min(1, 'Meeting title is required'),
-    scheduledDate: z.string().datetime(),
-  })
+const formSchema = z.object({
+  agenda: z.string().min(1, "Meeting title is required"),
+  scheduledDate: z.string().datetime(),
+})
 
 type FormValues = z.infer<typeof formSchema>
 
@@ -43,8 +45,13 @@ export default function CalendarManageEventDialog() {
     setSelectedMeeting,
     meetings,
     setMeetings,
+    onUpdateMeeting,
+    onDeleteMeeting,
   } = useCalendarContext()
   const [isEditing, setIsEditing] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const { user } = useAuth()
 
   const {
     register,
@@ -56,8 +63,8 @@ export default function CalendarManageEventDialog() {
   } = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      agenda: '',
-      scheduledDate: '',
+      agenda: "",
+      scheduledDate: "",
     },
   })
 
@@ -65,34 +72,60 @@ export default function CalendarManageEventDialog() {
     if (selectedMeeting) {
       reset({
         agenda: selectedMeeting.agenda,
-        scheduledDate: format(selectedMeeting.scheduledDate, "yyyy-MM-dd'T'HH:mm"),
+        scheduledDate: format(
+          selectedMeeting.scheduledDate,
+          "yyyy-MM-dd'T'HH:mm"
+        ),
       })
     }
     setIsEditing(false)
   }, [selectedMeeting, reset])
 
-  function onSubmit(values: FormValues) {
+  async function onSubmit(values: FormValues) {
     if (!selectedMeeting) return
 
-    const updatedMeeting = {
-      ...selectedMeeting,
-      agenda: values.agenda,
-      scheduledDate: new Date(values.scheduledDate),
+    try {
+      setIsSubmitting(true)
+      if (onUpdateMeeting) {
+        await onUpdateMeeting(selectedMeeting.id, {
+          agenda: values.agenda,
+          scheduledDate: new Date(values.scheduledDate),
+        })
+      } else {
+        const updatedMeeting = {
+          ...selectedMeeting,
+          agenda: values.agenda,
+          scheduledDate: new Date(values.scheduledDate),
+        }
+        setMeetings(
+          meetings.map((meeting) =>
+            meeting.id === selectedMeeting.id ? updatedMeeting : meeting
+          )
+        )
+      }
+      setIsEditing(false)
+      handleClose()
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to update meeting")
+    } finally {
+      setIsSubmitting(false)
     }
-
-    setMeetings(
-      meetings.map((meeting) =>
-        meeting.id === selectedMeeting.id ? updatedMeeting : meeting
-      )
-    )
-    setIsEditing(false)
-    handleClose()
   }
 
-  function handleDelete() {
+  async function handleDelete() {
     if (!selectedMeeting) return
-    setMeetings(meetings.filter((meeting) => meeting.id !== selectedMeeting.id))
-    handleClose()
+    try {
+      if (onDeleteMeeting) {
+        await onDeleteMeeting(selectedMeeting.id)
+      } else {
+        setMeetings(
+          meetings.filter((meeting) => meeting.id !== selectedMeeting.id)
+        )
+      }
+      handleClose()
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || "Failed to delete meeting")
+    }
   }
 
   function handleClose() {
@@ -110,7 +143,10 @@ export default function CalendarManageEventDialog() {
 
     reset({
       agenda: selectedMeeting.agenda,
-      scheduledDate: format(selectedMeeting.scheduledDate, "yyyy-MM-dd'T'HH:mm"),
+      scheduledDate: format(
+        selectedMeeting.scheduledDate,
+        "yyyy-MM-dd'T'HH:mm"
+      ),
     })
     setIsEditing(false)
   }
@@ -119,7 +155,7 @@ export default function CalendarManageEventDialog() {
     <Dialog open={manageMeetingDialogOpen} onOpenChange={handleClose}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Manage meeting</DialogTitle>
+          <DialogTitle>Manage meeting <Badge variant="outline" className="text-xs px-2 py-0.5 shadow-sm bg-blue-100/60 text-blue-700 border-transparent">Pending</Badge></DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <Field>
@@ -127,7 +163,7 @@ export default function CalendarManageEventDialog() {
             <Input
               placeholder="Meeting title"
               readOnly={!isEditing}
-              {...register('agenda')}
+              {...register("agenda")}
             />
             <FieldError errors={errors.agenda ? [errors.agenda] : []} />
           </Field>
@@ -135,11 +171,12 @@ export default function CalendarManageEventDialog() {
           <Field>
             <FieldLabel className="font-bold">Scheduled date</FieldLabel>
             <DateTimePicker
+              disabled={!isEditing}
               field={{
-                value: watch('scheduledDate'),
+                value: watch("scheduledDate"),
                 onChange: (value) =>
                   isEditing &&
-                  setValue('scheduledDate', value, { shouldValidate: true }),
+                  setValue("scheduledDate", value, { shouldValidate: true }),
               }}
             />
             <FieldError
@@ -151,7 +188,7 @@ export default function CalendarManageEventDialog() {
             <Field>
               <FieldLabel className="font-bold">Reference</FieldLabel>
               <Input
-                value={`${selectedMeeting.referenceType} • ${selectedMeeting.referenceId}`}
+                value={`${selectedMeeting.referenceType} • ${selectedMeeting.referenceTitle || selectedMeeting.referenceId}`}
                 readOnly
               />
             </Field>
@@ -160,7 +197,16 @@ export default function CalendarManageEventDialog() {
           {selectedMeeting && (
             <Field>
               <FieldLabel className="font-bold">Created by</FieldLabel>
-              <Input value={selectedMeeting.createdBy} readOnly />
+              <Input
+                value={
+                  selectedMeeting.createdByName ||
+                  (selectedMeeting.createdBy === user?.id ||
+                  selectedMeeting.createdBy === (user as any)?._id || selectedMeeting.createdBy === user?.profile?.id || selectedMeeting.createdBy === user?.profile?._id
+                    ? user?.fullName
+                    : selectedMeeting.createdBy)
+                }
+                readOnly
+              />
             </Field>
           )}
 
@@ -193,10 +239,17 @@ export default function CalendarManageEventDialog() {
               </Button>
             ) : (
               <div className="flex items-center gap-2">
-                <Button type="button" variant="outline" onClick={handleCancelEdit}>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleCancelEdit}
+                  disabled={isSubmitting}
+                >
                   Cancel
                 </Button>
-                <Button type="submit">Save</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Saving..." : "Save"}
+                </Button>
               </div>
             )}
           </DialogFooter>

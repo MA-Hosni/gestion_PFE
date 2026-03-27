@@ -5,23 +5,19 @@ import { TaskRow } from './task-row'
 import { AddTaskDialog } from './task-dialog'
 import type { Task } from '../types'
 import type { Contributor } from '@/services/project/api-project'
-import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
+import type { CreateMeetingInput } from '@/hooks/use-meetings'
 import { getTasksByUserStory } from '@/services/project/api-task'
 
 interface TaskTableProps {
   userStoryId: string
   contributors: Contributor[]
-  currentUserId: string
-  onCreateMeeting: (
-    meeting: Omit<CalendarMeeting, 'id' | 'color'> & { color?: string }
-  ) => void
+  onCreateMeeting: (meeting: CreateMeetingInput) => Promise<unknown> | unknown
   onTaskCountChange?: (count: number) => void
 }
 
 function TaskTable({
   userStoryId,
   contributors,
-  currentUserId,
   onCreateMeeting,
   onTaskCountChange,
 }: TaskTableProps) {
@@ -101,7 +97,6 @@ function TaskTable({
                   task={task}
                   contributors={contributors}
                   onRefresh={fetchTasks}
-                  currentUserId={currentUserId}
                   onCreateMeeting={onCreateMeeting}
                 />
               ))
