@@ -21,7 +21,9 @@ import {
 import { arrayMove } from '@dnd-kit/sortable'
 
 import type { BoardTask, FilterState, Status } from '@/components/project/board/types'
-import { FilterDialog, BoardColumn, TaskCard } from '@/components/project/board'
+import { TaskCard } from '@/components/project/board/TaskCard'
+import { FilterDialog } from '@/components/project/board/FilterDialog'
+import { BoardColumn } from '@/components/project/board/BoardColumn'
 import type { ProjectSprint, Contributor } from '@/services/project/api-project'
 import { useBoardTasks } from '@/hooks/use-board-tasks'
 

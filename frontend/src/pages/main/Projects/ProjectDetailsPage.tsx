@@ -3,7 +3,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
-import CalendarPage from './Calendar/CalendarPage'
+import CalendarPage from './CalendarPage'
 import BoardPage from './BoardPage'
 import ContributorsPage from './ContributorsPage'
 import BacklogPage from './Backlog/BacklogPage'

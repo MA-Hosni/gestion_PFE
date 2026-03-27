@@ -29,12 +29,10 @@ import { CSS } from '@dnd-kit/utilities'
 import { Input } from '@/components/ui/input'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { cn } from '@/lib/utils'
-import {
-  getSprintColumns,
-  NestedUserStories,
-  SprintDialog,
-  type Sprint
-} from '@/components/project/backlog'
+import { getSprintColumns } from '@/components/project/backlog/SprintColumns'
+import { NestedUserStories } from '@/components/project/backlog/NestedUserStories'
+import { SprintDialog } from '@/components/project/backlog/sprint-dialog'
+import type { Sprint } from '@/components/project/backlog/types'
 import type { CalendarMeeting } from '@/components/project/meeting-calendar/calendar/calendar-types'
 import type { ProjectSprint, Contributor } from '@/services/project/api-project'
 import { reorderSprints, getAllUserStories } from '@/services/project/api-sprint'
