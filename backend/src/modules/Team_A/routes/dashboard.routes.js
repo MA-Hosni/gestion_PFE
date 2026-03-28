@@ -31,28 +31,6 @@ router.get("/projects", authenticateToken, authorizeSupervisor, dashboardControl
 
 /**
  * @swagger
- * /dashboard/{projectId}:
- *   get:
- *     summary: Get project progress
- *     tags: [Dashboard]
- *     security:
- *       - BearerAuth: []
- *     parameters:
- *       - in: path
- *         name: projectId
- *         required: true
- *         schema:
- *           type: string
- *     responses:
- *       200:
- *         description: Project progress details
- *       401:
- *         $ref: '#/components/responses/Unauthorized'
- */
-router.get("/:projectId", authenticateToken, dashboardController.getProgress);
-
-/**
- * @swagger
  * /dashboard/student/timeline:
  *   get:
  *     summary: Get student timeline
@@ -82,6 +60,28 @@ router.get("/student/timeline", authenticateToken, authorizeStudent, dashboardCo
  *         $ref: '#/components/responses/Unauthorized'
  */
 router.get("/student/tasks/standby", authenticateToken, authorizeStudent, dashboardController.getStudentStandbyTasks);
+
+/**
+ * @swagger
+ * /dashboard/{projectId}:
+ *   get:
+ *     summary: Get project progress
+ *     tags: [Dashboard]
+ *     security:
+ *       - BearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: projectId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Project progress details
+ *       401:
+ *         $ref: '#/components/responses/Unauthorized'
+ */
+router.get("/:projectId", authenticateToken, dashboardController.getProgress);
 
 /**
  * @swagger

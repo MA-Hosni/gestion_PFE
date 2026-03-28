@@ -8,6 +8,7 @@ import BoardPage from "./BoardPage"
 import ContributorsPage from "./ContributorsPage"
 import BacklogPage from "./Backlog/BacklogPage"
 import ReportsPage from "./ReportsPage"
+import DashboardPage from "./DashboardPage"
 import { Button } from "@/components/ui/button"
 import { CalendarDays, ClipboardPenLine, Loader2 } from "lucide-react"
 import {
@@ -21,13 +22,6 @@ import { format } from "date-fns"
 import { generateProjectReport } from "@/services/project/api-report"
 import { generateHTMLReport } from "@/lib/report-generator"
 import { useMeetings } from "@/hooks/use-meetings"
-
-// Placeholder components - replaced with actual components later
-const Summary = () => (
-  <div className="flex h-96 items-center justify-center rounded-lg border bg-muted/20 p-4">
-    Summary Component
-  </div>
-)
 
 function ProjectDetailsPage() {
   const { projectId } = useParams()
@@ -342,7 +336,10 @@ function ProjectDetailsPage() {
         </TabsList>
         <div className="mt-4 max-w-full overflow-x-auto">
           <TabsContent value="Summary">
-            <Summary />
+            <DashboardPage
+              projectId={project.projectId}
+              contributors={project.contributors}
+            />
           </TabsContent>
           <TabsContent value="Backlog">
             <BacklogPage
