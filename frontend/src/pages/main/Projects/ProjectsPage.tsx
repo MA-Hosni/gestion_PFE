@@ -21,7 +21,6 @@ import { ChartContainer, type ChartConfig } from "@/components/ui/chart"
 import { ArrowRight, CalendarIcon, Loader2 } from "lucide-react"
 import { getStudentProject, getProjectProgress, type Project } from "@/services/project/api-project"
 
-// Helper to get initials
 function getInitials(name: string) {
   if (!name) return "UN"
   const parts = name.split(" ")
@@ -42,7 +41,6 @@ export default function ProjectsPage() {
         const projectData = await getStudentProject()
         if (projectData) {
           setProject(projectData)
-          // Fetch progress
           if (projectData.projectId) {
              const progressData = await getProjectProgress(projectData.projectId)
              if (progressData && progressData.projectProgress) {

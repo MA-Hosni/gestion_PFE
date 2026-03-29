@@ -9,13 +9,17 @@ import {
   XAxis,
   YAxis,
   CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
 } from "recharts"
 import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+  type ChartConfig,
+} from "@/components/ui/chart"
+import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -56,7 +60,18 @@ function BarSkeleton() {
   )
 }
 
-// ─── Radial Progress Chart ─────────────────────────────────────────────────
+// ─── 1. Radial Progress Chart ──────────────────────────────────────────────────
+
+const radialConfig = {
+  progress: {
+    label: "Progress",
+    theme: { light: "hsl(221, 83%, 53%)", dark: "hsl(221, 83%, 67%)" },
+  },
+  remaining: {
+    label: "Remaining",
+    color: "hsl(var(--muted))",
+  },
+} satisfies ChartConfig
 
 function RadialProgressChart({
   progress,
@@ -65,7 +80,10 @@ function RadialProgressChart({
   progress: number
   isLoading: boolean
 }) {
-  const data = [{ name: "Progress", value: progress, fill: "hsl(221, 83%, 63%)" }]
+  const data = [
+    { name: "remaining", value: 100 - progress, fill: "var(--color-remaining)" },
+    { name: "progress",  value: progress,        fill: "var(--color-progress)"  },
+  ]
 
   return (
     <Card className="@container/card">
@@ -81,7 +99,11 @@ function RadialProgressChart({
           <CircleSkeleton size={160} />
         ) : (
           <div className="relative">
-            <ResponsiveContainer width={180} height={180}>
+            <ChartContainer
+              config={radialConfig}
+              className="mx-auto aspect-square"
+              style={{ width: 180, height: 180 }}
+            >
               <RadialBarChart
                 cx="50%"
                 cy="50%"
@@ -89,11 +111,15 @@ function RadialProgressChart({
                 outerRadius={85}
                 startAngle={90}
                 endAngle={-270}
-                data={[{ value: 100, fill: "hsl(var(--muted))" }, ...data]}
+                data={data}
               >
                 <RadialBar dataKey="value" background={false} cornerRadius={8} />
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent hideLabel nameKey="name" />}
+                />
               </RadialBarChart>
-            </ResponsiveContainer>
+            </ChartContainer>
             {/* Center label */}
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-3xl font-bold tabular-nums">{progress}%</span>
@@ -106,9 +132,18 @@ function RadialProgressChart({
   )
 }
 
-// ─── Donut Task Split Chart ────────────────────────────────────────────────
+// ─── 2. Donut Task Split Chart ────────────────────────────────────────────────
 
-const DONUT_COLORS = ["hsl(142, 76%, 45%)", "hsl(221, 83%, 63%)", "hsl(38, 92%, 55%)"]
+const donutConfig = {
+  done: {
+    label: "Done",
+    theme: { light: "hsl(142, 76%, 36%)", dark: "hsl(142, 71%, 45%)" },
+  },
+  remaining: {
+    label: "Remaining",
+    theme: { light: "hsl(221, 83%, 53%)", dark: "hsl(221, 83%, 67%)" },
+  },
+} satisfies ChartConfig
 
 function DonutTaskChart({
   progressData,
@@ -122,21 +157,11 @@ function DonutTaskChart({
   const remaining = Math.max(0, total - done)
 
   const data = [
-    { name: "Done", value: done },
-    { name: "Remaining", value: remaining },
+    { name: "done",      value: done,      fill: "var(--color-done)"      },
+    { name: "remaining", value: remaining, fill: "var(--color-remaining)" },
   ].filter((d) => d.value > 0)
 
   const isEmpty = data.length === 0
-
-  const customTooltip = ({ active, payload }: any) => {
-    if (!active || !payload?.length) return null
-    return (
-      <div className="rounded-lg border bg-popover px-3 py-2 shadow-lg text-sm">
-        <p className="font-semibold">{payload[0].name}</p>
-        <p className="text-muted-foreground">{payload[0].value} tasks</p>
-      </div>
-    )
-  }
 
   return (
     <Card className="@container/card">
@@ -156,29 +181,31 @@ function DonutTaskChart({
           </div>
         ) : (
           <>
-            <ResponsiveContainer width="100%" height={160}>
+            <ChartContainer
+              config={donutConfig}
+              className="mx-auto aspect-square h-[180px]"
+            >
               <PieChart>
+                <ChartTooltip
+                  cursor={false}
+                  content={<ChartTooltipContent nameKey="name" hideLabel />}
+                />
                 <Pie
                   data={data}
                   cx="50%"
                   cy="50%"
-                  innerRadius={40}
-                  outerRadius={60}
-                  paddingAngle={0}
+                  innerRadius={45}
+                  outerRadius={70}
+                  paddingAngle={3}
                   dataKey="value"
                 >
-                  {data.map((_, idx) => (
-                    <Cell key={idx} fill={DONUT_COLORS[idx % DONUT_COLORS.length]} />
+                  {data.map((entry, idx) => (
+                    <Cell key={idx} fill={entry.fill} />
                   ))}
                 </Pie>
-                <Tooltip content={customTooltip} />
-                <Legend
-                  formatter={(value) => (
-                    <span className="text-xs text-muted-foreground">{value}</span>
-                  )}
-                />
+                <ChartLegend content={<ChartLegendContent nameKey="name" />} />
               </PieChart>
-            </ResponsiveContainer>
+            </ChartContainer>
             <p className="text-xs text-muted-foreground">
               {done} of {total} tasks completed
             </p>
@@ -189,7 +216,18 @@ function DonutTaskChart({
   )
 }
 
-// ─── Sprint Progress Bar Chart ────────────────────────────────────────────
+// ─── 3. Sprint Progress Stacked Bar Chart ──────────────────────────────────────
+
+const sprintConfig = {
+  done: {
+    label: "Done",
+    theme: { light: "hsl(142, 76%, 36%)", dark: "hsl(142, 71%, 45%)" },
+  },
+  remaining: {
+    label: "Remaining",
+    theme: { light: "hsl(221, 83%, 53%)", dark: "hsl(221, 83%, 67%)" },
+  },
+} satisfies ChartConfig
 
 function SprintProgressChart({
   progressData,
@@ -204,20 +242,6 @@ function SprintProgressChart({
     total: s.totalTasks,
     remaining: s.totalTasks - s.doneTasks,
   }))
-
-  const customTooltip = ({ active, payload, label }: any) => {
-    if (!active || !payload?.length) return null
-    return (
-      <div className="rounded-lg border bg-popover px-3 py-2 shadow-lg text-sm">
-        <p className="mb-1 font-semibold">{label}</p>
-        {payload.map((p: any) => (
-          <p key={p.name} className="text-muted-foreground" style={{ color: p.fill }}>
-            {p.name}: {p.value}
-          </p>
-        ))}
-      </div>
-    )
-  }
 
   return (
     <Card className="@container/card">
@@ -236,49 +260,44 @@ function SprintProgressChart({
             No sprints available
           </p>
         ) : (
-          <ResponsiveContainer width="100%" height={180}>
+          <ChartContainer config={sprintConfig} className="aspect-auto h-[200px] w-full">
             <BarChart
               data={sprintData}
               margin={{ top: 0, right: 0, left: -36, bottom: 0 }}
               barCategoryGap="10%"
             >
-              <CartesianGrid vertical={false} stroke="#f5f5f5" />
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis
                 dataKey="name"
-                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 allowDecimals={false}
-                tick={{ fontSize: 10, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={false}
                 tickLine={false}
               />
-              <Tooltip content={customTooltip} cursor={{ fill: "transparent" }} />
-              <Legend
-                formatter={(value) => (
-                  <span className="text-xs text-muted-foreground capitalize">{value}</span>
-                )}
+              <ChartTooltip
+                cursor={false}
+                content={<ChartTooltipContent indicator="dot" />}
               />
+              <ChartLegend content={<ChartLegendContent />} />
               <Bar
                 dataKey="done"
-                name="Done"
-                fill="hsl(142, 76%, 45%)"
+                fill="var(--color-done)"
                 radius={[6, 6, 6, 6]}
                 maxBarSize={36}
                 stackId="a"
               />
               <Bar
                 dataKey="remaining"
-                name="Remaining"
-                fill="hsl(221, 83%, 63%)"
+                fill="var(--color-remaining)"
                 radius={[6, 6, 6, 6]}
                 maxBarSize={36}
                 stackId="a"
               />
             </BarChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         )}
       </CardFooter>
     </Card>

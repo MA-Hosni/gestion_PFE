@@ -5,9 +5,6 @@ import api from "@/services/http/api-client"
 export type AuthRole = "Student" | "CompSupervisor" | "UniSupervisor"
 
 export interface AuthUserProfile {
-  // Backend returns a role-specific profile object (student/supervisor fields).
-  // Keep it open-ended to avoid tight coupling.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   [key: string]: any
 }
 
@@ -91,7 +88,7 @@ function getErrorMessage(err: unknown) {
       typeof responseData === "string"
         ? responseData
         : typeof responseData === "object" && responseData
-          ? // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ? 
             ("error" in responseData
               ? String((responseData as any).error)
               : "message" in responseData

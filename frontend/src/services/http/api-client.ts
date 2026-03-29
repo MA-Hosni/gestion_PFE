@@ -24,7 +24,6 @@ api.interceptors.request.use((config) => {
   return config
 })
 
-// --- REFRESH TOKEN LOGIC ---
 let isRefreshing = false
 let failedQueue: Array<{
   resolve: (token: string) => void
@@ -45,7 +44,6 @@ const processQueue = (error: unknown, token: string | null = null) => {
 api.interceptors.response.use(
   (response) => response,
   async (error: import("axios").AxiosError) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const originalRequest = error.config as any
 
     if (
@@ -79,7 +77,6 @@ api.interceptors.response.use(
           }
         )
 
-        // Adjust based on your RefreshResponse shape
         const newAccessToken = res.data.data.accessToken
         setAccessToken(newAccessToken)
         processQueue(null, newAccessToken)

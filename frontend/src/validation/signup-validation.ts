@@ -37,7 +37,6 @@ export const signupSchema = z
       ),
     confirmPassword: z.string(),
 
-    // Student-only fields
     cin: z.string().regex(/^\d{8}$/, "CIN must be exactly 8 digits").optional(),
     studentIdCardIMG: z.string().optional(),
     degree: z.enum(["Bachelor", "Master", "Engineer"]).optional(),
@@ -52,7 +51,6 @@ export const signupSchema = z
       .optional(),
     companyName: z.string().optional(),
 
-    // Supervisor-only fields
     badgeIMG: z.string().optional(),
   })
   .superRefine((data, ctx) => {

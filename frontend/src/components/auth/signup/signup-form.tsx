@@ -106,7 +106,6 @@ export function SignupForm({
     },
     (errors) => {
       console.log("Validation Errors:", errors)
-      // If there are errors on steps other than 3, we should let the user know
       const errorKeys = Object.keys(errors)
       if (errorKeys.length > 0) {
         toast.error(`Validation error in fields: ${errorKeys.join(", ")}`)

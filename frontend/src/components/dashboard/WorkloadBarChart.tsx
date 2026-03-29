@@ -1,17 +1,12 @@
+import { BarChart, Bar, XAxis, YAxis, Cell, LabelList } from "recharts"
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  LabelList,
-} from "recharts"
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart"
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -36,15 +31,15 @@ interface WorkloadItem {
   total: number
 }
 
-// ─── Color Palette ────────────────────────────────────────────────────────────
+// ─── Theme-aware Color Palette ────────────────────────────────────────────────
 
-const BAR_COLORS = [
-  "hsl(221, 83%, 63%)",
-  "hsl(262, 83%, 63%)",
-  "hsl(142, 76%, 45%)",
-  "hsl(38, 92%, 55%)",
-  "hsl(348, 86%, 61%)",
-  "hsl(199, 89%, 48%)",
+const BAR_THEMES: Array<{ light: string; dark: string }> = [
+  { light: "hsl(221, 83%, 53%)", dark: "hsl(221, 83%, 67%)" },
+  { light: "hsl(262, 83%, 53%)", dark: "hsl(262, 83%, 67%)" },
+  { light: "hsl(142, 76%, 36%)", dark: "hsl(142, 76%, 50%)" },
+  { light: "hsl(38, 92%, 50%)",  dark: "hsl(38, 92%, 60%)"  },
+  { light: "hsl(348, 86%, 50%)", dark: "hsl(348, 86%, 65%)" },
+  { light: "hsl(199, 89%, 42%)", dark: "hsl(199, 89%, 55%)" },
 ]
 
 // ─── Skeleton ────────────────────────────────────────────────────────────────
@@ -65,33 +60,12 @@ function ChartSkeleton() {
   )
 }
 
-// ─── Custom Tooltip ──────────────────────────────────────────────────────────
-
-function CustomTooltip({
-  active,
-  payload,
-}: {
-  active?: boolean
-  payload?: Array<{ payload: WorkloadItem }>
-}) {
-  if (!active || !payload?.length) return null
-  const { name, percentage, assigned, total } = payload[0].payload
-  return (
-    <div className="rounded-lg border bg-popover px-3 py-2 shadow-lg text-sm">
-      <p className="font-semibold">{name}</p>
-      <p className="text-muted-foreground">
-        {assigned} of {total} tasks ({percentage}%)
-      </p>
-    </div>
-  )
-}
-
 // ─── Derivation Logic ─────────────────────────────────────────────────────────
 
 /**
  * We derive workload from user stories by checking how many are in each sprint.
  * Since assignedTo is not in the progress data, we distribute tasks equally among
- * contributors as an approximation, and flag when real assignee data is unavailable.
+ * contributors as an approximation.
  */
 function deriveWorkload(
   sprints: SprintProgress[],
@@ -99,14 +73,14 @@ function deriveWorkload(
 ): WorkloadItem[] {
   if (!contributors.length) return []
   const totalTasks = sprints.reduce((s, sp) => s + sp.totalTasks, 0)
-  if (totalTasks === 0) return contributors.map((c) => ({
-    name: c.fullName.split(" ")[0],
-    percentage: 0,
-    assigned: 0,
-    total: 0,
-  }))
+  if (totalTasks === 0)
+    return contributors.map((c) => ({
+      name: c.fullName.split(" ")[0],
+      percentage: 0,
+      assigned: 0,
+      total: 0,
+    }))
 
-  // Equal distribution approximation
   const perPerson = Math.floor(totalTasks / contributors.length)
   const remainder = totalTasks % contributors.length
 
@@ -131,6 +105,15 @@ export function WorkloadBarChart({
   const data = deriveWorkload(sprints, contributors)
   const chartHeight = Math.max(200, data.length * 52)
 
+  // Build ChartConfig dynamically — one entry per contributor with theme colors
+  const chartConfig = data.reduce<ChartConfig>((cfg, item, idx) => {
+    cfg[`c${idx}`] = {
+      label: item.name,
+      theme: BAR_THEMES[idx % BAR_THEMES.length],
+    }
+    return cfg
+  }, {} satisfies ChartConfig)
+
   return (
     <Card className="@container/card">
       <CardHeader>
@@ -151,40 +134,51 @@ export function WorkloadBarChart({
             No contributors data available
           </p>
         ) : (
-          <ResponsiveContainer width="100%" height={chartHeight}>
+          <ChartContainer
+            config={chartConfig}
+            className="w-full"
+            style={{ height: chartHeight }}
+          >
             <BarChart
               data={data}
               layout="vertical"
               margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
               barCategoryGap="30%"
             >
-              <XAxis
-                type="number"
-                domain={[0, 100]}
-                hide
-              />
+              <XAxis type="number" domain={[0, 100]} hide />
               <YAxis
                 type="category"
                 dataKey="name"
                 width={100}
-                tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }}
                 axisLine={false}
                 tickLine={false}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+              <ChartTooltip
+                cursor={false}
+                content={
+                  <ChartTooltipContent
+                    formatter={(value, _name, item) => (
+                      <span>
+                        {item.payload.assigned} of {item.payload.total} tasks ({value}%)
+                      </span>
+                    )}
+                    hideLabel
+                  />
+                }
+              />
               <Bar dataKey="percentage" radius={[6, 6, 6, 6]} maxBarSize={30}>
                 {data.map((_, idx) => (
-                  <Cell key={idx} fill={BAR_COLORS[idx % BAR_COLORS.length]} />
+                  <Cell key={idx} fill={`var(--color-c${idx})`} />
                 ))}
                 <LabelList
                   dataKey="percentage"
                   position="right"
                   formatter={(v: number) => `${v}%`}
-                  style={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                  className="fill-muted-foreground text-[11px] font-semibold"
                 />
               </Bar>
             </BarChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         )}
       </CardFooter>
     </Card>

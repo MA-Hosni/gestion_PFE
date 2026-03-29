@@ -2,8 +2,8 @@ import { Clock, AlertCircle } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
-  CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card"
@@ -24,14 +24,14 @@ interface StandbyTasksTableProps {
   isLoading: boolean
 }
 
-// ─── Priority Badge Config ────────────────────────────────────────────────────
+// ─── Priority Badge Config (light + dark) ─────────────────────────────────────
 
 const priorityStyles: Record<string, string> = {
-  Critical: "bg-red-500/15 text-red-600 border-red-500/30 dark:text-red-400",
-  Highest: "bg-orange-500/15 text-orange-600 border-orange-500/30 dark:text-orange-400",
-  High: "bg-amber-500/15 text-amber-600 border-amber-500/30 dark:text-amber-400",
-  Medium: "bg-blue-500/15 text-blue-600 border-blue-500/30 dark:text-blue-400",
-  Low: "bg-slate-500/15 text-slate-600 border-slate-500/30 dark:text-slate-400",
+  Critical: "bg-red-500/15 text-red-700 border-red-500/30 dark:text-red-400",
+  Highest: "bg-orange-500/15 text-orange-700 border-orange-500/30 dark:text-orange-400",
+  High: "bg-amber-500/15 text-amber-700 border-amber-500/30 dark:text-amber-400",
+  Medium: "bg-blue-500/15 text-blue-700 border-blue-500/30 dark:text-blue-400",
+  Low: "bg-slate-500/15 text-slate-700 border-slate-500/30 dark:text-slate-400",
 }
 
 function PriorityBadge({ priority }: { priority: string }) {
@@ -80,8 +80,8 @@ export function StandbyTasksTable({ tasks, isLoading }: StandbyTasksTableProps) 
   })
 
   return (
-    <Card className="flex flex-col shadow-sm">
-      <CardHeader className="pb-3">
+    <Card className="@container/card flex flex-col">
+      <CardHeader>
         <div className="flex items-center gap-2">
           <Clock />
           <CardTitle className="text-base font-semibold">Standby Tasks</CardTitle>
@@ -91,9 +91,9 @@ export function StandbyTasksTable({ tasks, isLoading }: StandbyTasksTableProps) 
         </CardDescription>
       </CardHeader>
 
-      <CardContent className="p-0">
+      <CardFooter className="flex-col p-0">
         {isLoading ? (
-          <div className="px-4 pb-4">
+          <div className="w-full px-4 pb-4">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -110,14 +110,14 @@ export function StandbyTasksTable({ tasks, isLoading }: StandbyTasksTableProps) 
             </Table>
           </div>
         ) : sorted.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-3 py-10 text-center">
+          <div className="flex w-full flex-col items-center justify-center gap-3 py-10 text-center">
             <AlertCircle className="h-8 w-8 text-muted-foreground/40" />
             <p className="text-sm text-muted-foreground">No standby tasks — great job!</p>
           </div>
         ) : (
-          <div className="max-h-[340px] overflow-y-auto">
+          <div className="max-h-[340px] w-full overflow-y-auto">
             <Table>
-              <TableHeader className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm">
+              <TableHeader className="sticky top-0 z-10 bg-card/90 backdrop-blur-sm">
                 <TableRow>
                   <TableHead className="pl-6">Task</TableHead>
                   <TableHead>User Story</TableHead>
@@ -153,7 +153,7 @@ export function StandbyTasksTable({ tasks, isLoading }: StandbyTasksTableProps) 
             </Table>
           </div>
         )}
-      </CardContent>
+      </CardFooter>
     </Card>
   )
 }

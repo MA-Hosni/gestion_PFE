@@ -58,7 +58,6 @@ export function BacklogDetailsDrawer({
   const [width, setWidth] = useState(800)
   const isResizing = useRef(false)
 
-  // ── Editable state ─────────────────────────────────────────────────────────
   const [title, setTitle] = useState("")
   const [isEditingTitle, setIsEditingTitle] = useState(false)
   const [description, setDescription] = useState("")
@@ -70,7 +69,6 @@ export function BacklogDetailsDrawer({
   const [endDate, setEndDate] = useState("")
   const [storyPoints, setStoryPoints] = useState(0)
 
-  // ── Sync state when a different story is selected ──────────────────────────
   useEffect(() => {
     setTitle(userStoryTitle ?? "")
     setDescription(userStoryDescription ?? "")
@@ -83,7 +81,6 @@ export function BacklogDetailsDrawer({
     setIsEditingDetails(false)
   }, [userStoryTitle, userStoryDescription, userStoryPriority, userStoryStartDate, userStoryEndDate, userStoryStoryPoints])
 
-  // ── Resize logic ───────────────────────────────────────────────────────────
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {
       if (!isResizing.current) return
@@ -112,7 +109,6 @@ export function BacklogDetailsDrawer({
     document.body.style.userSelect = 'none'
   }
 
-  // ── API helper: update a partial set of fields ─────────────────────────────
   const saveField = useCallback(async (fields: Record<string, unknown>) => {
     if (!userStoryId) return false
     try {
@@ -125,7 +121,6 @@ export function BacklogDetailsDrawer({
     }
   }, [userStoryId, onRefresh])
 
-  // ── Title save on blur ─────────────────────────────────────────────────────
   const handleTitleBlur = async () => {
     setIsEditingTitle(false)
     const trimmed = title.trim()
@@ -140,7 +135,6 @@ export function BacklogDetailsDrawer({
     }
   }
 
-  // ── Description save on blur ───────────────────────────────────────────────
   const handleDescriptionBlur = async () => {
     setIsEditingDescription(false)
     if (description !== (userStoryDescription ?? "")) {
@@ -149,7 +143,6 @@ export function BacklogDetailsDrawer({
     }
   }
 
-  // ── Details panel save ─────────────────────────────────────────────────────
   const handleDetailsSave = async () => {
     if (!startDate || !endDate) {
       toast.error("Start date and due date are required")
@@ -193,7 +186,6 @@ export function BacklogDetailsDrawer({
     setIsEditingDetails(false)
   }
 
-  // ── Date display helper ────────────────────────────────────────────────────
   const formatDateDisplay = (iso: string) => {
     try { return format(new Date(iso), "PPP") } catch { return iso || "Pick a date" }
   }

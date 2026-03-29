@@ -1,7 +1,5 @@
 import api from "../http/api-client"
 
-// ─── Response Shape Interfaces ────────────────────────────────────────────────
-
 export interface UserStoryProgress {
   _id: string
   storyName: string
@@ -58,12 +56,6 @@ export interface StandbyTask {
   } | null
 }
 
-// ─── API Functions ────────────────────────────────────────────────────────────
-
-/**
- * Fetches aggregated project progress data including sprints and user stories.
- * GET /api/dashboard/:projectId
- */
 export const getDashboardProgress = async (
   projectId: string
 ): Promise<DashboardProgressData> => {

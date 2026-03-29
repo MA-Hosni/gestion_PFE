@@ -104,7 +104,6 @@ function ProjectDetailsPage() {
     if (!project) return
     const payload = fields ?? { title, description, startDate, endDate }
 
-    // Build only changed fields
     const changes: Record<string, string> = {}
     if (payload.title !== undefined && payload.title !== project.title)
       changes.title = payload.title
@@ -133,7 +132,7 @@ function ProjectDetailsPage() {
           error?.response?.data?.message ||
           "Failed to update project"
       )
-      // Revert to last known good state
+
       setTitle(project.title)
       setDescription(project.description)
       setStartDate(project.startDate)
@@ -141,7 +140,6 @@ function ProjectDetailsPage() {
     }
   }
 
-  // ── Title blur ──
   const onBlurTitle = () => {
     setIsEditingTitle(false)
     if (!title.trim()) {
@@ -152,13 +150,11 @@ function ProjectDetailsPage() {
     handleUpdate({ title })
   }
 
-  // ── Description blur ──
   const onBlurDescription = () => {
     setIsEditingDescription(false)
     handleUpdate({ description })
   }
 
-  // ── Dates blur / save ──
   const saveDates = () => {
     setIsEditingDates(false)
     if (!startDate || !endDate) {

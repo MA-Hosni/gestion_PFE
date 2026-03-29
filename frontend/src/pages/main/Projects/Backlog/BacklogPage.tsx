@@ -38,8 +38,6 @@ import { reorderSprints, getAllUserStories } from '@/services/project/api-sprint
 import { toast } from 'sonner'
 import type { CreateMeetingInput } from '@/hooks/use-meetings'
 
-// ── Helpers ──────────────────────────────────────────────────────────────────
-
 function mapProjectSprintsToSprints(
   projectSprints: ProjectSprint[],
   userStoriesMap: Map<string, Sprint['userStories']>
@@ -56,8 +54,6 @@ function mapProjectSprintsToSprints(
       userStories: userStoriesMap.get(s._id) ?? [],
     }))
 }
-
-// ── Draggable Row ────────────────────────────────────────────────────────────
 
 function DraggableRow({
   row,
@@ -136,8 +132,6 @@ function DraggableRow({
   )
 }
 
-// ── Main Component ───────────────────────────────────────────────────────────
-
 interface BacklogPageProps {
   contributors: Contributor[]
   onCreateMeeting: (meeting: CreateMeetingInput) => Promise<unknown> | unknown
@@ -151,13 +145,11 @@ const BacklogPage = ({ contributors, onCreateMeeting, projectSprints, projectId,
   const [sprints, setSprints] = useState<Sprint[]>([])
   const [expanded, setExpanded] = useState<ExpandedState>(true)
 
-  // Load user stories and merge with project sprint metadata
   const loadSprints = useCallback(async () => {
     try {
       const userStoriesMap = await getAllUserStories()
       setSprints(mapProjectSprintsToSprints(projectSprints, userStoriesMap))
     } catch {
-      // If fetching user stories fails, show sprints without them
       setSprints(mapProjectSprintsToSprints(projectSprints, new Map()))
     }
   }, [projectSprints])
@@ -198,7 +190,6 @@ const BacklogPage = ({ contributors, onCreateMeeting, projectSprints, projectId,
     getRowId: row => row.id,
   })
 
-  // Set up DnD Sensors
   const sensors = useSensors(
     useSensor(PointerSensor, {
       activationConstraint: {
@@ -219,7 +210,6 @@ const BacklogPage = ({ contributors, onCreateMeeting, projectSprints, projectId,
         orderIndex: i + 1,
       }))
 
-      // Optimistic update
       setSprints(reordered)
 
       try {

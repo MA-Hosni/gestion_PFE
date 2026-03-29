@@ -1,17 +1,12 @@
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell, LabelList } from "recharts"
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  LabelList,
-} from "recharts"
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart"
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -29,39 +24,21 @@ interface StoryPriorityChartProps {
 
 interface PriorityItem {
   priority: string
+  key: string
   count: number
-  fill: string
 }
 
-// ─── Config ───────────────────────────────────────────────────────────────────
+// ─── Config (theme-aware) ─────────────────────────────────────────────────────
 
-const PRIORITY_CONFIG: Record<string, { label: string; fill: string; order: number }> = {
-  Critical: { label: "Critical", fill: "hsl(0, 86%, 60%)", order: 0 },
-  Highest: { label: "Highest", fill: "hsl(25, 95%, 55%)", order: 1 },
-  High: { label: "High", fill: "hsl(38, 92%, 55%)", order: 2 },
-  Medium: { label: "Medium", fill: "hsl(221, 83%, 63%)", order: 3 },
-  Low: { label: "Low", fill: "hsl(152, 69%, 48%)", order: 4 },
-}
-
-// ─── Custom Tooltip ──────────────────────────────────────────────────────────
-
-function CustomTooltip({
-  active,
-  payload,
-}: {
-  active?: boolean
-  payload?: Array<{ payload: PriorityItem }>
-}) {
-  if (!active || !payload?.length) return null
-  const { priority, count } = payload[0].payload
-  return (
-    <div className="rounded-lg border bg-popover px-3 py-2 shadow-lg text-sm">
-      <p className="font-semibold">{priority}</p>
-      <p className="text-muted-foreground">
-        {count} user {count === 1 ? "story" : "stories"}
-      </p>
-    </div>
-  )
+const PRIORITY_CONFIG: Record<
+  string,
+  { label: string; order: number; theme: { light: string; dark: string } }
+> = {
+  Critical: { label: "Critical", order: 0, theme: { light: "hsl(0, 72%, 51%)",   dark: "hsl(0, 86%, 65%)"   } },
+  Highest:  { label: "Highest",  order: 1, theme: { light: "hsl(25, 95%, 50%)",  dark: "hsl(25, 95%, 60%)"  } },
+  High:     { label: "High",     order: 2, theme: { light: "hsl(38, 92%, 50%)",  dark: "hsl(38, 92%, 60%)"  } },
+  Medium:   { label: "Medium",   order: 3, theme: { light: "hsl(221, 83%, 53%)", dark: "hsl(221, 83%, 67%)" } },
+  Low:      { label: "Low",      order: 4, theme: { light: "hsl(152, 69%, 38%)", dark: "hsl(152, 69%, 52%)" } },
 }
 
 // ─── Skeleton ────────────────────────────────────────────────────────────────
@@ -86,8 +63,7 @@ function deriveStoryPriorities(sprints: SprintProgress[]): PriorityItem[] {
   const counts: Record<string, number> = {}
 
   sprints.forEach((sprint) => {
-    sprint.userStories.forEach((_story) => {
-      // Use "Medium" as fallback since priority isn't in basic UserStoryProgress
+    sprint.userStories.forEach(() => {
       const p = "Medium"
       counts[p] = (counts[p] ?? 0) + 1
     })
@@ -96,8 +72,8 @@ function deriveStoryPriorities(sprints: SprintProgress[]): PriorityItem[] {
   return Object.entries(PRIORITY_CONFIG)
     .map(([key, cfg]) => ({
       priority: cfg.label,
+      key: key.toLowerCase(),
       count: counts[key] ?? 0,
-      fill: cfg.fill,
     }))
     .filter((item) => item.count > 0)
 }
@@ -107,17 +83,35 @@ function deriveStoryPriorities(sprints: SprintProgress[]): PriorityItem[] {
 export function StoryPriorityChart({ sprints, isLoading }: StoryPriorityChartProps) {
   const data = deriveStoryPriorities(sprints)
 
-  // Fallback: if all come out as Medium (no priority field from API), show
-  // a simple total per sprint instead
   const showFallback = data.length === 1 && data[0].priority === "Medium"
 
   const chartData: PriorityItem[] = showFallback
-    ? sprints.map((s, i) => ({
-        priority: s.title || `Sprint ${i + 1}`,
-        count: s.userStories.length,
-        fill: Object.values(PRIORITY_CONFIG)[i % Object.values(PRIORITY_CONFIG).length].fill,
-      }))
+    ? sprints.map((s, i) => {
+        const keys = Object.keys(PRIORITY_CONFIG)
+        return {
+          priority: s.title || `Sprint ${i + 1}`,
+          key: `sprint${i}`,
+          count: s.userStories.length,
+        }
+      })
     : data
+
+  // Build ChartConfig dynamically — depends on whether fallback or real priorities
+  const chartConfig = chartData.reduce<ChartConfig>((cfg, item, idx) => {
+    if (showFallback) {
+      const themeKeys = Object.values(PRIORITY_CONFIG)
+      cfg[item.key] = {
+        label: item.priority,
+        theme: themeKeys[idx % themeKeys.length].theme,
+      }
+    } else {
+      const pcfg = Object.values(PRIORITY_CONFIG).find((p) => p.label === item.priority)
+      if (pcfg) {
+        cfg[item.key] = { label: item.priority, theme: pcfg.theme }
+      }
+    }
+    return cfg
+  }, {} satisfies ChartConfig)
 
   return (
     <Card className="@container/card">
@@ -143,38 +137,48 @@ export function StoryPriorityChart({ sprints, isLoading }: StoryPriorityChartPro
             No user stories found
           </p>
         ) : (
-          <ResponsiveContainer width="100%" height={200}>
+          <ChartContainer config={chartConfig} className="aspect-auto h-[200px] w-full">
             <BarChart
               data={chartData}
-              margin={{ top: 0, right: 0, left: -30, bottom: 0 }}
+              margin={{ top: 20, right: 0, left: -30, bottom: 0 }}
               barCategoryGap="30%"
             >
-              <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis
                 dataKey="priority"
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={false}
                 tickLine={false}
               />
               <YAxis
                 allowDecimals={false}
-                tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                 axisLine={false}
                 tickLine={false}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+              <ChartTooltip
+                cursor={false}
+                content={
+                  <ChartTooltipContent
+                    formatter={(value) => (
+                      <span>
+                        {value} user {Number(value) === 1 ? "story" : "stories"}
+                      </span>
+                    )}
+                    hideLabel
+                  />
+                }
+              />
               <Bar dataKey="count" radius={[6, 6, 0, 0]} maxBarSize={36}>
-                {chartData.map((item, idx) => (
-                  <Cell key={idx} fill={item.fill} />
+                {chartData.map((item) => (
+                  <Cell key={item.key} fill={`var(--color-${item.key})`} />
                 ))}
                 <LabelList
                   dataKey="count"
                   position="top"
-                  style={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                  className="fill-muted-foreground text-[11px] font-semibold"
                 />
               </Bar>
             </BarChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         )}
       </CardFooter>
     </Card>

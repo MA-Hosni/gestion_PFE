@@ -21,7 +21,6 @@ export default function LayoutPage() {
   const location = useLocation()
   const [projectTitle, setProjectTitle] = useState("")
   
-  // Create breadcrumb based on current path
   const pathnames = location.pathname.split("/").filter((x) => x)
   const isProjectDetails = pathnames[0] === 'projects' && pathnames.length === 2
   const currentPage = pathnames[pathnames.length - 1] || "projects"

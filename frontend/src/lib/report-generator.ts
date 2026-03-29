@@ -26,7 +26,6 @@ export function generateHTMLReport(data: ReportData, type: 'Project' | 'Sprint')
   const startDate = formatDate(type === 'Project' ? data.project?.startDate : data.sprint?.startDate)
   const endDate = formatDate(type === 'Project' ? data.project?.endDate : data.sprint?.endDate)
 
-  // Statistics
   let totalTasks = 0
   let completedTasks = 0
   let allTasks: any[] = []

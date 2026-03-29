@@ -60,7 +60,7 @@ const ContributorsPage = ({ project, setProject }: ContributorsPageProps) => {
         .map(u => ({
              _id: u._id,
              fullName: u.fullName, 
-             email: "Pending...", // Could fetch full profile if needed
+             email: "Pending...",
         }))
 
       setProject(prev => {
@@ -138,7 +138,6 @@ const ContributorsPage = ({ project, setProject }: ContributorsPageProps) => {
         },
       }
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [project] 
   )
 

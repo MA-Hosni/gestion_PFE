@@ -20,14 +20,11 @@ import {
 } from "@/services/project/api-dashboard"
 import type { Contributor } from "@/services/project/api-project"
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 interface DashboardPageProps {
   projectId: string
   contributors: Contributor[]
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export default function DashboardPage({ projectId, contributors }: DashboardPageProps) {
   const [progressData, setProgressData] = useState<DashboardProgressData | null>(null)
@@ -62,7 +59,6 @@ export default function DashboardPage({ projectId, contributors }: DashboardPage
     fetchDashboardData()
   }, [fetchDashboardData])
 
-  // Stable callback for the timeline calendar — called per month navigation
   const handleFetchTimeline = useCallback(
     async (month: number, year: number): Promise<TimelineEvent[]> => {
       return await getStudentTimeline(month, year)
@@ -70,7 +66,6 @@ export default function DashboardPage({ projectId, contributors }: DashboardPage
     []
   )
 
-  // ── Error state ──────────────────────────────────────────────────────────
   if (error && !isLoading) {
     return (
       <div className="flex flex-col items-center gap-4 p-8">

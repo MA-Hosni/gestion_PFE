@@ -1,17 +1,12 @@
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Cell, LabelList } from "recharts"
 import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  LabelList,
-  Cell,
-} from "recharts"
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart"
 import {
   Card,
-  CardContent,
   CardDescription,
   CardFooter,
   CardHeader,
@@ -30,31 +25,31 @@ interface TaskStatusBarChartProps {
 
 interface StatusItem {
   name: string
+  key: string
   count: number
   percentage: number
-  fill: string
 }
 
-// ─── Custom Tooltip ──────────────────────────────────────────────────────────
+// ─── Chart Config (theme-aware) ───────────────────────────────────────────────
 
-function CustomTooltip({
-  active,
-  payload,
-}: {
-  active?: boolean
-  payload?: Array<{ payload: StatusItem }>
-}) {
-  if (!active || !payload?.length) return null
-  const { name, count, percentage } = payload[0].payload
-  return (
-    <div className="rounded-lg border bg-popover px-3 py-2 shadow-lg text-sm">
-      <p className="font-semibold">{name}</p>
-      <p className="text-muted-foreground">
-        {count} tasks &middot; {percentage}%
-      </p>
-    </div>
-  )
-}
+const chartConfig = {
+  done: {
+    label: "Done",
+    theme: { light: "hsl(142, 76%, 36%)", dark: "hsl(142, 71%, 45%)" },
+  },
+  inProgress: {
+    label: "In Progress",
+    theme: { light: "hsl(221, 83%, 53%)", dark: "hsl(221, 83%, 67%)" },
+  },
+  standby: {
+    label: "Standby",
+    theme: { light: "hsl(38, 92%, 50%)", dark: "hsl(38, 92%, 60%)" },
+  },
+  todo: {
+    label: "To Do",
+    theme: { light: "hsl(215, 16%, 47%)", dark: "hsl(215, 16%, 65%)" },
+  },
+} satisfies ChartConfig
 
 // ─── Skeleton ────────────────────────────────────────────────────────────────
 
@@ -90,13 +85,12 @@ export function TaskStatusBarChart({
   const safe = (n: number) => (total > 0 ? Math.round((n / total) * 100) : 0)
 
   const statuses: StatusItem[] = [
-    { name: "Done", count: done, percentage: safe(done), fill: "hsl(142, 76%, 45%)" },
-    { name: "In Progress", count: inProgress, percentage: safe(inProgress), fill: "hsl(221, 83%, 63%)" },
-    { name: "Standby", count: standby, percentage: safe(standby), fill: "hsl(38, 92%, 55%)" },
-    { name: "To Do", count: todo, percentage: safe(todo), fill: "hsl(215, 16%, 57%)" },
+    { name: "Done",        key: "done",       count: done,       percentage: safe(done)       },
+    { name: "In Progress", key: "inProgress", count: inProgress, percentage: safe(inProgress) },
+    { name: "Standby",     key: "standby",    count: standby,    percentage: safe(standby)    },
+    { name: "To Do",       key: "todo",       count: todo,       percentage: safe(todo)       },
   ].filter((s) => s.count > 0 || !isLoading)
 
-  // Sort descending by count for readability
   const sorted = [...statuses].sort((a, b) => b.count - a.count)
 
   return (
@@ -119,41 +113,52 @@ export function TaskStatusBarChart({
             No tasks found in this project yet
           </p>
         ) : (
-          <ResponsiveContainer width="100%" height={Math.max(180, sorted.length * 52)}>
+          <ChartContainer
+            config={chartConfig}
+            className="w-full"
+            style={{ height: Math.max(180, sorted.length * 52) }}
+          >
             <BarChart
               data={sorted}
               layout="vertical"
               margin={{ top: 0, right: 0, left: 0, bottom: 0 }}
               barCategoryGap="30%"
             >
-              <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="hsl(var(--border))" />
-              <XAxis
-                type="number"
-                domain={[0, 100]}
-                hide
-              />
+              <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+              <XAxis type="number" domain={[0, 100]} hide />
               <YAxis
                 type="category"
                 dataKey="name"
                 width={80}
-                tick={{ fontSize: 12, fill: "hsl(var(--foreground))" }}
                 axisLine={false}
                 tickLine={false}
               />
-              <Tooltip content={<CustomTooltip />} cursor={{ fill: "transparent" }} />
+              <ChartTooltip
+                cursor={false}
+                content={
+                  <ChartTooltipContent
+                    formatter={(value, _name, item) => (
+                      <span>
+                        {item.payload.count} tasks · {value}%
+                      </span>
+                    )}
+                    hideLabel
+                  />
+                }
+              />
               <Bar dataKey="percentage" radius={[6, 6, 6, 6]} maxBarSize={30}>
-                {sorted.map((item, idx) => (
-                  <Cell key={idx} fill={item.fill} />
+                {sorted.map((item) => (
+                  <Cell key={item.key} fill={`var(--color-${item.key})`} />
                 ))}
                 <LabelList
                   dataKey="percentage"
                   position="right"
                   formatter={(v: number) => `${v}%`}
-                  style={{ fontSize: 11, fill: "hsl(var(--muted-foreground))", fontWeight: 600 }}
+                  className="fill-muted-foreground text-[11px] font-semibold"
                 />
               </Bar>
             </BarChart>
-          </ResponsiveContainer>
+          </ChartContainer>
         )}
       </CardFooter>
     </Card>
